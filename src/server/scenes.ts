@@ -139,6 +139,58 @@ export async function updateSceneContent(sceneId: string, content: unknown) {
   return { word_count, savedAt: new Date().toISOString() };
 }
 
+export async function renameChapter(chapterId: string, title: string) {
+  const { supabase } = await requireUser();
+  const trimmed = title.trim().slice(0, 200) || "Untitled chapter";
+  const { error } = await supabase
+    .from("chapters")
+    .update({ title: trimmed })
+    .eq("id", chapterId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+  return trimmed;
+}
+
+export async function renameScene(sceneId: string, title: string) {
+  const { supabase } = await requireUser();
+  const trimmed = title.trim().slice(0, 200) || "Untitled scene";
+  const { error } = await supabase
+    .from("scenes")
+    .update({ title: trimmed })
+    .eq("id", sceneId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+  return trimmed;
+}
+
+export async function reorderChapters(projectId: string, orderedIds: string[]) {
+  const { supabase } = await requireUser();
+  await Promise.all(
+    orderedIds.map((id, position) =>
+      supabase
+        .from("chapters")
+        .update({ position })
+        .eq("id", id)
+        .eq("project_id", projectId),
+    ),
+  );
+  revalidatePath("/app", "layout");
+}
+
+export async function reorderScenes(chapterId: string, orderedIds: string[]) {
+  const { supabase } = await requireUser();
+  await Promise.all(
+    orderedIds.map((id, position) =>
+      supabase
+        .from("scenes")
+        .update({ position })
+        .eq("id", id)
+        .eq("chapter_id", chapterId),
+    ),
+  );
+  revalidatePath("/app", "layout");
+}
+
 export async function signOut() {
   const { supabase } = await requireUser();
   await supabase.auth.signOut();
