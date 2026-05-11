@@ -31,6 +31,8 @@ This is the only step a human has to do. Approx. 10 minutes.
    - `https://rjnfvyjghybutgrtbbeu.supabase.co/auth/v1/callback`
 7. Save the **Client ID** and **Client secret**.
 
+> **Never commit the Client Secret to this repo.** It belongs only in the Supabase dashboard (next step). The Client ID is technically public but we keep it out of the repo too for tidiness.
+
 ### 3b. Wire it into Supabase
 
 1. Go to <https://supabase.com/dashboard/project/rjnfvyjghybutgrtbbeu/auth/providers>
