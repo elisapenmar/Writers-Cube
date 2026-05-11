@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Writer's Cube V0.5 — Scope Document</title>
+<style>
+  :root {
+    --maroon: #6B1F2C;
+    --maroon-soft: #FBF1F3;
+    --maroon-border: #E4C2C8;
+    --purple: #5B21B6;
+    --purple-soft: #F4F1FB;
+    --blue: #1E3A8A;
+    --blue-soft: #EEF2FB;
+    --ink: #1A1A1A;
+    --ink-soft: #555555;
+    --rule: #D9D9D9;
+    --bg: #FFFFFF;
+  }
+
+  @page {
+    size: Letter;
+    margin: 0.75in 0.7in 0.85in 0.7in;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Georgia", "Charter", "Cambria", serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc {
+    max-width: 100%;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Helvetica Neue", "Inter", "Arial", sans-serif;
+    line-height: 1.25;
+    font-weight: 700;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h1 {
+    color: var(--maroon);
+    font-size: 26pt;
+    margin: 0 0 4pt 0;
+    letter-spacing: -0.01em;
+    border-bottom: 3px solid var(--maroon);
+    padding-bottom: 8pt;
+  }
+
+  h1:first-of-type {
+    margin-top: 0;
+  }
+
+  h2 {
+    color: var(--maroon);
+    font-size: 16pt;
+    margin: 22pt 0 8pt 0;
+    border-bottom: 1px solid var(--maroon-border);
+    padding-bottom: 4pt;
+    page-break-before: auto;
+  }
+
+  h3 {
+    color: var(--purple);
+    font-size: 12.5pt;
+    margin: 16pt 0 6pt 0;
+  }
+
+  h4 {
+    color: var(--blue);
+    font-size: 11pt;
+    margin: 12pt 0 4pt 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  p {
+    margin: 0 0 8pt 0;
+    orphans: 3;
+    widows: 3;
+  }
+
+  strong {
+    color: var(--maroon);
+    font-weight: 700;
+  }
+
+  em {
+    color: var(--ink-soft);
+  }
+
+  a {
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--blue);
+  }
+
+  ul, ol {
+    margin: 0 0 10pt 0;
+    padding-left: 22pt;
+  }
+
+  li {
+    margin-bottom: 4pt;
+  }
+
+  li::marker {
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  ul li::marker {
+    color: var(--maroon);
+  }
+
+  code {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 9.5pt;
+    background: var(--purple-soft);
+    color: var(--purple);
+    padding: 1pt 4pt;
+    border-radius: 3px;
+  }
+
+  pre {
+    background: var(--maroon-soft);
+    border-left: 3px solid var(--maroon);
+    padding: 8pt 10pt;
+    overflow-x: auto;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+
+  pre code {
+    background: transparent;
+    color: var(--ink);
+    padding: 0;
+  }
+
+  blockquote {
+    border-left: 3px solid var(--purple);
+    background: var(--purple-soft);
+    margin: 10pt 0;
+    padding: 6pt 12pt;
+    color: var(--ink);
+    font-style: italic;
+    page-break-inside: avoid;
+  }
+
+  blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 18pt 0;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0 14pt 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+
+  thead th {
+    background: var(--maroon);
+    color: #FFFFFF;
+    font-family: "Helvetica Neue", "Inter", "Arial", sans-serif;
+    font-weight: 600;
+    text-align: left;
+    padding: 6pt 8pt;
+    border: 1px solid var(--maroon);
+    font-size: 9pt;
+    letter-spacing: 0.01em;
+  }
+
+  tbody td {
+    padding: 5pt 8pt;
+    border: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--maroon-soft);
+  }
+
+  tbody td strong {
+    color: var(--purple);
+  }
+
+  /* Specific layout: keep section heading with first paragraph */
+  h2 + p, h2 + ul, h2 + ol, h2 + table {
+    page-break-before: avoid;
+  }
+  h3 + p, h3 + ul, h3 + ol, h3 + table {
+    page-break-before: avoid;
+  }
+
+  /* Cover-page-ish flourish for the first H1 area */
+  .doc > h1:first-child + p,
+  .doc > h1:first-child + p + p {
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+<h1>Writer&#39;s Cube V0.5 — Scope Document</h1>
+<p><strong>Internal name:</strong> <em>The Quill</em>
+<strong>Phase:</strong> Founder-only personal prototype (Phase 1 of 4)
+<strong>Target users:</strong> One — the founder
+<strong>Target outcome:</strong> The founder uses the product to draft her first novel, with AI helping her track her own story
+<strong>Target duration:</strong> 14–16 weeks of build + sustained daily use
+<strong>Status:</strong> Frozen on signature. Any change to this scope requires a written addendum.</p>
+<hr>
+<h2>1. Purpose of V0.5</h2>
+<p>V0.5 is the <strong>minimum surface the founder needs to start drafting a novel — with AI tracking her story as she goes.</strong> It exists to:</p>
+<ol>
+<li>Prove the writing experience feels good enough to use every day</li>
+<li>Prove the AI Story Bible agent actually helps a writer not lose the thread of her own story</li>
+<li>Generate a real friction journal from a real user (the founder) writing real prose with real AI assistance</li>
+<li>De-risk both the foundation layer (writing, persistence) <em>and</em> the AI integration layer before exposing them to outside writers in V0.7</li>
+</ol>
+<p><strong>What changed from earlier scoping (May 2026):</strong> The founder has chosen to deprioritize visual environments (the Vintage Writer&#39;s Desk) and prioritize <strong>AI agents from day one</strong>, because the AI is what helps her actually finish a novel. Brand identity and immersive environments move to V0.9 (closer to launch), giving the founder months of lived dogfooding before visual decisions are made.</p>
+<p>V0.5 is <strong>not</strong> a product. It is a tool the founder builds for herself, knowing the rest of the world will get something polished six months later.</p>
+<hr>
+<h2>2. In scope</h2>
+<h3>2.1 Writing surface (must work flawlessly)</h3>
+<ul>
+<li>Rich-text editor based on <strong>TipTap</strong> (ProseMirror) with basic formatting: bold, italic, underline, three header levels, ordered and unordered lists, blockquote</li>
+<li>Browser-native spell check (no custom dictionary in V0.5)</li>
+<li>Word count: per scene, per chapter, per project</li>
+<li>In-scene find (Ctrl/Cmd-F)</li>
+<li>Project-wide substring search</li>
+<li>Adjustable body font size (3 sizes: comfortable / large / huge)</li>
+<li>One serif body typeface (Georgia or Charter) and one sans for UI</li>
+</ul>
+<h3>2.2 Project structure</h3>
+<ul>
+<li>One active project (no multi-project switching yet)</li>
+<li>Project → Chapters → Scenes hierarchy</li>
+<li>Side navigation pane with collapsible tree</li>
+<li>Rename chapters and scenes inline</li>
+<li>Drag-to-reorder chapters and scenes</li>
+<li>Click to jump to any scene</li>
+</ul>
+<h3>2.3 Persistence (the trust layer — non-negotiable quality bar)</h3>
+<ul>
+<li><strong>Auto-save</strong> every keystroke, debounced ~1 second, to Supabase</li>
+<li>A visible &quot;saved at HH:MM&quot; indicator the founder can glance at</li>
+<li>Manual &quot;Save now&quot; button (for psychological comfort)</li>
+<li><strong>Daily versioned snapshots</strong> of each scene, retained 90 days</li>
+<li><strong>Google Drive backup</strong>: link account on first use; project state mirrored as a folder of <code>.md</code> files (one per scene) with daily snapshots in a <code>versions/</code> subfolder, plus a <code>manifest.json</code> describing structure</li>
+<li><strong>Local download</strong>: one-click &quot;Download project as ZIP&quot; producing the same folder structure</li>
+<li>Side-by-side compare of any scene against a previous snapshot</li>
+</ul>
+<h3>2.4 Founder-priority writing features</h3>
+<ul>
+<li><strong>Highlight-to-tag</strong><ul>
+<li>Five preset tags: <code>Look up</code>, <code>Revise</code>, <code>Weak</code>, <code>Fact check</code>, <code>Placeholder</code></li>
+<li>Highlight text → right-click → assign tag (or keyboard shortcut)</li>
+<li>Tags are visually distinct in the document (subtle colored underline + icon in margin)</li>
+<li>Dedicated &quot;Tags&quot; view in side nav: list of tagged passages grouped by tag type, each clickable to jump to its location</li>
+</ul>
+</li>
+<li><strong>Typewriter mode</strong><ul>
+<li>Toggle from a single button (and keyboard shortcut)</li>
+<li>Screen blacks out except for the current ~5 lines around the cursor</li>
+<li>Spell check disabled</li>
+<li>Editing of previously written lines gated by an &quot;are you sure&quot; confirm</li>
+<li>Visible word count remains in a small corner element</li>
+</ul>
+</li>
+</ul>
+<h3>2.5 AI integration (new in this scope revision)</h3>
+<p>V0.5 ships with two AI features, both routed through the founder&#39;s own Anthropic API key. The product proxies the call (so the key stays in Supabase secure storage), but the cost lands on the founder&#39;s Anthropic account.</p>
+<ul>
+<li><p><strong>Minimal BYO Key Setup</strong></p>
+<ul>
+<li>A simple settings screen where the founder pastes her Anthropic API key</li>
+<li>&quot;Test key&quot; button that runs a tiny request and confirms it works</li>
+<li>Real-time cost-this-month indicator pulled from her Anthropic usage data (or estimated locally if Anthropic doesn&#39;t expose the data per-key)</li>
+<li><em>Note: this is the minimal version. The polished Guided AI Setup Wizard ships in V0.9 for outside users.</em></li>
+</ul>
+</li>
+<li><p><strong>Story Bible AI agent</strong> <em>(the signature AI feature)</em></p>
+<ul>
+<li>Background agent that reads the project and maintains a structured &quot;story bible&quot;:<ul>
+<li>Characters (name, description, traits, first appearance)</li>
+<li>Places (name, description, scenes that occur there)</li>
+<li>Timeline (chronological list of events with their scene-of-occurrence)</li>
+<li>Relationships (character-to-character, with how the relationship has evolved)</li>
+</ul>
+</li>
+<li>Re-runs after each writing session (or on demand via a button) — uses prompt caching aggressively to keep cost low</li>
+<li>Each entity is displayed in the navigation pane and is clickable to see source passages</li>
+<li>Founder can ask the Story Bible questions in plain language: <em>&quot;Did Sarah meet Marcus yet?&quot; &quot;What did the locket look like the last time it appeared?&quot;</em></li>
+<li>This is the feature most likely to help her finish a novel — it removes the cognitive load of remembering her own story</li>
+</ul>
+</li>
+<li><p><strong>Highlight + right-click + ask AI</strong></p>
+<ul>
+<li>Highlight any passage, right-click, choose &quot;Ask AI&quot;</li>
+<li>Opens a small inline panel where the founder can ask a question about the passage</li>
+<li>AI has access to full project context (cached)</li>
+<li>Use cases: &quot;Is this scene&#39;s pacing too fast?&quot;, &quot;What sensory details would I add here?&quot;, &quot;Does this contradict anything earlier?&quot;</li>
+</ul>
+</li>
+</ul>
+<p><strong>Underlying model:</strong> Claude Sonnet 4.6 via Anthropic API. Model is configurable in settings but defaults to Sonnet 4.6. Prompt caching enabled by default.</p>
+<p><strong>Estimated founder API spend during V0.5:</strong> ~$5–15/month on her own Anthropic account, based on writing 3–5 days/week with Story Bible running at end of each session and ~10 highlight-ask queries per session. The brief&#39;s §13 cost table now includes this line.</p>
+<h3>2.6 Themes</h3>
+<ul>
+<li>Light theme (default)</li>
+<li>Dark theme</li>
+<li>Both use sane, professional defaults. <strong>No</strong> Vintage Desk environment artwork or brand identity in V0.5 — those land in V0.9, after the founder has spent months drafting and can give the brand designer informed direction.</li>
+</ul>
+<h3>2.7 Authentication</h3>
+<ul>
+<li>Single user (the founder) signs in via Google OAuth (re-uses the Drive integration)</li>
+<li>No signup flow, no marketing site, no terms acceptance UI</li>
+</ul>
+<h3>2.8 Hosting</h3>
+<ul>
+<li>Deployed on a Vercel preview URL initially; optional <code>v05.writerscube.app</code> subdomain once the domain is purchased</li>
+<li>No custom marketing domain in V0.5</li>
+</ul>
+<hr>
+<h2>3. Out of scope</h2>
+<p>These are deliberately deferred. Every one of them is somebody&#39;s &quot;wouldn&#39;t it be nice if…&quot; — but <strong>adding any of them to V0.5 is a scope change that requires a written addendum.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>First scheduled phase</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Branching narratives</td>
+<td>V0.7</td>
+</tr>
+<tr>
+<td>AI persona onboarding survey (voice/values setup)</td>
+<td>V2.0</td>
+</tr>
+<tr>
+<td>AI Research Assistant persona</td>
+<td>V2.0</td>
+</tr>
+<tr>
+<td>AI Thought Partner persona</td>
+<td>V2.0</td>
+</tr>
+<tr>
+<td>Character interview mode (chat <em>as</em> a character)</td>
+<td>V2.0</td>
+</tr>
+<tr>
+<td><strong>Vintage Writer&#39;s Desk environment / any artwork-based environment</strong></td>
+<td><strong>V0.9 (decision-gated by §6 success criteria)</strong></td>
+</tr>
+<tr>
+<td><strong>Brand identity (logo, type, color)</strong></td>
+<td><strong>V0.9</strong></td>
+</tr>
+<tr>
+<td>Futuristic Studio environment</td>
+<td>V1.5</td>
+</tr>
+<tr>
+<td>Customizable widgets</td>
+<td>V1.5</td>
+</tr>
+<tr>
+<td>Daily goals, streaks, pomodoro</td>
+<td>V1.5</td>
+</tr>
+<tr>
+<td>Project templates (by audience tier)</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Multiple-project support</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Sharing / beta-reader access</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Polished onboarding walkthrough + Guided AI Setup Wizard</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Subscription, payments, pricing UI</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Multi-user authentication &amp; accounts</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Custom marketing domain</td>
+<td>V0.9</td>
+</tr>
+<tr>
+<td>Export to DOCX, PDF</td>
+<td>V0.9 (Markdown export ships in V0.5)</td>
+</tr>
+<tr>
+<td>TTS playback, audio</td>
+<td>V2.5</td>
+</tr>
+<tr>
+<td>Mobile / tablet UI</td>
+<td>V3.0</td>
+</tr>
+<tr>
+<td>Desktop wrapper (Tauri)</td>
+<td>V3.0</td>
+</tr>
+<tr>
+<td>Cube View (3D manuscript navigation)</td>
+<td>V3.0</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Technical stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Framework</td>
+<td>Next.js 15+ (App Router)</td>
+<td>Modern, well-supported, hosts cleanly on Vercel</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Vercel (Hobby tier)</td>
+<td>Free, instant deploys</td>
+</tr>
+<tr>
+<td>Database &amp; auth</td>
+<td>Supabase (Free tier)</td>
+<td>Postgres + Google OAuth + secure secret storage for the API key</td>
+</tr>
+<tr>
+<td>Editor</td>
+<td>TipTap (ProseMirror)</td>
+<td>Mature, extensible, has the primitives needed for V0.7&#39;s branching feature</td>
+</tr>
+<tr>
+<td>Styling</td>
+<td>Tailwind CSS</td>
+<td>Fast iteration, no design system overhead yet</td>
+</tr>
+<tr>
+<td>State</td>
+<td>Zustand for client state; React Query for server state</td>
+<td>Lightweight, low ceremony</td>
+</tr>
+<tr>
+<td>Cloud backup</td>
+<td>Google Drive API (scope: <code>drive.file</code>)</td>
+<td>Limits access to files Writer&#39;s Cube creates</td>
+</tr>
+<tr>
+<td>Local backup</td>
+<td>Browser File System Access API + JSZip fallback</td>
+<td>Native picker in Chrome/Edge; ZIP download as universal fallback</td>
+</tr>
+<tr>
+<td><strong>AI provider (in-product)</strong></td>
+<td><strong>Anthropic API (Claude Sonnet 4.6) — founder&#39;s BYO key</strong></td>
+<td><strong>Strongest API privacy terms; prompt caching support; best long-context performance for the Story Bible agent</strong></td>
+</tr>
+<tr>
+<td>AI orchestration</td>
+<td>Anthropic SDK (TypeScript) called from Next.js server actions</td>
+<td>Keeps the founder&#39;s API key server-side; no client-side key exposure</td>
+</tr>
+<tr>
+<td>Development AI</td>
+<td>Claude Max 20x via Claude Code</td>
+<td>The build itself</td>
+</tr>
+<tr>
+<td>Code hosting</td>
+<td>GitHub (private repo under entity account)</td>
+<td>Standard</td>
+</tr>
+</tbody></table>
+<p><strong>Total V0.5 monthly running cost:</strong></p>
+<ul>
+<li>$0 hosting (free tiers)</li>
+<li>$200 Claude Max 20x (development)</li>
+<li>~$5–15 founder&#39;s Anthropic API spend (using the product)</li>
+<li>~$1 domain (<code>writerscube.app</code>)</li>
+<li><strong>≈ $206–216/month</strong></li>
+</ul>
+<hr>
+<h2>5. Build timeline (14-week target)</h2>
+<table>
+<thead>
+<tr>
+<th>Week</th>
+<th>Milestone</th>
+<th>Definition of done</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Editor + project shell</td>
+<td>Founder can open the app, create a project with chapters/scenes, type into the editor, and reload without losing content</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Auto-save + side nav polish</td>
+<td>Auto-save works reliably; &quot;saved at HH:MM&quot; indicator; drag-to-reorder; rename inline</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Google Drive integration + ZIP export</td>
+<td>OAuth flow works; project mirrored as <code>.md</code> folder; ZIP download produces a clean local archive</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Daily versioned snapshots + side-by-side compare</td>
+<td>Snapshots generated daily; compare-with-previous works</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Highlight-to-tag system + Typewriter mode</td>
+<td>All five tag types work; Tags view shows grouped list with jump-to; typewriter mode toggle, blackout, edit-confirm, restore-on-exit</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Project-wide search + light/dark themes</td>
+<td>Substring search; theme switcher</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Minimal BYO Key Setup</strong></td>
+<td>Settings screen for the founder&#39;s Anthropic key; test-key button; key stored encrypted server-side</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Story Bible AI agent — extraction layer</strong></td>
+<td>Background job extracts characters, places, timeline, relationships from project; results visible in nav pane</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Story Bible AI agent — query layer</strong></td>
+<td>Founder can ask the Story Bible questions in plain language; receives accurate, citation-grounded answers</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Highlight + right-click + ask AI</strong></td>
+<td>Inline panel; full-project-context queries; passes prompt caching test</td>
+</tr>
+<tr>
+<td>11</td>
+<td>AI cost tracking + prompt-cache optimization</td>
+<td>Founder can see live monthly cost in the app; caching reduces per-call cost by ~50% versus uncached</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Bug-squash + persistence-stress week</td>
+<td>Founder writes daily for the full week; data integrity audited; AI accuracy spot-checked on her own manuscript</td>
+</tr>
+<tr>
+<td>13–14</td>
+<td>Sustained-use evaluation</td>
+<td>Founder writes daily; weekly friction-journal review; only critical bug fixes shipped</td>
+</tr>
+<tr>
+<td>15–16</td>
+<td>Stretch buffer for slipped work and continued drafting</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>By the end of week 16, V0.5 is closed. V0.7 planning begins.</p>
+<hr>
+<h2>6. Success criteria</h2>
+<p>V0.5 is successful if, by week 16:</p>
+<ol>
+<li><strong>Founder has used the product on at least 3 days/week for 6 consecutive weeks</strong></li>
+<li><strong>Zero data-loss incidents</strong> — no scene ever lost more than the last 5 seconds of input</li>
+<li><strong>Founder has drafted at least 15,000 words inside the product</strong> (a meaningful chunk of a novel)</li>
+<li><strong>Friction journal contains at least 40 entries</strong> (the signal that drives V0.7 scope)</li>
+<li><strong>Story Bible AI agent has been used at least 30 times and rated &quot;useful&quot; by the founder on ≥80% of those uses</strong> (this validates the highest-ROI feature)</li>
+<li><strong>Highlight-tag feature has been used at least 25 times</strong></li>
+<li><strong>AI cost stays under $20/month</strong> (validates the BYO economics for outside users)</li>
+</ol>
+<p>If any of (1) through (3) fails, V0.7 does not begin until the failure is diagnosed and fixed in V0.5. If (5) fails (Story Bible isn&#39;t useful), the entire AI architecture is reconsidered before V0.7 ships AI to outside users.</p>
+<hr>
+<h2>7. Anti-goals (what V0.5 explicitly is <em>not</em>)</h2>
+<ul>
+<li><strong>Not a shippable product.</strong> No marketing site. No signup flow. No payment integration. No terms of service UI.</li>
+<li><strong>Not screenshotable.</strong> Visuals are functional, not branded. The Vintage Desk environment is V0.9. Logo is a wordmark in a default typeface.</li>
+<li><strong>Not multi-user.</strong> No invitations, no sharing, no roles, no permissions.</li>
+<li><strong>Not optimized for large projects.</strong> Performance is fine for a single 100k-word novel; it does not need to handle 10 novels at once.</li>
+<li><strong>Not feature-complete versus competitors.</strong> Scrivener has dozens of features V0.5 doesn&#39;t. That&#39;s fine — V0.5&#39;s job is to be reliable, fast, trustworthy, and <em>intelligent</em> enough to help one user finish her novel.</li>
+<li><strong>Not the polished AI experience outside users will see.</strong> The BYO key setup is minimal. The Guided AI Setup Wizard with personalized cost estimator ships in V0.9.</li>
+</ul>
+<hr>
+<h2>8. Decision log</h2>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2026-05-11</td>
+<td>Editor framework = TipTap</td>
+<td>ProseMirror primitives needed for V0.7 branching; mature ecosystem</td>
+</tr>
+<tr>
+<td>2026-05-11</td>
+<td>Google Drive scope = <code>drive.file</code> only</td>
+<td>Smallest possible permission ask; preserves user trust</td>
+</tr>
+<tr>
+<td>2026-05-11</td>
+<td>No multi-project in V0.5</td>
+<td>One novel is the goal; schema can wait</td>
+</tr>
+<tr>
+<td>2026-05-11</td>
+<td><strong>Story Bible AI agent in V0.5</strong> <em>(scope revision)</em></td>
+<td>Founder believes AI tracking is what will help her finish a novel — the highest-ROI feature for her as the first user</td>
+</tr>
+<tr>
+<td>2026-05-11</td>
+<td><strong>Vintage Desk environment moved to V0.9</strong> <em>(scope revision)</em></td>
+<td>Visuals don&#39;t help the founder write; they help outside users be wowed. Deferred to closer to launch, with the benefit of informed direction from months of dogfooding</td>
+</tr>
+<tr>
+<td>2026-05-11</td>
+<td>Default AI model = Claude Sonnet 4.6</td>
+<td>Best long-context + structured output performance for Story Bible; aggressive prompt caching cuts cost in half</td>
+</tr>
+<tr>
+<td>2026-05-11</td>
+<td>AI key stored server-side (encrypted), proxied via Next.js server actions</td>
+<td>Never expose the key to client JS; key is bound to founder&#39;s account</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Sign-off</h2>
+<p>Scope frozen on: <strong>____________</strong></p>
+<p>Signed (founder): <strong>____________</strong></p>
+<p>Any change to this document requires a written addendum dated and signed below.</p>
+<h3>Addenda</h3>
+<p><em>(none yet)</em></p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Writer's Cube — Investor Brief</title>
+<style>
+  :root {
+    --maroon: #6B1F2C;
+    --maroon-soft: #FBF1F3;
+    --maroon-border: #E4C2C8;
+    --purple: #5B21B6;
+    --purple-soft: #F4F1FB;
+    --blue: #1E3A8A;
+    --blue-soft: #EEF2FB;
+    --ink: #1A1A1A;
+    --ink-soft: #555555;
+    --rule: #D9D9D9;
+    --bg: #FFFFFF;
+  }
+
+  @page {
+    size: Letter;
+    margin: 0.75in 0.7in 0.85in 0.7in;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Georgia", "Charter", "Cambria", serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc {
+    max-width: 100%;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Helvetica Neue", "Inter", "Arial", sans-serif;
+    line-height: 1.25;
+    font-weight: 700;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h1 {
+    color: var(--maroon);
+    font-size: 26pt;
+    margin: 0 0 4pt 0;
+    letter-spacing: -0.01em;
+    border-bottom: 3px solid var(--maroon);
+    padding-bottom: 8pt;
+  }
+
+  h1:first-of-type {
+    margin-top: 0;
+  }
+
+  h2 {
+    color: var(--maroon);
+    font-size: 16pt;
+    margin: 22pt 0 8pt 0;
+    border-bottom: 1px solid var(--maroon-border);
+    padding-bottom: 4pt;
+    page-break-before: auto;
+  }
+
+  h3 {
+    color: var(--purple);
+    font-size: 12.5pt;
+    margin: 16pt 0 6pt 0;
+  }
+
+  h4 {
+    color: var(--blue);
+    font-size: 11pt;
+    margin: 12pt 0 4pt 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  p {
+    margin: 0 0 8pt 0;
+    orphans: 3;
+    widows: 3;
+  }
+
+  strong {
+    color: var(--maroon);
+    font-weight: 700;
+  }
+
+  em {
+    color: var(--ink-soft);
+  }
+
+  a {
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--blue);
+  }
+
+  ul, ol {
+    margin: 0 0 10pt 0;
+    padding-left: 22pt;
+  }
+
+  li {
+    margin-bottom: 4pt;
+  }
+
+  li::marker {
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  ul li::marker {
+    color: var(--maroon);
+  }
+
+  code {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 9.5pt;
+    background: var(--purple-soft);
+    color: var(--purple);
+    padding: 1pt 4pt;
+    border-radius: 3px;
+  }
+
+  pre {
+    background: var(--maroon-soft);
+    border-left: 3px solid var(--maroon);
+    padding: 8pt 10pt;
+    overflow-x: auto;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+
+  pre code {
+    background: transparent;
+    color: var(--ink);
+    padding: 0;
+  }
+
+  blockquote {
+    border-left: 3px solid var(--purple);
+    background: var(--purple-soft);
+    margin: 10pt 0;
+    padding: 6pt 12pt;
+    color: var(--ink);
+    font-style: italic;
+    page-break-inside: avoid;
+  }
+
+  blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 18pt 0;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0 14pt 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+
+  thead th {
+    background: var(--maroon);
+    color: #FFFFFF;
+    font-family: "Helvetica Neue", "Inter", "Arial", sans-serif;
+    font-weight: 600;
+    text-align: left;
+    padding: 6pt 8pt;
+    border: 1px solid var(--maroon);
+    font-size: 9pt;
+    letter-spacing: 0.01em;
+  }
+
+  tbody td {
+    padding: 5pt 8pt;
+    border: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--maroon-soft);
+  }
+
+  tbody td strong {
+    color: var(--purple);
+  }
+
+  /* Specific layout: keep section heading with first paragraph */
+  h2 + p, h2 + ul, h2 + ol, h2 + table {
+    page-break-before: avoid;
+  }
+  h3 + p, h3 + ul, h3 + ol, h3 + table {
+    page-break-before: avoid;
+  }
+
+  /* Cover-page-ish flourish for the first H1 area */
+  .doc > h1:first-child + p,
+  .doc > h1:first-child + p + p {
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+<h1>Writer&#39;s Cube — Investor Brief</h1>
+<p><strong>Prepared:</strong> 2026-05-11
+<strong>Founder:</strong> Elisa Penmar
+<strong>Stage:</strong> Pre-seed / pre-build
+<strong>Funding sought:</strong> $75,000 – $150,000 (see §13)</p>
+<blockquote>
+<p><em>You think you have writer&#39;s block? Think again — now you&#39;ve got Writer&#39;s Cube.</em></p>
+</blockquote>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>Writer&#39;s Cube is a creative-writing-first software environment that combines the structural rigor of Scrivener, the flexibility of Coda, and the collaborative feel of Google Docs — while adding three things none of them offer: <strong>branching narrative drafting</strong>, <strong>customizable physical-feeling writing environments</strong>, and <strong>AI agents tuned to the user&#39;s voice and values</strong>.</p>
+<p>The product is positioned to capture the creative-writing market first (the most passionate and underserved buyer segment), then extend horizontally to screenwriters, narrative game designers, academic writers, and instructional designers — audiences already served at launch via templates and tier-specific onboarding.</p>
+<p><strong>Why now.</strong> Creative-writing tools have stagnated for a decade. Scrivener (the incumbent) is showing its age. The new wave of AI writing tools (Sudowrite, Novelcrafter) are AI-first instead of writing-first, alienating literary writers. There is a clear market gap for a tool that respects the craft <em>and</em> uses AI thoughtfully. AI capability has finally crossed the threshold where a context-aware project assistant is genuinely useful — and writers are starting to demand it on their own terms.</p>
+<p><strong>Financial outline — in plain language:</strong></p>
+<ul>
+<li>For every $1 of revenue, we expect to keep roughly <strong>80¢</strong> in gross profit — because in V1 our users supply their own AI subscriptions, so Writer&#39;s Cube doesn&#39;t pay AI bills out of our margin.</li>
+<li><strong>Conservative revenue projection:</strong> about <strong>$280,000/year</strong> by the end of year 2, and about <strong>$700,000/year</strong> by the end of year 3.</li>
+<li>A <strong>two-person operating model</strong> keeps overhead low for the first two years; the first additional hire is a part-time customer-support contractor in year 2.</li>
+<li>Most of the initial funding is spent on three things: <strong>visual design and the immersive writing environment</strong> (the awe moment), <strong>AI integration work</strong>, and <strong>launch marketing.</strong></li>
+</ul>
+<hr>
+<h2>2. The Opportunity</h2>
+<h3>The market</h3>
+<p>Creative writing tools are a small but durable global market with passionate, paying users.</p>
+<ul>
+<li><strong>Scrivener</strong> has sold an estimated 2M+ licenses since 2007 at $59 each — a single feature-light product captured roughly $100M+ in lifetime revenue.</li>
+<li><strong>NaNoWriMo</strong> (National Novel Writing Month) historically attracted 400k+ participants annually before pandemic and recent organizational difficulties — a clear pool of motivated, software-purchasing writers now actively looking for alternatives.</li>
+<li><strong>Sudowrite</strong> (AI fiction writing) reportedly hit ~$3M ARR within ~2 years of launch at $19–59/mo.</li>
+<li><strong>Self-publishing market</strong> continues to grow; Bowker&#39;s ISBN data shows &gt;2M self-published titles per year in the US alone, each requiring a drafting tool.</li>
+<li>Adjacent verticals (screenwriting, narrative game design, academic writing, instructional design) collectively represent another 5M+ professional users globally.</li>
+</ul>
+<p>We are not chasing a billion-dollar VC outcome. We are chasing a defensible, profitable, beloved indie-SaaS business in the $3–20M ARR range with a clear path beyond if vertical expansion succeeds.</p>
+<h3>Why the gap is real</h3>
+<p>Every existing tool forces a trade-off the user shouldn&#39;t have to make:</p>
+<table>
+<thead>
+<tr>
+<th>If you want…</th>
+<th>You give up…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Structural drafting (Scrivener)</td>
+<td>Modern UX, real collaboration, AI</td>
+</tr>
+<tr>
+<td>Real-time collaboration (Google Docs)</td>
+<td>Project structure, creative scaffolding</td>
+</tr>
+<tr>
+<td>AI assistance (Sudowrite, Novelcrafter)</td>
+<td>Craft-respecting design, customization</td>
+</tr>
+<tr>
+<td>Branching scenarios (Twine, Plottr)</td>
+<td>A drafting experience, prose tools</td>
+</tr>
+<tr>
+<td>Beauty and atmosphere (iA Writer, Ulysses)</td>
+<td>Project structure, AI</td>
+</tr>
+</tbody></table>
+<p>Writer&#39;s Cube collapses these trade-offs into one product.</p>
+<hr>
+<h2>3. The Problem</h2>
+<p>Writers — across every tier of our market — share the same set of frictions:</p>
+<ol>
+<li><strong>Tool sprawl.</strong> Drafting in Word, outlining in Notion, research in browser tabs, notes in Apple Notes, plot diagrams in Miro, beta-reader feedback in Google Docs. Nothing connects.</li>
+<li><strong>Tooling drains creative energy.</strong> The act of <em>managing the project</em> steals time and attention from the act of writing.</li>
+<li><strong>Decision paralysis kills momentum.</strong> &quot;What if the story went this way instead?&quot; becomes a productivity black hole because there&#39;s nowhere to safely explore the alternate path.</li>
+<li><strong>Losing the thread.</strong> In a long project, writers lose track of their own characters, timelines, and continuity. They reread their own work just to remember it.</li>
+<li><strong>AI feels invasive.</strong> Existing AI tools either rewrite the user&#39;s voice into something generic or feel like cheating. Most writers want a collaborator, not a ghostwriter.</li>
+<li><strong>The space doesn&#39;t inspire.</strong> A blinking cursor on a white rectangle is not what makes someone want to write. The physical writers&#39; rooms of history — Hemingway&#39;s Cuba study, Roald Dahl&#39;s writing hut, Maya Angelou&#39;s hotel rooms — were carefully crafted for a reason.</li>
+</ol>
+<p>Writer&#39;s Cube addresses all six.</p>
+<hr>
+<h2>4. The Product</h2>
+<h3>The four signature concepts</h3>
+<p><strong>1. Branching narratives (the cube).</strong> Highlight any passage and &quot;branch&quot; it. The text opens into an in-line flow-chart view where you can write the alternate path, then return to either branch with full context preserved. This is the namesake feature and the most ownable concept in the product. Nothing else on the market does this inside a prose drafting environment.</p>
+<p><strong>2. Customizable physical-feeling environments.</strong> A vintage writer&#39;s desk with paper notes, a futuristic studio, and over time a library of artist-crafted environments. Objects on the desk are draggable. Lighting and ambient sound shift with the mood of the scene. This is what creates the awe moment in the first 90 seconds — and what photographs beautifully for social media.</p>
+<p><strong>3. Highlight-to-actionable-tag.</strong> Highlight any passage and tag it with a preset action: &quot;look up later,&quot; &quot;revise this,&quot; &quot;weak dialogue,&quot; &quot;fact-check.&quot; The tagged passages are pulled into a focused micro-todo list so revision becomes a series of small, conquerable tasks instead of one overwhelming reread.</p>
+<p><strong>4. Story Bible AI agent.</strong> As the user writes, an AI agent automatically extracts characters, places, timeline, relationships, and event logs into the project&#39;s navigation pane. The user can ask it questions in plain language: <em>&quot;Did Sarah ever meet Marcus?&quot;</em> <em>&quot;What did the locket look like in chapter 3?&quot;</em> This is the highest-ROI AI feature because it solves the universal pain of &quot;I lost track of my own story&quot; — and it gets more valuable the more the user writes.</p>
+<h3>Foundational features in V1</h3>
+<ul>
+<li>Cloud + local storage linking at first run (Google Drive, hard drive, or both)</li>
+<li>Auto-save with version history and side-by-side compare</li>
+<li>Rich text editing, dictionary/thesaurus, dictation-ready spell check, word count</li>
+<li>Typewriter mode (no edits, no spell check — momentum mode)</li>
+<li>Project templates by audience tier (see §6)</li>
+<li>Shareable comment access for non-subscribers (beta readers, agents, professors)</li>
+<li>Onboarding walkthrough and contextual help</li>
+<li><strong>Guided AI Setup Wizard</strong> — walks users through obtaining an Anthropic or OpenAI API key (the kind they likely don&#39;t have yet), connecting it to Writer&#39;s Cube, running a test request, and shows a <strong>personalized monthly cost estimate</strong> based on their projected writing volume. This is its own designed product surface, not an afterthought, because most writers do not know the difference between a consumer AI subscription and an API key — and the wizard&#39;s quality directly affects activation and trust.</li>
+<li>Export: DOCX, PDF, Markdown, plain text</li>
+<li>Explicit, contractual privacy stance: <strong>user text is never used to train AI</strong> (see §12 for the mechanism, §10 for how this becomes a marketing pillar)</li>
+</ul>
+<h3>What&#39;s coming after launch</h3>
+<p>V1.5 (3–6 months) adds the second immersive environment, customizable widgets, daily goals, and expanded templates. V2.0 (9–12 months) adds AI personas (research assistant, thought partner), character interview mode, and hosted AI tier. V2.5 (12–18 months) adds speech-to-text, TTS playback with synchronized highlighting, and AI voice generation. V3.0 (18–24 months) adds mobile capture, desktop wrapper, advanced analytics (pacing heatmap, emotional arc), beta-reader branch voting, <strong>SCORM export for instructional designers</strong>, and the 3D Cube View. Full roadmap available in the executive document.</p>
+<hr>
+<h2>5. Competitive Position</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Writer&#39;s Cube</th>
+<th>Scrivener</th>
+<th>Sudowrite</th>
+<th>Novelcrafter</th>
+<th>Google Docs</th>
+<th>Notion</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Creative-writing-native UX</td>
+<td>✅</td>
+<td>✅</td>
+<td>◐</td>
+<td>✅</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Branching narratives in prose</td>
+<td><strong>✅ unique</strong></td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Immersive environments</td>
+<td><strong>✅ unique</strong></td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Story Bible AI agent</td>
+<td><strong>✅ unique</strong></td>
+<td>✗</td>
+<td>◐</td>
+<td>◐</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Highlight-to-tag system</td>
+<td>✅</td>
+<td>◐</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Real-time collaboration</td>
+<td>✅ (V2.0)</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Cloud + local storage choice</td>
+<td>✅</td>
+<td>◐</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Modern UX</td>
+<td>✅</td>
+<td>✗</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Privacy: no AI training on user text</td>
+<td>✅</td>
+<td>n/a</td>
+<td>◐</td>
+<td>◐</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Multi-audience templates</td>
+<td>✅</td>
+<td>◐</td>
+<td>✗</td>
+<td>✗</td>
+<td>✗</td>
+<td>◐</td>
+</tr>
+</tbody></table>
+<p>Defensibility comes from <strong>the combination</strong>, not any single feature. Branching is hard to copy without rebuilding the editor. Story Bible needs the structured data model to work well. Environments need real design investment. A larger competitor would take 12–18 months to ship a credible imitation — by which time Writer&#39;s Cube has captured the cultural moment.</p>
+<hr>
+<h2>6. Audience Strategy</h2>
+<p>We launch addressing <strong>three tiers from day one</strong>, with templates and onboarding paths tuned to each. Features remain creative-writer-centered; tier templates simply lower the activation barrier for adjacent audiences.</p>
+<h3>Tier 1 — Creative writers (primary, marketing focus)</h3>
+<ul>
+<li>Novelists, short-story writers, memoirists, poets</li>
+<li>Templates: three-act, save the cat, hero&#39;s journey, short story arc, poetry collection</li>
+<li>This is where every feature is designed to feel most native</li>
+</ul>
+<h3>Tier 2 — Adjacent creative writers (organic capture)</h3>
+<ul>
+<li>Screenwriters, playwrights, narrative game designers, comic/graphic-novel writers</li>
+<li>Templates: feature screenplay, hour-long teleplay, stage play, branching game narrative, comic script</li>
+<li>Branching is a major draw for game writers in particular</li>
+</ul>
+<h3>Tier 3 — Structured writers (expansion)</h3>
+<ul>
+<li>Academic writers, instructional designers, journalists, longform nonfiction</li>
+<li>Templates: research article, thesis/dissertation chapter, lit review, ID storyboard, longform investigative piece</li>
+<li>V3.0 unlocks SCORM export for ID&#39;s — converting branching narratives into Canvas/Brightspace-ready interactive lessons via AI. This is a serious B2B opening with universities and corporate L&amp;D buyers.</li>
+</ul>
+<p><strong>Why all three from launch:</strong> broader templates = broader social media surface area, broader word-of-mouth, and validation across multiple buyer profiles before pricing decisions are locked. The cost of including additional templates is small relative to the marketing leverage gained.</p>
+<hr>
+<h2>7. Business Model &amp; Pricing</h2>
+<p>Two viable pricing structures, each with trade-offs:</p>
+<h3>Option A — Freemium + two paid tiers (recommended)</h3>
+<table>
+<thead>
+<tr>
+<th>Plan</th>
+<th>Price</th>
+<th>Includes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Free</strong></td>
+<td>$0</td>
+<td>1 project, basic editor, 1 environment, no branching, no AI, watermarked exports</td>
+</tr>
+<tr>
+<td><strong>Writer</strong></td>
+<td><strong>$12/mo</strong> or <strong>$108/yr</strong> ($9/mo equivalent)</td>
+<td>Unlimited projects, branching, all environments, BYO AI key, full exports, beta-reader sharing</td>
+</tr>
+<tr>
+<td><strong>Studio</strong></td>
+<td><strong>$24/mo</strong> or <strong>$216/yr</strong> ($18/mo equivalent)</td>
+<td>Everything in Writer + hosted AI (no BYO key needed) + priority support + early access to new environments</td>
+</tr>
+</tbody></table>
+<p><strong>Pros:</strong> Free tier drives discovery and word-of-mouth. Two paid tiers cleanly separate price-sensitive solo writers from professionals who want everything included. Annual discount drives cash up front (helpful for runway). BYO key option keeps margin clean.</p>
+<p><strong>Cons:</strong> Free tier costs us small infrastructure overhead per user. Risk that the free tier is &quot;good enough&quot; — must be carefully designed to inspire upgrade without feeling crippled.</p>
+<h3>Option B — Trial + single tier + lifetime</h3>
+<table>
+<thead>
+<tr>
+<th>Plan</th>
+<th>Price</th>
+<th>Includes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Trial</strong></td>
+<td>$0 for 30 days</td>
+<td>Full product</td>
+</tr>
+<tr>
+<td><strong>Writer&#39;s Cube</strong></td>
+<td><strong>$15/mo</strong> or <strong>$144/yr</strong> ($12/mo equivalent)</td>
+<td>Everything, BYO AI key</td>
+</tr>
+<tr>
+<td><strong>Lifetime</strong></td>
+<td><strong>$399</strong> one-time</td>
+<td>Everything forever, founding-member badge</td>
+</tr>
+</tbody></table>
+<p><strong>Pros:</strong> Simpler messaging. Lifetime tier funds development from day one (Scrivener-style). No free-tier abuse risk.</p>
+<p><strong>Cons:</strong> No free tier means no viral surface for discovery. Lifetime tier caps recurring revenue from your most enthusiastic users. Harder to grow community.</p>
+<h3>Recommendation</h3>
+<p><strong>Option A</strong> for long-term value, with a <strong>time-limited &quot;founding member&quot; lifetime offer</strong> (e.g., $299 for first 500 customers) to fund the build. This blends the best of both: viral discovery + upfront capital.</p>
+<hr>
+<h2>8. Brand &amp; Design Investment</h2>
+<p>Visuals are not a polish task; they are <strong>the product</strong>. The promise of &quot;awe and wonder&quot; cannot be delivered with the generic productivity-app design language most SaaS tools default to — flat gray panels, stock illustrations, and dashboard tables. The <em>technology</em> delivery (web browser, see §9) is fully capable of cinematic, atmospheric design — Linear, Arc, and Apple&#39;s marketing surfaces are all web-based. What we are committing to is the <em>design investment</em> that lets the web platform produce something that feels handcrafted rather than templated.</p>
+<p>Recommended investment areas for V1 brand &amp; design:</p>
+<table>
+<thead>
+<tr>
+<th>Investment</th>
+<th>Estimated cost</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Brand identity (logo, type, color, voice)</td>
+<td>$4,000 – $8,000</td>
+<td>Cohesion across product, marketing, social</td>
+</tr>
+<tr>
+<td><strong>Vintage Writer&#39;s Desk environment</strong> (3D / illustrated art direction + asset library)</td>
+<td><strong>$10,000 – $20,000</strong></td>
+<td>The signature awe moment. Worth professional artist treatment.</td>
+</tr>
+<tr>
+<td>Onboarding cinematic / launch film (60–90s)</td>
+<td>$3,000 – $8,000</td>
+<td>Social media currency; press hooks; investor proof</td>
+</tr>
+<tr>
+<td>UI/UX design system</td>
+<td>$3,000 – $6,000</td>
+<td>Reusable across all future surfaces</td>
+</tr>
+<tr>
+<td>Marketing site + visual assets</td>
+<td>$2,000 – $5,000</td>
+<td>Conversion-critical</td>
+</tr>
+<tr>
+<td><strong>Total brand/design V1</strong></td>
+<td><strong>$22,000 – $47,000</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>This is the single biggest line item in the use-of-funds — intentionally. The product is built on the premise that <em>the space inspires the writer.</em> Cheap visuals undermine the entire thesis. We recommend hiring one strong illustrator or 3D artist (contract) and one strong brand/UX designer (contract), with founder providing creative direction.</p>
+<p>For social media, every environment doubles as content. The Vintage Desk environment alone can produce months of evocative posts before any writer-customer content exists.</p>
+<h3>Timing of the visual investment</h3>
+<p><strong>Production work on the visuals does not begin in month 1.</strong> The founder&#39;s V0.5 prioritizes the writing surface and AI agents (the Story Bible) so she can begin drafting her novel immediately — visuals don&#39;t help her finish a novel; the AI helps her finish a novel. The visual production schedule is:</p>
+<table>
+<thead>
+<tr>
+<th>Month</th>
+<th>Visual activity</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1–2</td>
+<td>Identify and have introductory conversations with brand designers and illustrators; cultivate relationships, no production yet</td>
+</tr>
+<tr>
+<td>3–5</td>
+<td>Founder drafts in V0.5/V0.7 with unbranded, default UI; brand direction informed by lived experience</td>
+</tr>
+<tr>
+<td>6–7</td>
+<td>Brand identity (logo, type, color, voice) shipped — V0.9 closed beta launches with cohesive brand basics</td>
+</tr>
+<tr>
+<td>7–9</td>
+<td>Vintage Writer&#39;s Desk environment produced — closed beta sees the signature environment for the first time</td>
+</tr>
+<tr>
+<td>9–10</td>
+<td>Launch film, marketing site, final polish — V1.0 public launch with full visual identity</td>
+</tr>
+</tbody></table>
+<p><strong>Risk to manage:</strong> &quot;Deferred&quot; must not become &quot;skipped.&quot; Visual work landing in months 6–9 is on a tighter calendar than originally scoped (was months 1–6). The investor relationship and a written internal milestone for &quot;visual production start&quot; in month 5 mitigate this risk.</p>
+<hr>
+<h2>9. Platforms &amp; Infrastructure</h2>
+<h3>Decision: web app first, desktop wrapper at V3.0, mobile companion at V3.0</h3>
+<p>Three product surface options were considered:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Browser-based web app</th>
+<th>Desktop app (Tauri/Electron)</th>
+<th>Native mobile</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>User experience</td>
+<td>Familiar, accessible from any device, instant access via link</td>
+<td>Feels native, integrates with filesystem and notifications, perceived as &quot;serious tool&quot; by writers</td>
+<td>Best for capture-on-the-go; constrained for drafting</td>
+</tr>
+<tr>
+<td>Offline behavior</td>
+<td>Limited (PWA can help, real offline needs work)</td>
+<td>True offline (local-first DB)</td>
+<td>Native offline</td>
+</tr>
+<tr>
+<td>Update velocity</td>
+<td>Instant — push and everyone has new version</td>
+<td>Slower — users update on their schedule</td>
+<td>Slowest — app store review cycles</td>
+</tr>
+<tr>
+<td>Cross-platform reach</td>
+<td>All OSes immediately</td>
+<td>Mac/Windows/Linux from one Tauri codebase</td>
+<td>iOS + Android each need work</td>
+</tr>
+<tr>
+<td>Dev cost</td>
+<td>Lowest — single codebase, single deploy</td>
+<td>Adds packaging, signing, auto-update infra</td>
+<td>Significant — separate UI for small screens</td>
+</tr>
+<tr>
+<td>Discoverability</td>
+<td>Best — SEO, shareable URLs, web ads</td>
+<td>App store presence (limited for productivity)</td>
+<td>App store presence</td>
+</tr>
+<tr>
+<td><strong>Best for</strong></td>
+<td><strong>Drafting + sharing + onboarding</strong></td>
+<td><strong>Daily writing sessions, &quot;real app&quot; feel</strong></td>
+<td><strong>Capture, light editing, voice notes</strong></td>
+</tr>
+</tbody></table>
+<p><strong>Recommended sequence:</strong></p>
+<ol>
+<li><strong>V1.0 — Web app</strong> built on Next.js. Single codebase, fast iteration, broad reach, easy sharing of beta-reader links. PWA-enabled for installable feel.</li>
+<li><strong>V3.0 — Tauri desktop wrapper</strong> of the same web app. Lightweight (Tauri uses the OS&#39;s native webview, far smaller than Electron). Adds offline-first sync, OS notifications, dock integration, filesystem access.</li>
+<li><strong>V3.0 — Mobile companion</strong> as a separate, narrow-scope app focused on capture (voice notes, jot ideas, read drafts on the go). Not a full editor.</li>
+</ol>
+<p>This sequence minimizes early dev cost while keeping the door open to every form factor writers expect.</p>
+<h3>Recommended stack &amp; monthly costs</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Platform</th>
+<th>Stage 1 (solo)</th>
+<th>Stage 2 (beta)</th>
+<th>Stage 3 (growth)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>AI development partner</strong></td>
+<td><strong>Claude Max 20x</strong></td>
+<td><strong>$200</strong></td>
+<td><strong>$200</strong></td>
+<td><strong>$200</strong></td>
+</tr>
+<tr>
+<td>Frontend hosting</td>
+<td>Vercel</td>
+<td>Free</td>
+<td>$20</td>
+<td>$50–200</td>
+</tr>
+<tr>
+<td>DB + auth + storage</td>
+<td>Supabase</td>
+<td>Free</td>
+<td>$25</td>
+<td>$50–150</td>
+</tr>
+<tr>
+<td>Object storage (media)</td>
+<td>Cloudflare R2</td>
+<td>$0</td>
+<td>$0–10</td>
+<td>$10–80</td>
+</tr>
+<tr>
+<td>Code &amp; CI</td>
+<td>GitHub</td>
+<td>Free</td>
+<td>Free</td>
+<td>$4–20</td>
+</tr>
+<tr>
+<td>Error tracking</td>
+<td>Sentry</td>
+<td>Free</td>
+<td>$26</td>
+<td>$80</td>
+</tr>
+<tr>
+<td>Product analytics</td>
+<td>PostHog</td>
+<td>Free</td>
+<td>Free</td>
+<td>$50–100</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Resend</td>
+<td>Free</td>
+<td>$20</td>
+<td>$30–80</td>
+</tr>
+<tr>
+<td>Payments</td>
+<td>Stripe</td>
+<td>per-tx</td>
+<td>per-tx</td>
+<td>per-tx</td>
+</tr>
+<tr>
+<td>DNS / CDN</td>
+<td>Cloudflare</td>
+<td>Free</td>
+<td>Free</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Domain (amortized)</td>
+<td><code>writerscube.app</code></td>
+<td>~$1</td>
+<td>~$1</td>
+<td>~$1</td>
+</tr>
+<tr>
+<td><strong>Founder&#39;s in-product AI key</strong> (Anthropic, <strong>V0.5+</strong>)</td>
+<td>BYO API key — founder dogfooding the Story Bible + ask-AI features from day one</td>
+<td>$5–15</td>
+<td>$5–15</td>
+<td>$5–20</td>
+</tr>
+<tr>
+<td><strong>Company-paid API costs</strong> (V2.0 Studio hosted-AI tier only)</td>
+<td>Anthropic API w/ Zero Data Retention</td>
+<td>$0</td>
+<td>$0</td>
+<td>$0–50 (until V2.0)</td>
+</tr>
+<tr>
+<td><strong>Subtotal</strong></td>
+<td></td>
+<td><strong>~$210–230/mo</strong></td>
+<td><strong>~$305–340/mo</strong></td>
+<td><strong>~$510–970/mo</strong></td>
+</tr>
+</tbody></table>
+<p><strong>Domain strategy.</strong> The premium <code>.com</code> (writerscube.com) is held by a domain reseller at a ~$6,500 asking price and is <strong>deliberately deferred</strong>. For V0.5 and V0.7 we use Vercel preview URLs (no domain required). At V0.9 we launch on <strong><code>writerscube.app</code></strong> at <del>$15/year — a modern, HTTPS-mandatory TLD already used by tools like Linear and Cash App, with zero stigma for a 2026 launch. We also defensively register <code>writerscube.io</code> (</del>$40/year) to prevent confusable-URL camping. If, post-launch, the <code>.com</code> becomes strategically valuable, the reseller can be approached with a low offer through their broker — but only with revenue justification, not pre-emptively. <strong>One-time domain spend year 1: ~$60.</strong></p>
+<p><strong>Note on AI costs.</strong> Two categories must be distinguished:</p>
+<ul>
+<li><strong>AI for development</strong> — the Claude Max 20x subscription above ($200/mo, fixed) powers Claude Code and the founder&#39;s day-to-day engineering and design work. This is the dev-side AI cost and stays flat regardless of user growth.</li>
+<li><strong>AI inside the product</strong> — V1 uses BYO API key, so users pay Anthropic/OpenAI directly for their Story Bible agent and chat features. Writer&#39;s Cube absorbs no user-side AI cost until the Studio (hosted-AI) tier ships in V2.0, at which point it scales with paying Studio users.</li>
+</ul>
+<p>This dual approach is the key reason Writer&#39;s Cube&#39;s unit economics stay clean even as the product gets more AI-heavy.</p>
+<h3>Storage architecture</h3>
+<p>User text and structured metadata live in our database (small). Generated media (audio, images, version snapshots) live in object storage. Crucially, users link <strong>Google Drive and/or local storage at first run</strong> — meaning the heavy backup burden is on the user&#39;s own storage, not ours. This keeps our storage liability bounded and gives writers absolute confidence that they own their work.</p>
+<hr>
+<h2>10. Go-to-Market &amp; Marketing Strategy</h2>
+<p>The product must launch addressing all three audience tiers, but <strong>marketing is creative-writer-led</strong>. Creative writers are the most vocal, social-media-active, and community-driven of the three tiers. Adjacent audiences will find us through that gravity well.</p>
+<h3>Privacy as a marketing pillar</h3>
+<p>Writers are paranoid about AI training on their unfinished work — and they&#39;re right to be. The recent news cycle alone (the <em>New York Times v. OpenAI</em> lawsuit, the Books3 dataset controversy, the Wattpad scraping accusations, the AI fiction discourse on BookTok) has primed writers to ask one question of every new tool: <strong>&quot;Will my draft train your AI?&quot;</strong> The honest, structural answer to that question is one of our strongest competitive differentiators — and it should be in the headline of the marketing site, not a footnote.</p>
+<p><strong>Headline messaging:</strong></p>
+<ul>
+<li><em>&quot;Your draft never trains anyone&#39;s AI. Contractually guaranteed.&quot;</em></li>
+<li><em>&quot;Bring your own AI — your contract, your terms, your privacy.&quot;</em></li>
+<li><em>&quot;We&#39;re not building a corpus. We&#39;re building a writing tool.&quot;</em></li>
+</ul>
+<p><strong>The educational moment.</strong> Most writers don&#39;t know the difference between a consumer AI subscription (ChatGPT.com, Claude.ai) and an API key — and that distinction is <em>the</em> mechanism that makes our privacy claim real. Marketing leans into this gap as an asset, not a hurdle:</p>
+<ul>
+<li><strong>Blog post / launch essay</strong>: &quot;Why we ask you to bring your own AI key — and how we use less of your data than any other writing app.&quot; Plain-English explanation. Shows the actual Anthropic/OpenAI contract language. Links to a Guided AI Setup Wizard preview.</li>
+<li><strong>&quot;You&#39;ll pay ~$5/month directly to Anthropic&quot; framing</strong>: turns the BYO-key requirement from a hurdle into a transparency story. Sudowrite is $19/mo with markup on AI; Writer&#39;s Cube is $12/mo + ~$5 you pay directly to your provider. Cheaper <em>and</em> more private.</li>
+<li><strong>Public &quot;Privacy Promise&quot; page</strong> at launch — readable in 2 minutes, written in plain English, links to the actual provider contracts and our own ToS commitment. No legalese, no hedging.</li>
+</ul>
+<p><strong>Differentiation by tier.</strong> The two paid tiers carry slightly different privacy stories:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Privacy story</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Writer ($12/mo, BYO key)</strong></td>
+<td><em>&quot;Your AI relationship is yours. Writer&#39;s Cube never stores your text. Your contract with your AI provider governs your data — and their API terms prohibit training on it.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>Studio ($24/mo, hosted AI)</strong></td>
+<td><em>&quot;We&#39;ve signed the strictest privacy contracts in the industry — Zero Data Retention agreements — on your behalf. We could not train on your text even if we wanted to. We audit this annually.&quot;</em></td>
+</tr>
+</tbody></table>
+<p><strong>This is also a community marketing engine.</strong> Writers tell other writers when they find a tool that respects them. The privacy story is highly shareable on BookTok, writing Substacks, MFA mailing lists, and Reddit — communities where AI-skepticism already runs hot. We give those communities something concrete to point to.</p>
+<h3>Pre-launch (months -3 to 0)</h3>
+<ul>
+<li><strong>&quot;Behind the cube&quot; content series</strong> on Instagram and TikTok: timelapses of the Vintage Desk environment being built. The visuals do the marketing.</li>
+<li><strong>Founder narrative on LinkedIn / writing newsletters</strong>: Elisa as the instructional designer who wanted a better way to write. Authenticity &gt; spin.</li>
+<li><strong>Email list with manuscript-prompt freebies</strong>: weekly prompts tied to product-tier templates (novel, screenplay, dissertation chapter).</li>
+<li><strong>Beta program</strong>: 100–200 hand-picked writers across all three tiers, with named-author testimonials at launch.</li>
+<li><strong>Cultivate 3–5 author influencers</strong> with 10k–100k followers each on BookTok or writing Substack. Free Studio tier in exchange for honest documentation of their drafting process.</li>
+</ul>
+<h3>Launch (month 0)</h3>
+<ul>
+<li><strong>Launch film</strong>: 60–90 second cinematic of the Vintage Desk + branching feature + Story Bible AI agent. Optimized for TikTok, Instagram Reels, YouTube Shorts.</li>
+<li><strong>Product Hunt launch</strong> with launch-day live thread by founder.</li>
+<li><strong>Press outreach</strong> to: The Verge (modern app design angle), Lifehacker, MakeUseOf, The Bookseller, Writer&#39;s Digest, Poets &amp; Writers.</li>
+<li><strong>Reddit AMA</strong> on r/writing, r/screenwriting, r/worldbuilding.</li>
+<li><strong>Founding Member lifetime offer</strong> (first 500 users at $299) drives urgency and funds growth.</li>
+</ul>
+<h3>Sustained growth (months 1–12)</h3>
+<ul>
+<li><strong>NaNoWriMo or successor event</strong> (organizational situation evolving — track and partner with whatever community absorbs the energy): bundled discount, themed templates.</li>
+<li><strong>MFA program partnerships</strong>: free Studio tier for current MFA students. Investment in long-term loyalty.</li>
+<li><strong>Author podcast tour</strong>: Helping Writers Become Authors, Writing Excuses, The Shit No One Tells You About Writing, Story Grid.</li>
+<li><strong>Branch voting on TikTok/BookTok</strong>: enable beta readers to publicly vote on story branches. This is the social-media-native viral mechanic; design for shareability.</li>
+<li><strong>Subreddit cultivation</strong>: r/writing, r/fantasywriters, r/screenwriting, r/INAT (game devs), r/instructionaldesign — light presence, useful answers, no spam.</li>
+<li><strong>Affiliate program</strong>: 30% recurring commission for the first year on referrals. Authors love a small income stream.</li>
+</ul>
+<h3>Audience-tier expansion (months 6+)</h3>
+<ul>
+<li><strong>Screenwriting / game writing</strong>: targeted ads on screenwriting subreddits, sponsored content on Save the Cat / Story Mastermind, Narrascope conference presence.</li>
+<li><strong>Academic / ID</strong>: AECT, Educause presence. Conference sponsorship is expensive — start with one or two university pilots, publish the case studies, let them speak for themselves.</li>
+</ul>
+<h3>Marketing budget recommendation</h3>
+<ul>
+<li><strong>V1 launch period (months -3 to 3)</strong>: $15,000–$25,000 (founding-member offer revenue offsets this materially)</li>
+<li><strong>Year 1 sustained</strong>: $30,000–$60,000</li>
+</ul>
+<p>Most of this is content production and influencer partnerships, not paid acquisition. Writer&#39;s Cube is a brand-led product; paid ads are supplementary.</p>
+<hr>
+<h2>11. Team &amp; Operating Model</h2>
+<h3>Current team</h3>
+<ul>
+<li><strong>Elisa Penmar</strong> — founder. Product vision, design direction, brand voice, user research, content (templates, prompts), business operations. Career background in instructional design lends direct credibility to the audience-tier expansion into ID and academic verticals. Writer&#39;s Cube is built on independent tooling and infrastructure (see §12), with all IP owned by the founder/entity.</li>
+<li><strong>AI development partners</strong> — engineering execution under founder direction via a dedicated Claude Max 20x subscription and Claude Code. This is a real, sustained productivity multiplier when scoped well, and is the operational backbone of a two-person development model.</li>
+</ul>
+<h3>Adding one more person</h3>
+<p>If a second person joins (likely also an investor), how responsibilities split depends entirely on their skills:</p>
+<p><strong>Scenario A — Technical co-founder.</strong> They take backend, infrastructure, AI integration, payments, security. Elisa retains product direction, brand, marketing, community, content. AI partners do frontend implementation under joint direction. <strong>Best for:</strong> fastest time-to-launch, healthiest long-term code quality.</p>
+<p><strong>Scenario B — Business/marketing co-founder.</strong> They take marketing, community, partnerships, customer support, business ops. Elisa retains product direction + works with AI partners on engineering. <strong>Best for:</strong> stronger launch and community traction, but the founder becomes the technical bottleneck.</p>
+<p><strong>Scenario C — Designer/illustrator co-founder.</strong> They take visual direction, immersive environments, brand. Elisa retains product + marketing + AI-driven engineering. <strong>Best for:</strong> maximizing the awe-and-wonder differentiator. Probably the highest leverage if the right person exists.</p>
+<h3>Triage guidance for two-person + AI</h3>
+<p>Regardless of scenario:</p>
+<ol>
+<li><strong>The founder is the only person doing user research.</strong> Direct contact with writers cannot be delegated to an AI or a co-founder; it shapes every other decision.</li>
+<li><strong>AI does scaffolding, refactoring, testing, documentation, and bounded feature work.</strong> It does not make product decisions or speak to users.</li>
+<li><strong>One person owns each surface end-to-end.</strong> Avoid shared ownership of any single surface in a two-person company; it creates friction.</li>
+<li><strong>Weekly written status update from each human to the other.</strong> Async, dated, short. This is the cheapest possible coordination mechanism and the easiest to skip — don&#39;t.</li>
+<li><strong>Defer hiring until $20k MRR or runway falls below 4 months.</strong> Whichever comes first. The one exception is the first part-time customer support contractor — see §12 for the trigger metrics and timing.</li>
+</ol>
+<hr>
+<h2>12. Customer Service &amp; Operational Sustainability</h2>
+<p>A product that asks writers to trust it with their unfinished work must answer the trust question every single day after launch — not just at launch. This section covers the three pillars of staying alive and well-loved: <strong>direct customer support, ongoing product maintenance, and data stewardship.</strong></p>
+<h3>Why this matters more for Writer&#39;s Cube than for most SaaS</h3>
+<ul>
+<li>Writers are emotionally invested in their work. A lost paragraph is a small personal crisis, and how we respond defines our reputation.</li>
+<li>The product introduces non-obvious concepts (branching, AI-key setup, environment customization) that will generate education-style support tickets, not just bug reports.</li>
+<li>Many users in our adjacent and academic tiers will be non-technical. BYO-AI-key setup alone will be a meaningful support category.</li>
+<li>&quot;Trust&quot; is the core value proposition. Slow or impersonal support undoes the brand promise.</li>
+</ul>
+<h3>Customer support staffing curve</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Paid users</th>
+<th>Support load</th>
+<th>Who handles it</th>
+<th>Monthly cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Beta</td>
+<td>&lt;200</td>
+<td>1–3 hrs/day, mostly bug reports</td>
+<td>Founder (treat as user research)</td>
+<td>tools only</td>
+</tr>
+<tr>
+<td>Launch → 500 paid</td>
+<td>500</td>
+<td>5–10 hrs/week</td>
+<td>Founder + strong docs + AI-assisted triage</td>
+<td>tools only</td>
+</tr>
+<tr>
+<td>500–1,500 paid</td>
+<td>1,500</td>
+<td>15–25 hrs/week</td>
+<td><strong>Part-time support contractor / VA (10–20 hrs/wk)</strong>, founder owns escalations</td>
+<td>$1,500 – $3,000</td>
+</tr>
+<tr>
+<td>1,500–5,000 paid</td>
+<td>5,000</td>
+<td>full-time</td>
+<td><strong>First full-time Customer Experience hire</strong></td>
+<td>$5,000 – $8,000 (loaded)</td>
+</tr>
+<tr>
+<td>5,000–15,000 paid</td>
+<td>15,000</td>
+<td>full team</td>
+<td>2 FT support + part-time community manager</td>
+<td>$15,000 – $25,000</td>
+</tr>
+</tbody></table>
+<h3>Concrete hiring triggers</h3>
+<p><strong>Hire the first part-time support person when ANY of these is true:</strong></p>
+<ul>
+<li>Founder is spending more than <strong>10 hours/week</strong> on support</li>
+<li>Median first-response time exceeds <strong>24 hours</strong></li>
+<li>Open ticket backlog exceeds <strong>50</strong></li>
+<li>Paid user count crosses <strong>1,000</strong></li>
+</ul>
+<p><strong>Convert to a full-time Customer Experience hire when ANY of these is true:</strong></p>
+<ul>
+<li>Founder is spending more than <strong>25 hours/week</strong> on support</li>
+<li>Part-time contractor is at capacity</li>
+<li>Paid user count crosses <strong>2,500</strong></li>
+<li>NPS or CSAT is dropping and support delay is a named driver</li>
+</ul>
+<p>In our base-case financial scenario (§13), the first part-time hire lands around month <strong>14–18</strong> (mid-Year 2) and the first full-time hire around month <strong>28–34</strong> (late Year 3).</p>
+<h3>Support tooling stack</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+<th>Monthly cost (early stage)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Help Scout or Plain</td>
+<td>Shared inbox + ticketing</td>
+<td>$25 – $40</td>
+</tr>
+<tr>
+<td>GitBook or Notion</td>
+<td>Help center / public documentation</td>
+<td>$5 – $15</td>
+</tr>
+<tr>
+<td>Crisp or Intercom (starter)</td>
+<td>In-app chat + onboarding messages</td>
+<td>$25 – $100</td>
+</tr>
+<tr>
+<td>Loom</td>
+<td>Async video walkthroughs (huge time-saver)</td>
+<td>$15</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td><strong>~$70 – $170/mo at launch</strong></td>
+</tr>
+</tbody></table>
+<h3>Product maintenance — &quot;keep the lights on&quot;</h3>
+<p>Reserve <strong>15–20% of engineering effort</strong> for maintenance once V1 ships. This covers:</p>
+<ul>
+<li>Dependency upgrades and security patches</li>
+<li>Bug fixing from real-user reports</li>
+<li>Infrastructure tuning as user count grows</li>
+<li>Compatibility (new browser releases, new OS versions, new AI model versions)</li>
+</ul>
+<p>Because our development model leans heavily on AI partners, <strong>a dedicated Claude Max 20x subscription ($200/mo)</strong> is a permanent line item, not a build-phase one. This is the operational backbone of the two-person development model and is treated as fixed infrastructure on the same footing as Vercel or Supabase. Additional AI tooling (specialized models, evals, API credits) may add another $100–200/mo. At ~$500k ARR we recommend a <strong>paid security audit</strong> ($5,000–$15,000) and an updated privacy/compliance review.</p>
+<h3>Data stewardship — the trust commitment</h3>
+<p>This is the single operational promise that cannot be broken. Writers will leave instantly and loudly if their work is ever lost. Our architecture is designed for this:</p>
+<ul>
+<li><strong>Automated, redundant backups</strong> — Supabase Pro includes point-in-time recovery; we add cross-region replication at growth stage</li>
+<li><strong>User-sovereign storage by default</strong> — Google Drive + local-disk integration at first run means even a catastrophic infrastructure failure on our side does not lose user work</li>
+<li><strong>The &quot;death plan&quot;</strong> — published policy: if Writer&#39;s Cube ever shuts down, users receive 90 days&#39; notice and a one-click full export. Publish this in the Terms of Service from day one. Costs us nothing; buys enormous trust.</li>
+<li><strong>Public status page</strong> at launch (BetterStack or Statuspage, ~$30/mo) so transparency is built in, not reactive</li>
+</ul>
+<h3>How &quot;your text is never used to train AI&quot; is actually enforced</h3>
+<p>Three concrete mechanisms make this promise verifiable, not just aspirational:</p>
+<ol>
+<li><strong>API-tier contracts with AI providers.</strong> Anthropic&#39;s API Commercial Terms and OpenAI&#39;s API Data Usage Policy both contractually state that content sent through their <em>API endpoints</em> (not their consumer apps) is <strong>not used to train their models</strong> by default. When Writer&#39;s Cube routes a user&#39;s text through these providers, it&#39;s covered by those contracts.</li>
+<li><strong>The BYO-key model (V1) goes one step further.</strong> When a user supplies their own Anthropic or OpenAI API key, their text travels under <em>their own</em> account with the provider — Writer&#39;s Cube never sees it in long-term storage, and the no-training guarantee applies to the user&#39;s own contract with the provider.</li>
+<li><strong>The hosted-AI tier (V2.0 Studio) uses Zero Data Retention agreements.</strong> Both Anthropic and OpenAI offer enterprise-tier ZDR agreements that contractually prohibit any storage or training use. We commit to writing this into our own Terms of Service: <em>Writer&#39;s Cube does not log, retain, or use customer text for any model training — our own or any third party&#39;s.</em> If we ever violate that, users have legal recourse.</li>
+</ol>
+<p>This is verifiable, mechanical, and contractually backed — not a marketing promise.</p>
+<h3>Founder sustainability</h3>
+<p>For a two-person company, founder burnout is the largest single-point-of-failure risk and should be treated as an operational concern, not a soft one:</p>
+<ul>
+<li>The first part-time hire usually goes to support specifically to <strong>reclaim founder hours for product and user research</strong> — not because the founder can&#39;t handle the tickets</li>
+<li>Reserved non-working hours, scoped releases, and explicit annual time off are non-negotiable; investors should expect these in the operating plan</li>
+<li>Bookkeeping, basic legal admin, and marketing asset production are early candidates for outsourcing before any in-house hire</li>
+</ul>
+<h3>Total operational sustainability cost by year (base case)</h3>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Customer support</th>
+<th>Maintenance tooling</th>
+<th>Data stewardship</th>
+<th>Annual total</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Y1</td>
+<td>$1,500 (tools + occasional VA)</td>
+<td>$3,500</td>
+<td>$400 (status page, backup add-ons)</td>
+<td><strong>~$5,400</strong></td>
+</tr>
+<tr>
+<td>Y2</td>
+<td>$30,000 (~half-year part-time contractor + tools)</td>
+<td>$5,000</td>
+<td>$1,000</td>
+<td><strong>~$36,000</strong></td>
+</tr>
+<tr>
+<td>Y3</td>
+<td>$90,000 (mid-year FT CS hire, loaded)</td>
+<td>$8,000 + $10,000 security audit</td>
+<td>$2,000</td>
+<td><strong>~$110,000</strong></td>
+</tr>
+</tbody></table>
+<p>These costs are already implicit in the §13 operating-cost estimate but are now explicit so investors can see them.</p>
+<h3>V1 use-of-funds impact</h3>
+<p>Adding to the §14 budget: <strong>$2,000</strong> for documentation site setup, Year-1 prepaid support tooling, and initial help-content production. This is absorbed within the existing $10k contingency line, so <strong>the total ask does not change.</strong></p>
+<hr>
+<h2>13. Financial Projections &amp; ROI</h2>
+<h3>Assumptions (please verify all assumptions are credible before extrapolating from these numbers)</h3>
+<ul>
+<li>ARPU blended across tiers: <strong>$12/mo</strong> (mix of $0 free, $12/mo Writer, $24/mo Studio, ~10% annual prepay, ~5% Studio mix in early years)</li>
+<li>Free-to-paid conversion: <strong>5%</strong> of free signups</li>
+<li>Monthly churn: <strong>5%</strong> in year 1 dropping to <strong>3%</strong> by year 3 (typical for niche-loyal indie SaaS)</li>
+<li>Gross margin: <strong>82%</strong> (BYO AI key, modest hosted-AI costs only on Studio mix)</li>
+<li>CAC: <strong>$25 blended</strong> (mostly organic / content / influencer)</li>
+<li>LTV at year-3 churn: ~$400</li>
+</ul>
+<h3>Three scenarios</h3>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Conservative</th>
+<th>Base</th>
+<th>Optimistic</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td>(paid / ARR)</td>
+<td>(paid / ARR)</td>
+<td>(paid / ARR)</td>
+</tr>
+<tr>
+<td><strong>Y1</strong></td>
+<td>500 / $72k</td>
+<td>1,500 / $216k</td>
+<td>3,000 / $432k</td>
+</tr>
+<tr>
+<td><strong>Y2</strong></td>
+<td>2,000 / $288k</td>
+<td>6,000 / $864k</td>
+<td>15,000 / $2.16M</td>
+</tr>
+<tr>
+<td><strong>Y3</strong></td>
+<td>5,000 / $720k</td>
+<td>15,000 / $2.16M</td>
+<td>40,000 / $5.76M</td>
+</tr>
+</tbody></table>
+<p><strong>Base case context:</strong> ~15,000 paid users in year 3 represents roughly 0.7% of the existing Scrivener customer base or ~3% of historical NaNoWriMo participation. This is achievable, not heroic.</p>
+<h3>Unit economics at base case</h3>
+<ul>
+<li>Gross profit at Y3: ~$1.77M</li>
+<li>Operating costs at Y3 — broken down:<ul>
+<li>2 founders/co-founders (loaded comp): ~$200–280k</li>
+<li>First full-time Customer Experience hire (loaded, mid-year start): ~$50–70k</li>
+<li>Marketing &amp; community: ~$60–90k</li>
+<li>Infrastructure, tooling, AI hosted costs: ~$60–100k</li>
+<li>Legal, accounting, security audit, misc: ~$30–60k</li>
+<li><strong>Total operating costs at Y3: ~$400–600k</strong></li>
+</ul>
+</li>
+<li><strong>Operating profit at Y3: ~$1.1–1.4M</strong></li>
+</ul>
+<h3>Investor ROI scenarios</h3>
+<p>This is an indie-SaaS profile, not a venture-scale moonshot. ROI for investors comes through one of three mechanisms:</p>
+<p><strong>Path 1 — Profit share / revenue share.</strong> Most credible for an indie SaaS. Example: $100k investment at 20% revenue share until 2.5x return, then 8% in perpetuity (or until founder buy-out). Base case returns 2.5x in ~30 months, plus continuing yield.</p>
+<p><strong>Path 2 — Equity with dividends.</strong> $100k for 15% equity. Base-case Y3 operating profit of $1.1–1.4M, with conservative 50% reinvestment, yields ~$80–110k annual dividend to the 15% holder by Y3. Strong cash-on-cash return; no exit required.</p>
+<p><strong>Path 3 — Equity with exit optionality.</strong> $100k for 15% equity. SaaS exits in this segment typically transact at 3–6x ARR. Base-case Y3 ARR of $2.16M implies an enterprise value of $6.5–13M; 15% stake = $1–2M (10–20x return) on exit, if pursued. Realistic timeline 4–6 years.</p>
+<h3>Sensitivity notes</h3>
+<ul>
+<li><strong>Branding/design under-investment is the single biggest risk to the conservative scenario.</strong> If the awe moment doesn&#39;t land, conversion drops and word-of-mouth doesn&#39;t compound. This is why the brand/design line in §8 is large and protected.</li>
+<li><strong>Hosted AI margin compression</strong> is the second risk — Studio tier margin can erode if AI prices rise faster than user pricing. Mitigated by BYO key as the default.</li>
+<li><strong>Churn higher than 5%</strong> materially affects LTV. Mitigated by sticky data — once a writer&#39;s draft, branches, story bible, and research live in Writer&#39;s Cube, switching costs are high.</li>
+</ul>
+<hr>
+<h2>14. The Ask &amp; Use of Funds</h2>
+<p><strong>Seeking: $75,000 – $150,000</strong> to take Writer&#39;s Cube from concept to launched V1 with a 12-month runway.</p>
+<h3>Use of funds (recommended at $100,000)</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Amount</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Brand &amp; immersive environment design</strong></td>
+<td>$35,000</td>
+<td>The awe moment. Illustrator/3D artist + brand designer.</td>
+</tr>
+<tr>
+<td><strong>Founder runway</strong> (partial; founder retains primary income)</td>
+<td>$25,000</td>
+<td>Buys focused build time; 10–15 hrs/week dedicated.</td>
+</tr>
+<tr>
+<td><strong>Engineering tooling &amp; AI infrastructure during build</strong></td>
+<td>$8,000</td>
+<td><strong>Claude Max 20x subscription ($2,400/yr) + Vercel/Supabase/Sentry/PostHog tiers as user count grows + Anthropic API credits for product evals + testing services.</strong></td>
+</tr>
+<tr>
+<td><strong>Launch marketing</strong></td>
+<td>$15,000</td>
+<td>Launch film, influencer partnerships, press, ads, Product Hunt.</td>
+</tr>
+<tr>
+<td><strong>Legal &amp; corporate setup</strong></td>
+<td>$7,000</td>
+<td>Incorporation (LLC or C-corp), Terms/Privacy, IP review, ASU disclosure handling.</td>
+</tr>
+<tr>
+<td><strong>Operating cash &amp; contingency</strong></td>
+<td>$10,000</td>
+<td>Platform fees, software, buffer.</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>$100,000</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3>What investors get</h3>
+<ul>
+<li>Equity or revenue share (structure to be negotiated — see §12 paths)</li>
+<li>Direct involvement option for the right person (operating role if interested and qualified)</li>
+<li>Monthly written investor update (asynchronous, transparent)</li>
+<li>Quarterly call</li>
+</ul>
+<hr>
+<h2>15. Risks &amp; Mitigations</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Scope creep delays V1</td>
+<td>V1 scope is fixed in writing; new features queued to V1.5+ with no exception during build</td>
+</tr>
+<tr>
+<td>Awe-moment under-delivers</td>
+<td>Brand/design investment is the largest single line item, intentionally</td>
+</tr>
+<tr>
+<td>Founder time constraint</td>
+<td>Funded runway buys focused build time; phased prototype approach (§16) keeps progress visible even at modest weekly hours</td>
+</tr>
+<tr>
+<td><strong>IP ownership ambiguity</strong></td>
+<td><strong>Writer&#39;s Cube IP is held cleanly by the founder/entity from day one; all development uses independent tooling (dedicated Claude Max 20x subscription, personal equipment, personal accounts); no external institutional entanglements</strong></td>
+</tr>
+<tr>
+<td>Large competitor copies</td>
+<td>12–18 month head start expected; brand and community lock-in compound over time</td>
+</tr>
+<tr>
+<td>AI provider pricing changes</td>
+<td>Model-agnostic product architecture (BYO key default); fixed-cost Claude Max plan for development insulates the dev budget from per-token swings</td>
+</tr>
+<tr>
+<td>Churn higher than modeled</td>
+<td>Sticky data, beta-reader sharing creates network effects, story bible compounds value</td>
+</tr>
+<tr>
+<td>Single-founder bus factor</td>
+<td>Investor relationship adds a second informed party; documentation and AI-generated runbooks reduce single-point-of-failure risk</td>
+</tr>
+<tr>
+<td><strong>Support quality degrades as user count grows</strong></td>
+<td><strong>Documented support staffing curve and concrete hiring triggers (§12); first part-time hire reclaims founder hours before quality slips; data-stewardship architecture limits the blast radius of any individual incident</strong></td>
+</tr>
+<tr>
+<td><strong>Founder burnout</strong></td>
+<td><strong>Operational sustainability treated as a financial line item, not a soft concern (§12); part-time support hire timed to reclaim hours; scoped releases with no exception</strong></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>16. Next Steps</h2>
+<h3>Founder-as-first-user: a strategic asset, not a quirk</h3>
+<p>The founder will use the prototype daily to draft her first novel — a personal goal she has been unable to complete with existing tools. This is not incidental to the business; it is one of the strongest possible signals for an investor, for three reasons:</p>
+<ol>
+<li><strong>Daily dogfooding produces a better product.</strong> Every friction point, every missing feature, every annoying interaction surfaces within hours. No external beta program can match the depth of insight from a founder writing 1,500 words a day in her own product.</li>
+<li><strong>The founding story writes itself.</strong> &quot;The instructional designer who built the tool she needed to finish her first novel — and did&quot; is a story journalists and BookTok will run with at launch. It is more compelling than any feature demo.</li>
+<li><strong>It commits the founder to user-led design.</strong> If the product doesn&#39;t help the founder finish her novel, the product isn&#39;t ready. That is a clean, honest quality bar that no spec document can replicate.</li>
+</ol>
+<p><strong>Acknowledged risks:</strong> founder taste can diverge from market taste; scope can drift toward founder-specific needs. <strong>Mitigations:</strong> the closed-beta program (Phase 3 below) runs in parallel to keep external user signal in the picture, and Section 6&#39;s audience-tier templates require us to test against use cases the founder won&#39;t personally hit.</p>
+<h3>Revised development phases</h3>
+<p>The original §4 roadmap (V1 → V1.5 → V2 → …) describes shipped versions. Underneath it, the actual build proceeds in four prototype phases — only the last of which is public.</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Internal name</th>
+<th>Audience</th>
+<th>Timing</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><strong>V0.5 — &quot;The Quill&quot;</strong></td>
+<td>Founder only</td>
+<td>Months 1–4</td>
+<td>Editor + side nav + local + Drive storage + auto-save + version history + highlight-to-tag + typewriter mode, plus <strong>the Story Bible AI agent and highlight-and-ask AI from day one</strong> (founder dogfoods BYO key flow). No visual environment artwork or brand identity yet — those move to V0.9</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>V0.7 — &quot;The Cube Opens&quot;</strong></td>
+<td>Founder + 5–10 trusted writers</td>
+<td>Months 4–7</td>
+<td>Adds branching narratives, AI persona/voice customization, project templates, sharing/comment access, polished revision compare</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>V0.9 — &quot;Beta + Brand&quot;</strong></td>
+<td>100–200 hand-picked writers across all 3 audience tiers</td>
+<td>Months 7–10</td>
+<td><strong>Visual investment lands here:</strong> Vintage Writer&#39;s Desk environment, brand identity (logo, type, color), polished Guided AI Setup Wizard, marketing site, exports, pricing experiments, payment integration, onboarding flow</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>V1.0 — Public launch</strong></td>
+<td>The world</td>
+<td>Month 10–13 (decision-gated, see below)</td>
+<td>Founding Member offer goes live; press push; launch film</td>
+</tr>
+</tbody></table>
+<h3>Launch-timing decision: two paths</h3>
+<p>The founder is <strong>comfortable with either outcome</strong> — finishing the novel first, or launching before the manuscript is done. The decision is made at a checkpoint review in <strong>month 10</strong>, against three criteria:</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Threshold to launch</th>
+<th>Threshold to delay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Closed beta NPS</td>
+<td>&gt;50</td>
+<td>&lt;40</td>
+</tr>
+<tr>
+<td>Critical bugs in last 30 days</td>
+<td>&lt;5</td>
+<td>&gt;10</td>
+</tr>
+<tr>
+<td>Story Bible AI agent accuracy (founder-judged on her own manuscript)</td>
+<td>&gt;80% useful suggestions</td>
+<td>&lt;60% useful</td>
+</tr>
+</tbody></table>
+<p><strong>Path A — &quot;Launch after the draft&quot; (target month 12–13).</strong> Founder completes her manuscript in V0.9; public launch frames the product around the completed novel (&quot;written in Writer&#39;s Cube&quot;). Marketing tells a full story. This is the cleaner narrative.</p>
+<p><strong>Path B — &quot;Build in public&quot; (target month 10).</strong> Beta quality bar is met, founder is still mid-draft. Launch with the public manuscript-in-progress as the brand story; founder posts weekly chapter updates and shares branching decisions. This is the riskier but potentially more viral narrative — the audience watches her finish in real time, and her completion becomes a shared moment.</p>
+<p>Either path is acceptable; the decision is driven by <strong>product quality, not founder timeline</strong>. This is the right discipline for an investor to expect.</p>
+<h3>Immediate actions (next 30 days)</h3>
+<p>These are sequenced; items higher in the list block items lower in the list.</p>
+<ol>
+<li><strong>Form a legal entity.</strong> Single-member LLC is the standard recommendation for indie SaaS at this stage; revisit C-corp only if VC-style fundraising emerges. All IP is assigned to the entity at formation.</li>
+<li><strong>Stand up independent development infrastructure.</strong> Activate the dedicated <strong>Claude Max 20x subscription</strong> for development, open new accounts for GitHub, Vercel, Supabase, and Stripe under the entity&#39;s email and payment method. Writer&#39;s Cube operates on its own tooling from day one — no shared accounts, no shared equipment.</li>
+<li><strong>Open a business bank account and set up bookkeeping.</strong> Mercury or Relay for banking; Wave (free) or Xero for books.</li>
+<li><strong>Register the domain strategy.</strong> Buy <code>writerscube.app</code> (<del>$15/yr) as the launch domain, and <code>writerscube.io</code> (</del>$40/yr) defensively. Skip the squatter-held <code>.com</code> (currently $6,495) until there&#39;s revenue to justify negotiating it down. Run a USPTO TESS trademark search; file an intent-to-use trademark application once the brand is settled.</li>
+<li><strong>Investor conversations</strong>: share this brief and the executive doc with the prospective investor/co-founder and run the structure decision (revenue share vs. equity, operational involvement). Note that no commitments need be made before a working prototype exists — see the closing question in §17.</li>
+<li><strong>Identify the brand designer and the illustrator/3D artist.</strong> Have two scoping conversations each before committing. Ask for portfolio work tied to atmosphere and physicality.</li>
+<li><strong>Define V0.5 scope in writing.</strong> A one-page document listing what is in the founder&#39;s personal prototype. Everything else is explicitly deferred. The founder signs it; no scope changes without a written addendum.</li>
+<li><strong>Choose the novel.</strong> The founder commits — in writing, to herself — to the working concept of the novel she will draft in V0.5. Genre, target length, deadline. This is real, not symbolic.</li>
+</ol>
+<h3>Short-term (months 1–6) — build + dogfood phase</h3>
+<ul>
+<li>Build V0.5; founder starts drafting <strong>on or before month 2</strong>, even if the editor is rough</li>
+<li>Founder commits to <strong>a regular writing cadence</strong> (e.g., 4 days/week, 500–1,500 words/session) and keeps a structured friction journal — every annoyance, every wish, every bug</li>
+<li>Engineering iterates weekly against the friction journal</li>
+<li>Brand identity, marketing site, and the Vintage Desk environment progress in parallel with art partners</li>
+<li>Build V0.7 by month 6; invite 5–10 trusted external writers; expand the friction signal</li>
+<li>Begin the &quot;Behind the Cube&quot; content series on Instagram/TikTok using build-in-progress visuals</li>
+<li>Pre-launch email list opens at month 5–6</li>
+</ul>
+<h3>Mid-term (months 6–12) — closed beta → launch</h3>
+<ul>
+<li>Closed beta opens at month 7 with 100–200 hand-picked writers across all three audience tiers</li>
+<li>Pricing experiments run in the closed beta (the price-discovery moment)</li>
+<li>Founding Member lifetime offer designed and pre-announced to the email list</li>
+<li>Month-9 checkpoint review against the launch-criteria table above</li>
+<li>Launch (Path A or Path B) at month 9–12</li>
+<li>Founder&#39;s manuscript publicly tracked from launch forward</li>
+</ul>
+<h3>First 7 days</h3>
+<p>If the founder wants a concrete starting point this week:</p>
+<ol>
+<li>Buy <code>writerscube.app</code> (<del>$15/yr) on Cloudflare or Namecheap; defensively register <code>writerscube.io</code> (</del>$40/yr); run a USPTO TESS trademark check. <em>(Day 1.)</em></li>
+<li>Activate the dedicated Claude Max 20x subscription and create new accounts (GitHub, Vercel, Supabase, Stripe) under the entity&#39;s intended email. <em>(Day 1–2.)</em></li>
+<li>File LLC formation paperwork (or engage a formation service like Stripe Atlas or LegalZoom). <em>(Day 2–3.)</em></li>
+<li>Schedule one conversation with the prospective investor/co-founder; share this brief and the executive document in advance. <em>(Day 3.)</em></li>
+<li>Send introductory portfolio-review notes to three brand designers and three illustrators/3D artists. <em>(Day 3–4.)</em></li>
+<li>Write the one-page V0.5 scope document. <em>(Day 4–5.)</em></li>
+<li>Write the one-page novel commitment (concept, genre, target length, target completion date). <em>(Day 6–7.)</em></li>
+</ol>
+<p>End of week 1, every dependency for week 2 is unblocked, and the founder has committed — to herself, in writing — to the two parallel projects that will define the next 12 months: building the tool, and writing the book.</p>
+<hr>
+<h2>17. Closing</h2>
+<p>Writer&#39;s Cube is the writing tool that respects the writer — the craft, the process, the work, and the human. It&#39;s the tool the founder couldn&#39;t find when she went looking; it&#39;s the tool she believes thousands of others are quietly looking for too.</p>
+<p>The market is fragmented. The incumbents are old or AI-first to a fault. The cultural moment for branching narratives, AI thought partners, and beautiful tools is right now. The founder is positioned at the intersection of creative writing, instructional design, and modern AI tooling.</p>
+<p>A modest, focused investment — anchored on brand and design — yields a defensible product with realistic paths to either profitable cash flow or a modest exit. We are not asking investors to bet on a moonshot. We are asking them to bet on a beautiful, useful product that writers will love and pay for.</p>
+<hr>
+<h2>Appendix A — Open questions for discussion</h2>
+<ul>
+<li>Preferred investment structure (revenue share, equity with dividends, or equity with exit)</li>
+<li>Investor&#39;s operational interest, if any</li>
+<li>Reporting cadence and format</li>
+<li>Co-founder fit if the investor is also the potential second team member</li>
+</ul>
+<h2>Appendix B — Companion documents</h2>
+<ul>
+<li>A detailed internal strategy document — covering the full roadmap, feature inventory, infrastructure plan, and competitive analysis — is available to investors on request following an initial conversation.</li>
+</ul>
+
+</div>
+</body>
+</html>
