@@ -149,6 +149,13 @@ export function SideNav({ project }: { project: ProjectTree }) {
         >
           + New chapter
         </button>
+        <a
+          href="/app/export"
+          download
+          className="block w-full text-center rounded-md border border-zinc-300 px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50"
+        >
+          Download project (.zip)
+        </a>
         <form action={signOut}>
           <button
             type="submit"
