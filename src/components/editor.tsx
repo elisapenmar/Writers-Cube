@@ -1,10 +1,13 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
 import type { Scene } from "@/lib/types";
 import { updateSceneContent } from "@/server/scenes";
+import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
+import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -16,7 +19,7 @@ export function Editor({ scene }: { scene: Scene }) {
 
   const editor = useEditor(
     {
-      extensions: [StarterKit],
+      extensions: [StarterKit, ...ALL_TAG_MARKS],
       content: (scene.content as object | null) ?? {
         type: "doc",
         content: [{ type: "paragraph" }],
@@ -85,6 +88,36 @@ export function Editor({ scene }: { scene: Scene }) {
         </div>
       </header>
       <div className="flex-1 overflow-y-auto px-6 py-12 bg-zinc-50">
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            options={{ placement: "top" }}
+            shouldShow={({ editor, from, to }) =>
+              from !== to && editor.isEditable
+            }
+            className="flex items-center gap-1 rounded-md bg-zinc-900 text-white px-1.5 py-1 shadow-lg text-xs"
+          >
+            {TAG_KINDS.map((kind: TagKind) => {
+              const markName = TAG_MARK_NAMES[kind];
+              const active = editor.isActive(markName);
+              return (
+                <button
+                  key={kind}
+                  onClick={() =>
+                    editor.chain().focus().toggleMark(markName).run()
+                  }
+                  className={`px-2 py-1 rounded hover:bg-zinc-700 ${active ? "bg-zinc-700" : ""}`}
+                  style={{
+                    borderBottom: `2px solid ${TAG_COLORS[kind].underline}`,
+                  }}
+                  title={TAG_LABELS[kind]}
+                >
+                  {TAG_LABELS[kind]}
+                </button>
+              );
+            })}
+          </BubbleMenu>
+        )}
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -15,6 +15,8 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "^5.100.9",
+    "@tiptap/core": "^3.23.1",
+    "@tiptap/extension-bubble-menu": "^3.23.1",
     "@tiptap/pm": "^3.23.1",
     "@tiptap/react": "^3.23.1",
     "@tiptap/starter-kit": "^3.23.1",

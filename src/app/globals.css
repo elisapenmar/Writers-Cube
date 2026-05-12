@@ -44,3 +44,18 @@ body {
 .ProseMirror h3 {
   font-family: var(--font-serif);
 }
+
+.wc-tag {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 0.92em;
+  line-height: 1.4;
+  cursor: help;
+  text-decoration: none;
+}
+.wc-tag[data-kind="lookup"]      { background: rgba(99,102,241,0.14);  color: #4338ca; }
+.wc-tag[data-kind="revise"]      { background: rgba(234,88,12,0.16);   color: #9a3412; }
+.wc-tag[data-kind="weak"]        { background: rgba(220,38,38,0.14);   color: #991b1b; }
+.wc-tag[data-kind="factcheck"]   { background: rgba(8,145,178,0.14);   color: #0e7490; }
+.wc-tag[data-kind="placeholder"] { background: rgba(163,163,163,0.18); color: #525252; }

@@ -100,6 +100,12 @@ export function SideNav({ project }: { project: ProjectTree }) {
       <div className="p-4 border-b border-zinc-200">
         <div className="text-xs uppercase tracking-wider text-zinc-500">Project</div>
         <div className="font-serif text-lg truncate">{project.title}</div>
+        <Link
+          href="/app/tags"
+          className="mt-2 inline-block text-xs text-zinc-500 hover:text-zinc-900"
+        >
+          View tags →
+        </Link>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
@@ -236,11 +242,16 @@ function SortableChapter({
         >
           ⋮⋮
         </span>
-        <EditableTitle
-          initial={chapter.title}
-          onSave={(next) => renameChapter(chapter.id, next)}
-          className="flex-1"
-        />
+        <Link
+          href={`/app/chapter/${chapter.id}`}
+          className="flex-1 hover:text-zinc-900 truncate"
+          title="Read whole chapter"
+        >
+          <EditableTitle
+            initial={chapter.title}
+            onSave={(next) => renameChapter(chapter.id, next)}
+          />
+        </Link>
         <button
           onClick={() => onAddScene(chapter.id)}
           disabled={pending}

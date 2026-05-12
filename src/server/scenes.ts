@@ -191,6 +191,179 @@ export async function reorderScenes(chapterId: string, orderedIds: string[]) {
   revalidatePath("/app", "layout");
 }
 
+type DocNode = {
+  type: string;
+  text?: string;
+  marks?: { type: string; attrs?: Record<string, unknown> }[];
+  content?: DocNode[];
+};
+
+const TAG_MARK_TYPES = new Set([
+  "tag",
+  "tagLookup",
+  "tagRevise",
+  "tagWeak",
+  "tagFactcheck",
+  "tagPlaceholder",
+]);
+
+/**
+ * Replace the character range [sentenceStart, sentenceEnd) in the Nth
+ * paragraph-like block with newText. If `keepTagKind` is provided, the
+ * inserted text gets that tag mark; otherwise the range becomes plain text.
+ * Any other marks (bold/italic) within the replaced range are dropped — V0.5
+ * accepts this tradeoff for sentence-level edits from the Tags view.
+ */
+function rewriteSentenceInDoc(
+  doc: DocNode,
+  targetBlockIndex: number,
+  sentenceStart: number,
+  sentenceEnd: number,
+  newText: string,
+  keepTagMarkName: string | null,
+): boolean {
+  let blockCounter = -1;
+  let mutated = false;
+
+  const visitBlock = (block: DocNode) => {
+    blockCounter += 1;
+    if (blockCounter !== targetBlockIndex) return;
+    if (!Array.isArray(block.content)) return;
+
+    const newChildren: DocNode[] = [];
+    let cursor = 0;
+    let insertedReplacement = false;
+
+    const insertReplacement = () => {
+      if (insertedReplacement) return;
+      insertedReplacement = true;
+      if (!newText) return;
+      const marks = keepTagMarkName ? [{ type: keepTagMarkName }] : undefined;
+      newChildren.push({
+        type: "text",
+        text: newText,
+        ...(marks ? { marks } : {}),
+      });
+    };
+
+    for (const child of block.content) {
+      if (child.type !== "text") {
+        // Inline non-text node: only keep if it falls outside the replaced range.
+        const pointPos = cursor;
+        if (pointPos < sentenceStart || pointPos >= sentenceEnd) {
+          newChildren.push(child);
+        }
+        continue;
+      }
+      const text = child.text ?? "";
+      const start = cursor;
+      const end = cursor + text.length;
+      cursor = end;
+
+      if (end <= sentenceStart || start >= sentenceEnd) {
+        // No overlap — keep as-is.
+        newChildren.push(child);
+        continue;
+      }
+      // Some overlap: keep prefix outside sentence range, drop inside, keep suffix.
+      const headEnd = Math.max(0, sentenceStart - start);
+      const tailStart = Math.max(0, sentenceEnd - start);
+
+      if (headEnd > 0) {
+        newChildren.push({ ...child, text: text.slice(0, headEnd) });
+      }
+      if (start <= sentenceStart) {
+        insertReplacement();
+      }
+      if (tailStart < text.length) {
+        newChildren.push({ ...child, text: text.slice(tailStart) });
+      }
+    }
+
+    // Edge case: sentence boundary is at the end of the block (no text node spans it).
+    if (!insertedReplacement) insertReplacement();
+
+    block.content = newChildren.filter(
+      (c) => c.type !== "text" || (c.text && c.text.length > 0),
+    );
+    mutated = true;
+  };
+
+  const walk = (node: DocNode) => {
+    if (mutated) return;
+    if (
+      node.type === "paragraph" ||
+      node.type === "heading" ||
+      (node.type === "blockquote" && !Array.isArray(node.content?.[0]?.content))
+    ) {
+      visitBlock(node);
+      return;
+    }
+    if (Array.isArray(node.content)) {
+      for (const c of node.content) {
+        if (mutated) return;
+        walk(c);
+      }
+    }
+  };
+
+  walk(doc);
+  return mutated;
+}
+
+function countWords(doc: DocNode): number {
+  let text = "";
+  const walk = (n: DocNode) => {
+    if (n.type === "text") text += " " + (n.text ?? "");
+    if (Array.isArray(n.content)) n.content.forEach(walk);
+  };
+  walk(doc);
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+export async function updateTaggedSentence(input: {
+  sceneId: string;
+  blockIndex: number;
+  sentenceStart: number;
+  sentenceEnd: number;
+  newText: string;
+  /** If null, the sentence becomes plain text (resolved). Otherwise the tag mark
+   * with this name is applied to the new sentence text. */
+  keepTagMarkName: string | null;
+}) {
+  const { supabase } = await requireUser();
+  const { data: scene, error: readErr } = await supabase
+    .from("scenes")
+    .select("content")
+    .eq("id", input.sceneId)
+    .maybeSingle();
+  if (readErr || !scene) throw new Error(readErr?.message ?? "scene not found");
+
+  const doc = scene.content as DocNode | null;
+  if (!doc) throw new Error("scene has no content");
+
+  const ok = rewriteSentenceInDoc(
+    doc,
+    input.blockIndex,
+    input.sentenceStart,
+    input.sentenceEnd,
+    input.newText.trim(),
+    input.keepTagMarkName,
+  );
+  if (!ok) {
+    throw new Error("Sentence no longer matches — reload the page");
+  }
+
+  const word_count = countWords(doc);
+  const { error } = await supabase
+    .from("scenes")
+    .update({ content: doc, word_count, updated_at: new Date().toISOString() })
+    .eq("id", input.sceneId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+  revalidatePath("/app/tags");
+}
+
 export async function signOut() {
   const { supabase } = await requireUser();
   await supabase.auth.signOut();
