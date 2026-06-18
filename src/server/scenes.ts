@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import type { ProjectTree, Chapter, Scene } from "@/lib/types";
+
+const ACTIVE_PROJECT_COOKIE = "wc_active_project";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -29,13 +32,40 @@ const PROJECT_METADATA_REMINDER =
 export async function getOrCreateProject(): Promise<ProjectTree> {
   const { supabase, user } = await requireUser();
 
-  const { data: existing, error: existingErr } = await supabase
-    .from("projects")
-    .select("id, title, author_name, agent_name")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  // Honor the active-project cookie if it points to one of the user's projects.
+  const cookieStore = await cookies();
+  const activeId = cookieStore.get(ACTIVE_PROJECT_COOKIE)?.value;
+
+  type ProjectRow = {
+    id: string;
+    title: string;
+    author_name: string | null;
+    agent_name: string | null;
+  };
+  let existing: ProjectRow | null = null;
+  let existingErr: { message?: string } | null = null;
+
+  if (activeId) {
+    const res = await supabase
+      .from("projects")
+      .select("id, title, author_name, agent_name")
+      .eq("user_id", user.id)
+      .eq("id", activeId)
+      .maybeSingle();
+    existing = res.data as ProjectRow | null;
+    existingErr = res.error;
+  }
+  if (!existing) {
+    const res = await supabase
+      .from("projects")
+      .select("id, title, author_name, agent_name")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    existing = res.data as ProjectRow | null;
+    existingErr = res.error;
+  }
   if (existingErr) {
     if (isMissingProjectMetadata(existingErr)) throw new Error(PROJECT_METADATA_REMINDER);
     throw new Error(existingErr.message);
