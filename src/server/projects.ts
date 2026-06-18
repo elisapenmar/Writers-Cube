@@ -107,7 +107,14 @@ export async function createProject(title?: string): Promise<{ id: string }> {
   return { id: data.id as string };
 }
 
-export async function openProject(projectId: string): Promise<void> {
-  await setActiveProject(projectId);
-  redirect("/app");
+export async function openProject(formData: FormData): Promise<void> {
+  const projectId = String(formData.get("projectId") ?? "");
+  if (projectId) await setActiveProject(projectId);
+  redirect("/app/write");
+}
+
+export async function createProjectAndOpen(formData: FormData): Promise<void> {
+  const title = String(formData.get("title") ?? "").trim();
+  await createProject(title || undefined);
+  redirect("/app/write");
 }
