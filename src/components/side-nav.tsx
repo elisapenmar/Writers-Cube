@@ -28,9 +28,11 @@ import {
   renameScene,
   reorderChapters,
   reorderScenes,
+  updateProjectMetadata,
   signOut,
 } from "@/server/scenes";
 import { EditableTitle } from "@/components/editable-title";
+import { useOrganize } from "@/store/organize-store";
 
 export function SideNav({ project }: { project: ProjectTree }) {
   const router = useRouter();
@@ -95,17 +97,38 @@ export function SideNav({ project }: { project: ProjectTree }) {
     });
   }
 
+  const navCollapsed = useOrganize((s) => s.navCollapsed);
+  const toggleNavCollapsed = useOrganize((s) => s.toggleNavCollapsed);
+
+  if (navCollapsed) {
+    return (
+      <aside className="w-12 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-screen items-center py-3 gap-3">
+        <button
+          onClick={toggleNavCollapsed}
+          className="w-8 h-8 rounded-md text-zinc-500 hover:bg-zinc-100 grid place-items-center"
+          title="Expand side nav"
+        >
+          »
+        </button>
+        <div className="text-[10px] text-zinc-400 [writing-mode:vertical-rl] rotate-180 font-serif tracking-wider">
+          {project.title}
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="w-72 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-screen">
-      <div className="p-4 border-b border-zinc-200">
-        <div className="text-xs uppercase tracking-wider text-zinc-500">Project</div>
-        <div className="font-serif text-lg truncate">{project.title}</div>
-        <Link
-          href="/app/tags"
-          className="mt-2 inline-block text-xs text-zinc-500 hover:text-zinc-900"
+      <div className="p-4 border-b border-zinc-200 relative">
+        <ProjectMetadata project={project} />
+        <NavLinks />
+        <button
+          onClick={toggleNavCollapsed}
+          className="absolute top-2 right-2 w-7 h-7 rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 grid place-items-center text-xs"
+          title="Collapse side nav"
         >
-          View tags →
-        </Link>
+          «
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
@@ -160,7 +183,7 @@ export function SideNav({ project }: { project: ProjectTree }) {
           download
           className="block w-full text-center rounded-md border border-zinc-300 px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50"
         >
-          Download project (.zip)
+          Download manuscript (.md)
         </a>
         <form action={signOut}>
           <button
@@ -204,6 +227,130 @@ function StaticChapter({
         ))}
       </ul>
     </li>
+  );
+}
+
+function ProjectMetadata({ project }: { project: ProjectTree }) {
+  return (
+    <div className="space-y-1">
+      <div className="text-[10px] uppercase tracking-widest text-zinc-400">
+        Working title
+      </div>
+      <EditableTitle
+        initial={project.title}
+        onSave={(next) =>
+          updateProjectMetadata(project.id, { title: next })
+        }
+        className="font-serif text-lg text-zinc-900 block"
+        inputClassName="font-serif text-lg w-full"
+      />
+      <div className="pt-2 space-y-0.5">
+        <MetaLine
+          label="by"
+          value={project.author_name}
+          placeholder="Your name"
+          onSave={(v) =>
+            updateProjectMetadata(project.id, { author_name: v })
+          }
+        />
+        <MetaLine
+          label="agent"
+          value={project.agent_name}
+          placeholder="—"
+          onSave={(v) =>
+            updateProjectMetadata(project.id, { agent_name: v })
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function MetaLine({
+  label,
+  value,
+  placeholder,
+  onSave,
+}: {
+  label: string;
+  value: string | null;
+  placeholder: string;
+  onSave: (next: string | null) => Promise<unknown> | unknown;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  useEffect(() => setDraft(value ?? ""), [value]);
+
+  async function commit() {
+    setEditing(false);
+    const next = draft.trim();
+    if (next !== (value ?? "")) {
+      await onSave(next.length === 0 ? null : next);
+    }
+  }
+
+  return (
+    <div className="flex items-baseline gap-2 text-xs">
+      <span className="text-zinc-400 w-10 shrink-0">{label}</span>
+      {editing ? (
+        <input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            if (e.key === "Escape") {
+              setDraft(value ?? "");
+              setEditing(false);
+            }
+          }}
+          className="flex-1 bg-white border border-zinc-300 rounded px-1 py-0.5 outline-none text-zinc-800"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className={`flex-1 text-left truncate hover:text-zinc-900 ${
+            value ? "text-zinc-600" : "text-zinc-300 italic"
+          }`}
+          title="Click to edit"
+        >
+          {value || placeholder}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function NavLinks() {
+  const setOpen = useOrganize((s) => s.setOpen);
+  const setBsOpen = useOrganize((s) => s.setBsOpen);
+  return (
+    <div className="mt-3 flex flex-col gap-1 text-xs">
+      <Link
+        href="/app/tags"
+        className="rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
+      >
+        View tags
+      </Link>
+      <button
+        type="button"
+        onClick={() => setBsOpen(true)}
+        className="text-left rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
+        title="Open the Brainstorm panel (left side, separate from Organize)"
+      >
+        Brainstorm
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-left rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
+        title="Open the Organize panel (notes / map / outline / characters / canvas)"
+      >
+        Organize
+      </button>
+    </div>
   );
 }
 

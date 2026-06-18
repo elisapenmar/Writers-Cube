@@ -1,57 +1,163 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
-import { ALL_TAG_MARKS } from "@/lib/tag-mark";
+import { useEffect, useRef, useState } from "react";
+import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
+import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
+import { updateSceneContent } from "@/server/scenes";
 
-type DocNode = {
-  type: string;
-  attrs?: Record<string, unknown>;
-  content?: DocNode[];
-  text?: string;
-  marks?: { type: string }[];
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+type SceneInput = {
+  id: string;
+  title: string;
+  content: unknown;
 };
 
-export function ChapterReader({
-  scenes,
-}: {
-  scenes: { id: string; title: string; content: DocNode | null }[];
-}) {
-  const mergedDoc: DocNode = {
-    type: "doc",
-    content: scenes.flatMap((scene, i) => {
-      const heading: DocNode = {
-        type: "heading",
-        attrs: { level: 2 },
-        content: [{ type: "text", text: scene.title }],
-      };
-      const body = scene.content?.content ?? [{ type: "paragraph" }];
-      const separator: DocNode[] = i === 0 ? [] : [
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "* * *" }],
-        },
-      ];
-      return [...separator, heading, ...body];
-    }),
-  };
+export function ChapterReader({ scenes }: { scenes: SceneInput[] }) {
+  const [status, setStatus] = useState<SaveStatus>("idle");
+  const [savedAt, setSavedAt] = useState<string | null>(null);
 
-  const editor = useEditor({
-    extensions: [StarterKit, ...ALL_TAG_MARKS],
-    content: mergedDoc,
-    editable: false,
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-zinc max-w-3xl mx-auto focus:outline-none font-serif text-lg leading-relaxed",
-      },
-    },
-  });
+  function bumpStatus(s: SaveStatus, t?: string) {
+    setStatus(s);
+    if (t) setSavedAt(t);
+  }
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-12 bg-zinc-50">
+    <div className="flex-1 overflow-y-auto bg-zinc-50">
+      <div className="sticky top-0 z-10 flex justify-end px-6 py-2 text-xs text-zinc-500 bg-zinc-50/80 backdrop-blur">
+        <SaveLabel status={status} savedAt={savedAt} />
+      </div>
+      <div className="max-w-3xl mx-auto py-8 px-6">
+        {scenes.map((scene) => (
+          <SceneBlock key={scene.id} scene={scene} onStatus={bumpStatus} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneBlock({
+  scene,
+  onStatus,
+}: {
+  scene: SceneInput;
+  onStatus: (status: SaveStatus, savedAt?: string) => void;
+}) {
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const editor = useEditor(
+    {
+      extensions: [StarterKit, ...ALL_TAG_MARKS],
+      content: (scene.content as object | null) ?? {
+        type: "doc",
+        content: [{ type: "paragraph" }],
+      },
+      immediatelyRender: false,
+      editorProps: {
+        attributes: {
+          class:
+            "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed",
+        },
+      },
+      onUpdate: ({ editor }) => {
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        onStatus("saving");
+        const doc = editor.getJSON();
+        saveTimer.current = setTimeout(() => {
+          void save(doc);
+        }, 800);
+      },
+    },
+    [scene.id],
+  );
+
+  async function save(doc: unknown) {
+    try {
+      const result = await updateSceneContent(scene.id, doc);
+      onStatus("saved", result.savedAt);
+    } catch {
+      onStatus("error");
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current && editor) {
+        clearTimeout(saveTimer.current);
+        void save(editor.getJSON());
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene.id]);
+
+  useEffect(() => {
+    const handler = () => {
+      if (saveTimer.current && editor) {
+        clearTimeout(saveTimer.current);
+        void save(editor.getJSON());
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
+
+  return (
+    <div className="wc-scene-block">
+      {editor && (
+        <BubbleMenu
+          editor={editor}
+          options={{ placement: "top" }}
+          shouldShow={({ editor, from, to }) =>
+            from !== to && editor.isEditable
+          }
+          className="flex items-center gap-1 rounded-md bg-zinc-900 text-white px-1.5 py-1 shadow-lg text-xs"
+        >
+          {TAG_KINDS.map((kind: TagKind) => {
+            const markName = TAG_MARK_NAMES[kind];
+            const active = editor.isActive(markName);
+            return (
+              <button
+                key={kind}
+                onClick={() =>
+                  editor.chain().focus().toggleMark(markName).run()
+                }
+                className={`px-2 py-1 rounded hover:bg-zinc-700 ${
+                  active ? "bg-zinc-700" : ""
+                }`}
+                style={{
+                  borderBottom: `2px solid ${TAG_COLORS[kind].underline}`,
+                }}
+                title={TAG_LABELS[kind]}
+              >
+                {TAG_LABELS[kind]}
+              </button>
+            );
+          })}
+        </BubbleMenu>
+      )}
       <EditorContent editor={editor} />
     </div>
   );
+}
+
+function SaveLabel({
+  status,
+  savedAt,
+}: {
+  status: SaveStatus;
+  savedAt: string | null;
+}) {
+  if (status === "saving") return <span>Saving…</span>;
+  if (status === "error") return <span className="text-red-600">Save failed</span>;
+  if (savedAt) {
+    const d = new Date(savedAt);
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return <span>Saved at {hh}:{mm}</span>;
+  }
+  return <span>&nbsp;</span>;
 }

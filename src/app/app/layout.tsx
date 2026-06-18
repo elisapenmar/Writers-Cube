@@ -1,4 +1,5 @@
 import { SideNav } from "@/components/side-nav";
+import { AppShell } from "@/components/app-shell";
 import { getOrCreateProject } from "@/server/scenes";
 
 export default async function AppLayout({
@@ -11,7 +12,7 @@ export default async function AppLayout({
   return (
     <div className="flex flex-1 min-h-screen">
       <SideNav project={project} />
-      <main className="flex-1 flex flex-col bg-zinc-50">{children}</main>
+      <AppShell>{children}</AppShell>
     </div>
   );
 }

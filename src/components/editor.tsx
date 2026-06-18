@@ -8,6 +8,7 @@ import type { Scene } from "@/lib/types";
 import { updateSceneContent } from "@/server/scenes";
 import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
 import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
+import { TypewriterMode } from "@/components/typewriter-mode";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -15,6 +16,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(scene.updated_at);
   const [wordCount, setWordCount] = useState<number>(scene.word_count);
+  const [typewriterOpen, setTypewriterOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor(
@@ -85,8 +87,37 @@ export function Editor({ scene }: { scene: Scene }) {
         <div className="flex items-center gap-4 text-xs text-zinc-500">
           <span>{wordCount} words</span>
           <SaveLabel status={status} savedAt={savedAt} />
+          <button
+            onClick={() => setTypewriterOpen(true)}
+            className="rounded-md border border-zinc-300 px-3 py-1 hover:bg-zinc-50"
+            title="Enter focused writing mode"
+          >
+            Typewriter mode
+          </button>
         </div>
       </header>
+
+      {typewriterOpen && (
+        <TypewriterMode
+          scene={{
+            id: scene.id,
+            title: scene.title,
+            content: editor ? editor.getJSON() : scene.content,
+            word_count: wordCount,
+          }}
+          onExit={(finalDoc, finalWordCount) => {
+            setTypewriterOpen(false);
+            if (finalDoc && editor) {
+              editor.commands.setContent(finalDoc as object, { emitUpdate: false });
+            }
+            if (typeof finalWordCount === "number") {
+              setWordCount(finalWordCount);
+            }
+            setSavedAt(new Date().toISOString());
+            setStatus("saved");
+          }}
+        />
+      )}
       <div className="flex-1 overflow-y-auto px-6 py-12 bg-zinc-50">
         {editor && (
           <BubbleMenu

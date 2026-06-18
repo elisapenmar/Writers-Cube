@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ChapterReader } from "@/components/chapter-reader";
 
@@ -37,25 +36,9 @@ export default async function ChapterPage({
   return (
     <div className="flex flex-col flex-1 h-screen">
       <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-zinc-500">
-            Chapter
-          </div>
-          <h1 className="font-serif text-lg">{chapter.title}</h1>
-        </div>
+        <h1 className="font-serif text-lg">{chapter.title}</h1>
         <div className="flex items-center gap-4 text-xs text-zinc-500">
-          <span>
-            {sceneList.length} scene{sceneList.length === 1 ? "" : "s"}
-          </span>
           <span>{totalWords} words</span>
-          {sceneList[0] && (
-            <Link
-              href={`/app/scene/${sceneList[0].id}`}
-              className="rounded-md border border-zinc-300 px-3 py-1 hover:bg-zinc-50"
-            >
-              Edit scene by scene
-            </Link>
-          )}
         </div>
       </header>
       {sceneList.length === 0 ? (

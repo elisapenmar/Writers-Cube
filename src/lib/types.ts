@@ -19,5 +19,7 @@ export type Chapter = {
 export type ProjectTree = {
   id: string;
   title: string;
+  author_name: string | null;
+  agent_name: string | null;
   chapters: Chapter[];
 };

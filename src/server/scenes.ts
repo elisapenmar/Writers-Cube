@@ -14,32 +14,57 @@ async function requireUser() {
   return { supabase, user };
 }
 
+function isMissingProjectMetadata(err: { message?: string } | null): boolean {
+  if (!err?.message) return false;
+  const m = err.message.toLowerCase();
+  return (
+    (m.includes("author_name") || m.includes("agent_name")) &&
+    (m.includes("column") || m.includes("does not exist"))
+  );
+}
+
+const PROJECT_METADATA_REMINDER =
+  "The 'author_name' / 'agent_name' columns are missing on projects. Run: alter table projects add column if not exists author_name text, add column if not exists agent_name text;";
+
 export async function getOrCreateProject(): Promise<ProjectTree> {
   const { supabase, user } = await requireUser();
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingErr } = await supabase
     .from("projects")
-    .select("id, title")
+    .select("id, title, author_name, agent_name")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
+  if (existingErr) {
+    if (isMissingProjectMetadata(existingErr)) throw new Error(PROJECT_METADATA_REMINDER);
+    throw new Error(existingErr.message);
+  }
 
   let projectId: string;
   let title: string;
+  let author_name: string | null = null;
+  let agent_name: string | null = null;
 
   if (existing) {
     projectId = existing.id;
     title = existing.title;
+    author_name = (existing.author_name as string | null) ?? null;
+    agent_name = (existing.agent_name as string | null) ?? null;
   } else {
     const { data: created, error } = await supabase
       .from("projects")
       .insert({ user_id: user.id, title: "My Novel" })
-      .select("id, title")
+      .select("id, title, author_name, agent_name")
       .single();
-    if (error || !created) throw new Error(error?.message ?? "create project failed");
+    if (error || !created) {
+      if (isMissingProjectMetadata(error)) throw new Error(PROJECT_METADATA_REMINDER);
+      throw new Error(error?.message ?? "create project failed");
+    }
     projectId = created.id;
     title = created.title;
+    author_name = (created.author_name as string | null) ?? null;
+    agent_name = (created.agent_name as string | null) ?? null;
   }
 
   const { data: chapters } = await supabase
@@ -62,7 +87,35 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
     scenes: (scenes ?? []).filter((s) => s.chapter_id === c.id),
   }));
 
-  return { id: projectId, title, chapters: chaptersWithScenes };
+  return { id: projectId, title, author_name, agent_name, chapters: chaptersWithScenes };
+}
+
+export async function updateProjectMetadata(
+  projectId: string,
+  patch: { title?: string; author_name?: string | null; agent_name?: string | null },
+): Promise<void> {
+  const { supabase } = await requireUser();
+  const update: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (typeof patch.title === "string") {
+    update.title = patch.title.trim().slice(0, 200) || "Untitled";
+  }
+  if (patch.author_name !== undefined) {
+    update.author_name = patch.author_name ? patch.author_name.trim().slice(0, 200) : null;
+  }
+  if (patch.agent_name !== undefined) {
+    update.agent_name = patch.agent_name ? patch.agent_name.trim().slice(0, 200) : null;
+  }
+  const { error } = await supabase
+    .from("projects")
+    .update(update)
+    .eq("id", projectId);
+  if (error) {
+    if (isMissingProjectMetadata(error)) throw new Error(PROJECT_METADATA_REMINDER);
+    throw new Error(error.message);
+  }
+  revalidatePath("/app", "layout");
 }
 
 export async function createChapter(projectId: string) {

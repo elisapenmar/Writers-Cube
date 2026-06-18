@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import JSZip from "jszip";
 import { createClient } from "@/lib/supabase/server";
 import { tiptapToMarkdown } from "@/lib/tiptap-to-markdown";
-
-function pad(n: number, width = 2) {
-  return String(n).padStart(width, "0");
-}
 
 function safeName(s: string) {
   return s.replace(/[/\\:*?"<>|]/g, "_").trim() || "Untitled";
@@ -20,7 +15,7 @@ export async function GET() {
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, title, updated_at")
+    .select("id, title, author_name, agent_name, updated_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -42,50 +37,38 @@ export async function GET() {
         .order("position", { ascending: true })
     : { data: [] };
 
-  const zip = new JSZip();
-  const root = zip.folder(safeName(project.title)) ?? zip;
+  const lines: string[] = [];
+  lines.push(`# ${project.title}`);
+  if (project.author_name) lines.push(`\n*by ${project.author_name}*`);
+  if (project.agent_name) lines.push(`\n*Agent: ${project.agent_name}*`);
+  lines.push("");
 
-  const manifest = {
-    project: { id: project.id, title: project.title },
-    exportedAt: new Date().toISOString(),
-    chapters: (chapters ?? []).map((c, ci) => ({
-      id: c.id,
-      title: c.title,
-      position: c.position,
-      folder: `${pad(ci + 1)} - ${safeName(c.title)}`,
-      scenes: (scenes ?? [])
-        .filter((s) => s.chapter_id === c.id)
-        .map((s, si) => ({
-          id: s.id,
-          title: s.title,
-          position: s.position,
-          word_count: s.word_count,
-          updated_at: s.updated_at,
-          file: `${pad(si + 1)} - ${safeName(s.title)}.md`,
-        })),
-    })),
-  };
-  root.file("manifest.json", JSON.stringify(manifest, null, 2));
+  let totalWords = 0;
 
   for (const [ci, chapter] of (chapters ?? []).entries() as IterableIterator<
     [number, { id: string; title: string }]
   >) {
-    const chapterFolder = root.folder(`${pad(ci + 1)} - ${safeName(chapter.title)}`);
-    if (!chapterFolder) continue;
     const chapterScenes = (scenes ?? []).filter((s) => s.chapter_id === chapter.id);
-    for (const [si, scene] of chapterScenes.entries()) {
-      const md = `# ${scene.title}\n\n${tiptapToMarkdown(scene.content)}`;
-      chapterFolder.file(`${pad(si + 1)} - ${safeName(scene.title)}.md`, md);
-    }
+    lines.push("\n\n---\n");
+    lines.push(`## Chapter ${ci + 1} — ${chapter.title}\n`);
+    chapterScenes.forEach((scene, si) => {
+      if (si > 0) lines.push("\n\\* \\* \\*\n");
+      const body = tiptapToMarkdown(scene.content).trim();
+      lines.push(body);
+      totalWords += scene.word_count ?? 0;
+    });
   }
 
-  const buffer = await zip.generateAsync({ type: "uint8array" });
-  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  const filename = `${safeName(project.title)}-${stamp}.zip`;
+  lines.push("\n\n*The End*\n");
+  lines.push(`\n<!-- exported ${new Date().toISOString()} · ${totalWords} words -->`);
 
-  return new NextResponse(buffer as unknown as BodyInit, {
+  const md = lines.join("\n");
+  const stamp = new Date().toISOString().slice(0, 10);
+  const filename = `${safeName(project.title)}-${stamp}.md`;
+
+  return new NextResponse(md, {
     headers: {
-      "Content-Type": "application/zip",
+      "Content-Type": "text/markdown; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
