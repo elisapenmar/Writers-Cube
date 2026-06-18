@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export const ACTIVE_PROJECT_COOKIE = "wc_active_project";
+const ACTIVE_PROJECT_COOKIE = "wc_active_project";
 
 export type ProjectSummary = {
   id: string;

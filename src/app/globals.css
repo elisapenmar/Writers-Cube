@@ -114,3 +114,65 @@ body {
 .wc-tag[data-kind="weak"]        { background: rgba(220,38,38,0.14);   color: #991b1b; }
 .wc-tag[data-kind="factcheck"]   { background: rgba(8,145,178,0.14);   color: #0e7490; }
 .wc-tag[data-kind="placeholder"] { background: rgba(163,163,163,0.18); color: #525252; }
+
+/* ---------- Writer's Cube brand (dice / cubist) ---------- */
+:root {
+  --wc-terracotta: #d9694c;
+  --wc-slate: #3e5c76;
+  --wc-ochre: #e0a82e;
+  --wc-sage: #7a9e7e;
+  --wc-plum: #6a557f;
+  --wc-cream: #f3efe6;
+  --wc-paper: #fffdf7;
+  --wc-ink: #211f29;
+}
+.wc-cream { background: var(--wc-cream); }
+.wc-paper { background: var(--wc-paper); }
+
+/* Die-face tile used for the Step-2 selectors */
+.wc-die {
+  position: relative;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fffdf7, #ece5d6);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset,
+              0 6px 14px rgba(33,31,41,0.10),
+              0 1px 2px rgba(33,31,41,0.10);
+  border: 1px solid rgba(33,31,41,0.07);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.wc-die:hover { transform: translateY(-2px); }
+.wc-die[data-selected="true"] {
+  background: linear-gradient(145deg, #4a6a86, #34516b);
+  border-color: rgba(33,31,41,0.18);
+  box-shadow: 0 8px 18px rgba(62,92,118,0.35),
+              0 1px 0 rgba(255,255,255,0.18) inset;
+}
+.wc-die[data-seed="true"][data-selected="true"] {
+  background: linear-gradient(145deg, #7e6796, #5d4a72);
+  box-shadow: 0 8px 18px rgba(106,85,127,0.35);
+}
+.wc-randomizer {
+  background: radial-gradient(120% 120% at 30% 25%, #f4d27a, #e0a82e 55%, #b9871f);
+  box-shadow: 0 8px 18px rgba(224,168,46,0.4), 0 1px 0 rgba(255,255,255,0.4) inset;
+  border: 1px solid rgba(33,31,41,0.12);
+}
+@keyframes wc-tumble {
+  0%   { transform: rotate(0deg)   scale(1); }
+  25%  { transform: rotate(-18deg) scale(1.06); }
+  50%  { transform: rotate(14deg)  scale(0.97); }
+  75%  { transform: rotate(-8deg)  scale(1.03); }
+  100% { transform: rotate(0deg)   scale(1); }
+}
+.wc-tumbling { animation: wc-tumble 500ms ease-in-out; }
+
+/* injected-from-draft highlight */
+.wc-injected {
+  color: var(--wc-terracotta);
+  font-style: italic;
+  font-weight: 500;
+}
+.wc-grounded-badge {
+  background: rgba(122,158,126,0.18);
+  color: #41603f;
+  border: 1px solid rgba(122,158,126,0.4);
+}

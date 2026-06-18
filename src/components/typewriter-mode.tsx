@@ -20,13 +20,26 @@ type Phase = "config" | "active" | "done";
 export function TypewriterMode({
   scene,
   onExit,
+  persist,
+  initialGoalType,
+  initialGoalValue,
+  autoStart,
+  promptHeader,
 }: {
   scene: { id: string; title: string; content: unknown; word_count: number };
   onExit: (finalDoc?: unknown, finalWordCount?: number) => void;
+  /** When provided, used to save instead of writing to the scenes table. */
+  persist?: (doc: unknown, wordCount: number) => void | Promise<void>;
+  initialGoalType?: GoalType;
+  initialGoalValue?: number;
+  /** Skip the config screen and begin writing immediately. */
+  autoStart?: boolean;
+  /** Optional prompt text shown above the locked editor. */
+  promptHeader?: React.ReactNode;
 }) {
-  const [phase, setPhase] = useState<Phase>("config");
-  const [goalType, setGoalType] = useState<GoalType>("words");
-  const [goalValue, setGoalValue] = useState<number>(250);
+  const [phase, setPhase] = useState<Phase>(autoStart ? "active" : "config");
+  const [goalType, setGoalType] = useState<GoalType>(initialGoalType ?? "words");
+  const [goalValue, setGoalValue] = useState<number>(initialGoalValue ?? 250);
   const [fontSize, setFontSize] = useState<FontSize>("comfortable");
 
   const [startWords, setStartWords] = useState(scene.word_count);
@@ -107,6 +120,8 @@ export function TypewriterMode({
       {(phase === "active" || phase === "done") && (
         <ActiveSession
           scene={scene}
+          persist={persist}
+          promptHeader={promptHeader}
           fontSizePx={FONT_SIZE_PX[fontSize]}
           fontSize={fontSize}
           setFontSize={setFontSize}
@@ -240,6 +255,8 @@ function ConfigScreen({
 
 function ActiveSession({
   scene,
+  persist,
+  promptHeader,
   fontSizePx,
   fontSize,
   setFontSize,
@@ -252,9 +269,9 @@ function ActiveSession({
   onDocChange,
   onExit,
 }: {
-  // Local state declared inside the component body below
-
   scene: { id: string; title: string; content: unknown; word_count: number };
+  persist?: (doc: unknown, wordCount: number) => void | Promise<void>;
+  promptHeader?: React.ReactNode;
   fontSizePx: number;
   fontSize: FontSize;
   setFontSize: (f: FontSize) => void;
@@ -267,6 +284,10 @@ function ActiveSession({
   onDocChange: (doc: unknown) => void;
   onExit: () => void;
 }) {
+  function saveDoc(doc: unknown, wc: number) {
+    if (persist) void Promise.resolve(persist(doc, wc)).catch(() => {});
+    else void updateSceneContent(scene.id, doc).catch(() => {});
+  }
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [celebrationDismissed, setCelebrationDismissed] = useState(false);
@@ -297,7 +318,7 @@ function ActiveSession({
         onWordCount(wc);
         onDocChange(doc);
         saveTimer.current = setTimeout(() => {
-          void updateSceneContent(scene.id, doc).catch(() => {});
+          saveDoc(doc, wc);
         }, 800);
         scrollCursorToCenter();
       },
@@ -351,7 +372,8 @@ function ActiveSession({
     return () => {
       if (saveTimer.current && editor) {
         clearTimeout(saveTimer.current);
-        void updateSceneContent(scene.id, editor.getJSON()).catch(() => {});
+        const doc = editor.getJSON();
+        saveDoc(doc, countWordsInJSON(doc));
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -382,7 +404,7 @@ function ActiveSession({
           className="mx-auto max-w-2xl px-6"
           style={{
             // Give space above and below so first/last lines can sit at center
-            paddingTop: "50vh",
+            paddingTop: promptHeader ? "30vh" : "50vh",
             paddingBottom: "50vh",
             fontSize: `${fontSizePx}px`,
             lineHeight: 1.6,
@@ -390,6 +412,11 @@ function ActiveSession({
             caretColor: "#fafafa",
           }}
         >
+          {promptHeader && (
+            <div className="mb-8 text-zinc-500 text-base leading-relaxed border-l-2 border-zinc-700 pl-4">
+              {promptHeader}
+            </div>
+          )}
           <EditorContent editor={editor} />
         </div>
       </div>
