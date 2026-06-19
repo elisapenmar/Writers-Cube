@@ -174,7 +174,7 @@ export function PromptTool({
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-serif text-3xl text-[var(--wc-ink)]">
-                Writer&apos;s Cube
+                Writing Prompts
               </h1>
               <p className="text-sm text-zinc-600 mt-1">
                 Roll your way out of the block.

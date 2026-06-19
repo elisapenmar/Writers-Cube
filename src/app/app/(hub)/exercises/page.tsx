@@ -46,7 +46,7 @@ export default async function ExercisesPage({
             </p>
           </div>
           <Link
-            href="/app/cube"
+            href="/app/prompts"
             className="shrink-0 rounded-xl px-4 py-2 text-white text-sm"
             style={{ background: "var(--wc-terracotta)" }}
           >
@@ -57,7 +57,7 @@ export default async function ExercisesPage({
         {exercises.length === 0 ? (
           <p className="text-sm text-zinc-500 rounded-2xl border border-dashed border-zinc-300 px-4 py-8 text-center">
             Nothing here yet. Roll a prompt in{" "}
-            <Link href="/app/cube" className="text-[var(--wc-slate)] hover:underline">
+            <Link href="/app/prompts" className="text-[var(--wc-slate)] hover:underline">
               Writer&apos;s Cube
             </Link>{" "}
             and save what you write.

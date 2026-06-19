@@ -110,7 +110,7 @@ export default async function ExerciseView({
 
         <div className="mt-4 flex items-center gap-3">
           <Link
-            href="/app/cube"
+            href="/app/prompts"
             className="rounded-xl px-4 py-2 text-sm text-white"
             style={{ background: "var(--wc-terracotta)" }}
           >

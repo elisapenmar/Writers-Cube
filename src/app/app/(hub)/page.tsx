@@ -35,16 +35,16 @@ export default async function Dashboard() {
         {/* Hero */}
         <section className="rounded-3xl p-6 sm:p-8 wc-paper border border-[rgba(33,31,41,0.08)] shadow-[0_8px_30px_rgba(33,31,41,0.06)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl text-[var(--wc-ink)]">
-              Writer&apos;s Cube
+            <h1 className="font-serif text-2xl text-[var(--wc-ink)]">
+              Writing Prompts
             </h1>
             <p className="text-sm text-zinc-600 mt-1">
-              Roll your way out of the block — a replayable prompt to warm up or
-              dig into your story.
+              Roll your way out of the block — a replayable warm-up, or prompts
+              dug straight out of your own draft.
             </p>
           </div>
           <Link
-            href="/app/cube"
+            href="/app/prompts"
             className="shrink-0 rounded-2xl px-6 py-3 text-white font-medium shadow-lg text-center"
             style={{ background: "var(--wc-terracotta)" }}
           >
@@ -114,7 +114,7 @@ export default async function Dashboard() {
           {practice.length === 0 ? (
             <EmptyHint>
               Standalone warm-ups you write from{" "}
-              <Link href="/app/cube" className="text-[var(--wc-slate)] hover:underline">
+              <Link href="/app/prompts" className="text-[var(--wc-slate)] hover:underline">
                 Writer&apos;s Cube
               </Link>{" "}
               land here.
@@ -145,7 +145,7 @@ export default async function Dashboard() {
             {storyExercises.length === 0 ? (
               <EmptyHint>
                 Prompts grounded in this story (via{" "}
-                <Link href="/app/cube" className="text-[var(--wc-slate)] hover:underline">
+                <Link href="/app/prompts" className="text-[var(--wc-slate)] hover:underline">
                   Help me with my story
                 </Link>
                 ) are saved here, attached to the project.

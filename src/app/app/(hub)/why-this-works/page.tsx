@@ -73,7 +73,7 @@ export default function WhyThisWorks() {
   return (
     <div className="flex-1 overflow-y-auto wc-cream">
       <div className="max-w-2xl mx-auto px-6 py-10">
-        <Link href="/app/cube" className="text-xs text-[var(--wc-slate)] hover:underline">
+        <Link href="/app/prompts" className="text-xs text-[var(--wc-slate)] hover:underline">
           ← Back to the prompts
         </Link>
         <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-2">
