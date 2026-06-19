@@ -3,12 +3,14 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 import { useEffect, useRef, useState } from "react";
 import type { Scene } from "@/lib/types";
 import { updateSceneContent } from "@/server/scenes";
 import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
 import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
 import { TypewriterMode } from "@/components/typewriter-mode";
+import { EditorToolbar } from "@/components/editor-toolbar";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -21,7 +23,7 @@ export function Editor({ scene }: { scene: Scene }) {
 
   const editor = useEditor(
     {
-      extensions: [StarterKit, ...ALL_TAG_MARKS],
+      extensions: [StarterKit, Underline, ...ALL_TAG_MARKS],
       content: (scene.content as object | null) ?? {
         type: "doc",
         content: [{ type: "paragraph" }],
@@ -96,6 +98,10 @@ export function Editor({ scene }: { scene: Scene }) {
           </button>
         </div>
       </header>
+
+      <div className="border-b border-zinc-200 bg-white px-6 py-1.5">
+        <EditorToolbar editor={editor} />
+      </div>
 
       {typewriterOpen && (
         <TypewriterMode

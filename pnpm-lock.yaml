@@ -35,6 +35,9 @@ importers:
       '@tiptap/extension-bubble-menu':
         specifier: ^3.23.1
         version: 3.23.1(@tiptap/core@3.23.1(@tiptap/pm@3.23.1))(@tiptap/pm@3.23.1)
+      '@tiptap/extension-underline':
+        specifier: ^3.27.0
+        version: 3.27.0(@tiptap/core@3.23.1(@tiptap/pm@3.23.1))
       '@tiptap/pm':
         specifier: ^3.23.1
         version: 3.23.1
@@ -785,6 +788,11 @@ packages:
     resolution: {integrity: sha512-+PvHyVozHyxJ9oWCIQx5JHBZ7LAa/sFJUOFaKyfmel4gL9AbP52MmvrciXARlZHd1WCULJtdbLan0+x5/D/9hQ==}
     peerDependencies:
       '@tiptap/core': 3.23.1
+
+  '@tiptap/extension-underline@3.27.0':
+    resolution: {integrity: sha512-0w3GDF5rC0oZXYh6jBt8jPS+SQ5mtJsyDjP94A0Qjh/7tsfeDzCzZMAadE4i+9g6DI1Hce4GqYDAAfPkoj4y5Q==}
+    peerDependencies:
+      '@tiptap/core': 3.27.0
 
   '@tiptap/extensions@3.23.1':
     resolution: {integrity: sha512-7UIn+idaVTVhdlP0KmgzBh8Csmwck357Dq4te5DuAxhSkN1gsXHlq39mpx907UYKJdSOgd+GMFeyOziPwSmbOQ==}
@@ -3074,6 +3082,10 @@ snapshots:
       '@tiptap/core': 3.23.1(@tiptap/pm@3.23.1)
 
   '@tiptap/extension-underline@3.23.1(@tiptap/core@3.23.1(@tiptap/pm@3.23.1))':
+    dependencies:
+      '@tiptap/core': 3.23.1(@tiptap/pm@3.23.1)
+
+  '@tiptap/extension-underline@3.27.0(@tiptap/core@3.23.1(@tiptap/pm@3.23.1))':
     dependencies:
       '@tiptap/core': 3.23.1(@tiptap/pm@3.23.1)
 

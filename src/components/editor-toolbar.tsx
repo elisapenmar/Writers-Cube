@@ -1,0 +1,93 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { Editor } from "@tiptap/react";
+
+/**
+ * Formatting toolbar bound to a TipTap editor. Re-renders on every editor
+ * transaction so the active-state highlights stay in sync.
+ */
+export function EditorToolbar({
+  editor,
+  className = "",
+}: {
+  editor: Editor | null;
+  className?: string;
+}) {
+  const [, force] = useState(0);
+  useEffect(() => {
+    if (!editor) return;
+    const update = () => force((n) => n + 1);
+    editor.on("transaction", update);
+    editor.on("selectionUpdate", update);
+    return () => {
+      editor.off("transaction", update);
+      editor.off("selectionUpdate", update);
+    };
+  }, [editor]);
+
+  if (!editor) return null;
+  const chain = () => editor.chain().focus();
+
+  return (
+    <div
+      className={`flex flex-wrap items-center gap-0.5 ${className}`}
+    >
+      <Btn label="B" title="Bold (⌘B)" active={editor.isActive("bold")} bold onClick={() => chain().toggleBold().run()} />
+      <Btn label="I" title="Italic (⌘I)" active={editor.isActive("italic")} italic onClick={() => chain().toggleItalic().run()} />
+      <Btn label="U" title="Underline (⌘U)" active={editor.isActive("underline")} underline onClick={() => chain().toggleUnderline().run()} />
+      <Btn label="S" title="Strikethrough" active={editor.isActive("strike")} strike onClick={() => chain().toggleStrike().run()} />
+      <Divider />
+      <Btn label="H1" title="Heading 1" active={editor.isActive("heading", { level: 1 })} onClick={() => chain().toggleHeading({ level: 1 }).run()} />
+      <Btn label="H2" title="Heading 2" active={editor.isActive("heading", { level: 2 })} onClick={() => chain().toggleHeading({ level: 2 }).run()} />
+      <Btn label="H3" title="Heading 3" active={editor.isActive("heading", { level: 3 })} onClick={() => chain().toggleHeading({ level: 3 }).run()} />
+      <Divider />
+      <Btn label="•" title="Bullet list" active={editor.isActive("bulletList")} onClick={() => chain().toggleBulletList().run()} />
+      <Btn label="1." title="Numbered list" active={editor.isActive("orderedList")} onClick={() => chain().toggleOrderedList().run()} />
+      <Btn label="❝" title="Blockquote" active={editor.isActive("blockquote")} onClick={() => chain().toggleBlockquote().run()} />
+    </div>
+  );
+}
+
+function Btn({
+  label,
+  title,
+  active,
+  bold,
+  italic,
+  underline,
+  strike,
+  onClick,
+}: {
+  label: string;
+  title: string;
+  active: boolean;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strike?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      title={title}
+      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center ${
+        active ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-100"
+      }`}
+      style={{
+        fontWeight: bold ? 700 : 500,
+        fontStyle: italic ? "italic" : undefined,
+        textDecoration: underline ? "underline" : strike ? "line-through" : undefined,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function Divider() {
+  return <span className="w-px h-5 bg-zinc-200 mx-1" />;
+}

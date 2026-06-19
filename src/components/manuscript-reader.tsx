@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -8,33 +8,76 @@ import { useEffect, useRef, useState } from "react";
 import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
 import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
 import { updateSceneContent } from "@/server/scenes";
+import { EditorToolbar } from "@/components/editor-toolbar";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-type SceneInput = {
+export type ManuscriptChapter = {
   id: string;
   title: string;
-  content: unknown;
+  scenes: { id: string; title: string; content: unknown }[];
 };
 
-export function ChapterReader({ scenes }: { scenes: SceneInput[] }) {
+export function ManuscriptReader({
+  projectTitle,
+  chapters,
+}: {
+  projectTitle: string;
+  chapters: ManuscriptChapter[];
+}) {
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
 
   function bumpStatus(s: SaveStatus, t?: string) {
     setStatus(s);
     if (t) setSavedAt(t);
   }
 
+  const totalScenes = chapters.reduce((n, c) => n + c.scenes.length, 0);
+
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-50">
-      <div className="sticky top-0 z-10 flex justify-end px-6 py-2 text-xs text-zinc-500 bg-zinc-50/80 backdrop-blur">
-        <SaveLabel status={status} savedAt={savedAt} />
+    <div className="flex-1 flex flex-col h-screen bg-zinc-50">
+      {/* Sticky toolbar — operates on whichever block is focused */}
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-zinc-200 bg-white px-6 py-2">
+        <span className="font-serif text-sm text-zinc-700 shrink-0">
+          {projectTitle}
+        </span>
+        <div className="flex-1 min-w-0 overflow-x-auto">
+          <EditorToolbar editor={activeEditor} />
+        </div>
+        <span className="shrink-0 text-xs text-zinc-500">
+          <SaveLabel status={status} savedAt={savedAt} />
+        </span>
       </div>
-      <div className="max-w-3xl mx-auto py-8 px-6">
-        {scenes.map((scene) => (
-          <SceneBlock key={scene.id} scene={scene} onStatus={bumpStatus} />
-        ))}
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto py-10 px-6">
+          {totalScenes === 0 && (
+            <p className="text-sm text-zinc-500 text-center py-16">
+              Nothing to scroll yet — add chapters and scenes from the sidebar.
+            </p>
+          )}
+          {chapters.map((chapter) => (
+            <section key={chapter.id} className="mb-10">
+              <h2 className="font-serif text-2xl text-zinc-800 mb-4 pb-1 border-b border-zinc-200">
+                {chapter.title}
+              </h2>
+              {chapter.scenes.length === 0 ? (
+                <p className="text-sm text-zinc-400 italic">No scenes yet.</p>
+              ) : (
+                chapter.scenes.map((scene) => (
+                  <SceneBlock
+                    key={scene.id}
+                    scene={scene}
+                    onStatus={bumpStatus}
+                    onFocus={setActiveEditor}
+                  />
+                ))
+              )}
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -43,9 +86,11 @@ export function ChapterReader({ scenes }: { scenes: SceneInput[] }) {
 function SceneBlock({
   scene,
   onStatus,
+  onFocus,
 }: {
-  scene: SceneInput;
+  scene: { id: string; title: string; content: unknown };
   onStatus: (status: SaveStatus, savedAt?: string) => void;
+  onFocus: (editor: Editor) => void;
 }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,6 +108,7 @@ function SceneBlock({
             "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed",
         },
       },
+      onFocus: ({ editor }) => onFocus(editor),
       onUpdate: ({ editor }) => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         onStatus("saving");
@@ -107,14 +153,15 @@ function SceneBlock({
   }, [editor]);
 
   return (
-    <div className="wc-scene-block">
+    <div className="wc-scene-block mb-6">
+      <div className="text-[11px] uppercase tracking-wider text-zinc-400 mb-1">
+        {scene.title}
+      </div>
       {editor && (
         <BubbleMenu
           editor={editor}
           options={{ placement: "top" }}
-          shouldShow={({ editor, from, to }) =>
-            from !== to && editor.isEditable
-          }
+          shouldShow={({ editor, from, to }) => from !== to && editor.isEditable}
           className="flex items-center gap-1 rounded-md bg-zinc-900 text-white px-1.5 py-1 shadow-lg text-xs"
         >
           {TAG_KINDS.map((kind: TagKind) => {
@@ -123,15 +170,9 @@ function SceneBlock({
             return (
               <button
                 key={kind}
-                onClick={() =>
-                  editor.chain().focus().toggleMark(markName).run()
-                }
-                className={`px-2 py-1 rounded hover:bg-zinc-700 ${
-                  active ? "bg-zinc-700" : ""
-                }`}
-                style={{
-                  borderBottom: `2px solid ${TAG_COLORS[kind].underline}`,
-                }}
+                onClick={() => editor.chain().focus().toggleMark(markName).run()}
+                className={`px-2 py-1 rounded hover:bg-zinc-700 ${active ? "bg-zinc-700" : ""}`}
+                style={{ borderBottom: `2px solid ${TAG_COLORS[kind].underline}` }}
                 title={TAG_LABELS[kind]}
               >
                 {TAG_LABELS[kind]}

@@ -335,6 +335,12 @@ function NavLinks() {
         ← Dashboard
       </Link>
       <Link
+        href="/app/manuscript"
+        className="rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
+      >
+        Scroll whole manuscript
+      </Link>
+      <Link
         href="/app/tags"
         className="rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
       >
