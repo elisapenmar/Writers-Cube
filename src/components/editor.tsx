@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
@@ -89,6 +90,13 @@ export function Editor({ scene }: { scene: Scene }) {
         <div className="flex items-center gap-4 text-xs text-zinc-500">
           <span>{wordCount} words</span>
           <SaveLabel status={status} savedAt={savedAt} />
+          <Link
+            href="/app/manuscript"
+            className="rounded-md border border-zinc-300 px-3 py-1 hover:bg-zinc-50"
+            title="Scroll through the whole manuscript"
+          >
+            Scroll mode
+          </Link>
           <button
             onClick={() => setTypewriterOpen(true)}
             className="rounded-md border border-zinc-300 px-3 py-1 hover:bg-zinc-50"
