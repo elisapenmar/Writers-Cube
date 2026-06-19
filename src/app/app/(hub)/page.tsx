@@ -6,11 +6,21 @@ import {
   createProjectAndOpen,
 } from "@/server/projects";
 import { listExercises, type ExerciseSummary } from "@/server/prompts";
+import { listKernels, type StoryKernel } from "@/server/kernels";
 import { ExerciseCard } from "@/components/exercise-card";
+import { StoryKernels } from "@/components/story-kernels";
 
 async function safeExercises(projectId: string | null): Promise<ExerciseSummary[]> {
   try {
     return await listExercises(projectId);
+  } catch {
+    return [];
+  }
+}
+
+async function safeKernels(): Promise<StoryKernel[]> {
+  try {
+    return await listKernels();
   } catch {
     return [];
   }
@@ -24,9 +34,10 @@ export default async function Dashboard() {
   const active =
     projects.find((p) => p.id === activeProjectId) ?? projects[0] ?? null;
 
-  const [practice, storyExercises] = await Promise.all([
+  const [practice, storyExercises, kernels] = await Promise.all([
     safeExercises(null),
     active ? safeExercises(active.id) : Promise.resolve([]),
+    safeKernels(),
   ]);
 
   return (
@@ -100,6 +111,9 @@ export default async function Dashboard() {
             </form>
           </div>
         </section>
+
+        {/* Story kernels */}
+        <StoryKernels initial={kernels} />
 
         {/* Practice library */}
         <section>

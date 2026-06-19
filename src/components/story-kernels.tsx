@@ -1,0 +1,155 @@
+"use client";
+
+import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  createKernel,
+  updateKernel,
+  deleteKernel,
+  type StoryKernel,
+} from "@/server/kernels";
+
+export function StoryKernels({ initial }: { initial: StoryKernel[] }) {
+  const [kernels, setKernels] = useState<StoryKernel[]>(initial);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+
+  function add() {
+    setError(null);
+    start(async () => {
+      try {
+        const k = await createKernel();
+        setKernels((prev) => [k, ...prev]);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Could not add");
+      }
+    });
+  }
+
+  function removeLocal(id: string) {
+    setKernels((prev) => prev.filter((k) => k.id !== id));
+  }
+
+  return (
+    <section>
+      <div className="flex items-baseline justify-between mb-3">
+        <div>
+          <h2 className="font-serif text-xl text-[var(--wc-ink)]">Story kernels</h2>
+          <p className="text-xs text-zinc-500">
+            Half-formed ideas, parked here until they&apos;re ready to grow.
+          </p>
+        </div>
+        <button
+          onClick={add}
+          disabled={pending}
+          className="shrink-0 rounded-lg px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          style={{ background: "var(--wc-plum)" }}
+        >
+          + New kernel
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-xs text-red-600 mb-2">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 underline">
+            Dismiss
+          </button>
+        </p>
+      )}
+
+      {kernels.length === 0 ? (
+        <p className="text-sm text-zinc-500 rounded-2xl border border-dashed border-zinc-300 px-4 py-6">
+          No kernels yet. Jot down a spark — a what-if, an image, a first line —
+          before it slips away.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {kernels.map((k) => (
+            <KernelCard
+              key={k.id}
+              kernel={k}
+              onDeleted={() => removeLocal(k.id)}
+              onError={setError}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function KernelCard({
+  kernel,
+  onDeleted,
+  onError,
+}: {
+  kernel: StoryKernel;
+  onDeleted: () => void;
+  onError: (m: string) => void;
+}) {
+  const [title, setTitle] = useState(kernel.title);
+  const [body, setBody] = useState(kernel.body);
+  const [saving, setSaving] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function schedule(patch: { title?: string; body?: string }) {
+    if (timer.current) clearTimeout(timer.current);
+    setSaving(true);
+    timer.current = setTimeout(async () => {
+      try {
+        await updateKernel(kernel.id, patch);
+      } catch (e) {
+        onError(e instanceof Error ? e.message : "Save failed");
+      } finally {
+        setSaving(false);
+      }
+    }, 600);
+  }
+
+  async function remove() {
+    if (!confirm("Delete this kernel?")) return;
+    try {
+      await deleteKernel(kernel.id);
+      onDeleted();
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Delete failed");
+    }
+  }
+
+  return (
+    <div
+      className="rounded-2xl border border-zinc-200 bg-white p-3 flex flex-col group"
+      style={{ borderTop: "3px solid var(--wc-plum)" }}
+    >
+      <div className="flex items-start gap-2">
+        <input
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            schedule({ title: e.target.value });
+          }}
+          placeholder="Working title…"
+          className="flex-1 bg-transparent font-serif text-base text-[var(--wc-ink)] outline-none placeholder:text-zinc-300"
+        />
+        <button
+          onClick={remove}
+          className="text-zinc-300 hover:text-red-700 opacity-0 group-hover:opacity-100 shrink-0"
+          title="Delete"
+        >
+          ×
+        </button>
+      </div>
+      <textarea
+        value={body}
+        onChange={(e) => {
+          setBody(e.target.value);
+          schedule({ body: e.target.value });
+        }}
+        placeholder="The spark… a what-if, an image, a line of dialogue."
+        rows={4}
+        className="mt-1 flex-1 resize-none bg-transparent text-sm text-zinc-700 leading-relaxed outline-none placeholder:text-zinc-300"
+      />
+      <div className="h-3 text-[10px] text-zinc-400">{saving ? "Saving…" : ""}</div>
+    </div>
+  );
+}
