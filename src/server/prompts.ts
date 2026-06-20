@@ -212,6 +212,7 @@ export type SaveExerciseInput = {
   goalValue: number | null;
   content: unknown;
   wordCount: number;
+  title?: string | null;
 };
 
 export async function saveExercise(input: SaveExerciseInput): Promise<{ id: string }> {
@@ -245,7 +246,7 @@ export async function saveExercise(input: SaveExerciseInput): Promise<{ id: stri
       goal_value: input.goalValue,
       content: input.content ?? null,
       word_count: input.wordCount,
-      title: promptJson.text.slice(0, 80),
+      title: input.title?.trim() ? input.title.trim().slice(0, 200) : null,
     })
     .select("id")
     .single();
@@ -313,6 +314,27 @@ export async function getExercise(id: string): Promise<ExerciseSummary | null> {
     throw new Error(error.message);
   }
   return (data as unknown as ExerciseSummary) ?? null;
+}
+
+export async function updateExercise(
+  id: string,
+  patch: { title?: string; content?: unknown; wordCount?: number },
+): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (typeof patch.title === "string") update.title = patch.title.slice(0, 200);
+  if (patch.content !== undefined) update.content = patch.content;
+  if (typeof patch.wordCount === "number") update.word_count = patch.wordCount;
+  const { error } = await supabase
+    .from("prompt_exercises")
+    .update(update)
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) {
+    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+    throw new Error(error.message);
+  }
+  revalidatePath("/app/exercises");
 }
 
 export async function deleteExercise(id: string): Promise<void> {
