@@ -10,6 +10,9 @@ import { listKernels, type StoryKernel } from "@/server/kernels";
 import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
 
+const PROJECTS_PREVIEW = 3;
+const KERNELS_PREVIEW = 3;
+
 async function safeExercises(projectId: string | null): Promise<ExerciseSummary[]> {
   try {
     return await listExercises(projectId);
@@ -34,11 +37,12 @@ export default async function Dashboard() {
   const active =
     projects.find((p) => p.id === activeProjectId) ?? projects[0] ?? null;
 
-  const [practice, storyExercises, kernels] = await Promise.all([
+  const [practice, kernels] = await Promise.all([
     safeExercises(null),
-    active ? safeExercises(active.id) : Promise.resolve([]),
     safeKernels(),
   ]);
+
+  const recentProjects = [...projects].reverse().slice(0, PROJECTS_PREVIEW);
 
   return (
     <div className="flex-1 overflow-y-auto wc-cream">
@@ -65,11 +69,18 @@ export default async function Dashboard() {
 
         {/* Projects */}
         <section>
-          <h2 className="font-serif text-xl text-[var(--wc-ink)] mb-3">
-            Your projects
-          </h2>
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="font-serif text-xl text-[var(--wc-ink)]">
+              Your projects
+            </h2>
+            {projects.length > PROJECTS_PREVIEW && (
+              <Link href="/app/projects" className="text-xs text-[var(--wc-slate)] hover:underline">
+                View all →
+              </Link>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {projects.map((p) => (
+            {recentProjects.map((p) => (
               <form key={p.id} action={openProject}>
                 <input type="hidden" name="projectId" value={p.id} />
                 <button
@@ -113,7 +124,7 @@ export default async function Dashboard() {
         </section>
 
         {/* Story kernels */}
-        <StoryKernels initial={kernels} />
+        <StoryKernels initial={kernels} limit={KERNELS_PREVIEW} />
 
         {/* Practice library */}
         <section>
@@ -141,38 +152,6 @@ export default async function Dashboard() {
             </div>
           )}
         </section>
-
-        {/* Project's prompted exercises */}
-        {active && (
-          <section>
-            <div className="flex items-baseline justify-between mb-3">
-              <h2 className="font-serif text-xl text-[var(--wc-ink)]">
-                Prompted exercises · {active.title}
-              </h2>
-              <Link
-                href={`/app/exercises?project=${active.id}`}
-                className="text-xs text-[var(--wc-slate)] hover:underline"
-              >
-                View all →
-              </Link>
-            </div>
-            {storyExercises.length === 0 ? (
-              <EmptyHint>
-                Prompts grounded in this story (via{" "}
-                <Link href="/app/prompts" className="text-[var(--wc-slate)] hover:underline">
-                  Help me with my story
-                </Link>
-                ) are saved here, attached to the project.
-              </EmptyHint>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {storyExercises.slice(0, 4).map((ex) => (
-                  <ExerciseCard key={ex.id} exercise={ex} />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
       </div>
     </div>
   );

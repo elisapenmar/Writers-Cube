@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   createKernel,
@@ -8,7 +9,13 @@ import {
   type StoryKernel,
 } from "@/server/kernels";
 
-export function StoryKernels({ initial }: { initial: StoryKernel[] }) {
+export function StoryKernels({
+  initial,
+  limit,
+}: {
+  initial: StoryKernel[];
+  limit?: number;
+}) {
   const [kernels, setKernels] = useState<StoryKernel[]>(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -29,6 +36,9 @@ export function StoryKernels({ initial }: { initial: StoryKernel[] }) {
     setKernels((prev) => prev.filter((k) => k.id !== id));
   }
 
+  const visible = limit ? kernels.slice(0, limit) : kernels;
+  const hasMore = limit !== undefined && kernels.length > limit;
+
   return (
     <section>
       <div className="flex items-baseline justify-between mb-3">
@@ -38,14 +48,21 @@ export function StoryKernels({ initial }: { initial: StoryKernel[] }) {
             Half-formed ideas, parked here until they&apos;re ready to grow.
           </p>
         </div>
-        <button
-          onClick={add}
-          disabled={pending}
-          className="shrink-0 rounded-lg px-3 py-1.5 text-sm text-white disabled:opacity-50"
-          style={{ background: "var(--wc-plum)" }}
-        >
-          + New kernel
-        </button>
+        <div className="flex items-center gap-3">
+          {hasMore && (
+            <Link href="/app/kernels" className="text-xs text-[var(--wc-slate)] hover:underline">
+              View all →
+            </Link>
+          )}
+          <button
+            onClick={add}
+            disabled={pending}
+            className="shrink-0 rounded-lg px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            style={{ background: "var(--wc-plum)" }}
+          >
+            + New kernel
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -64,7 +81,7 @@ export function StoryKernels({ initial }: { initial: StoryKernel[] }) {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {kernels.map((k) => (
+          {visible.map((k) => (
             <KernelCard
               key={k.id}
               kernel={k}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import {
   DndContext,
@@ -117,21 +117,47 @@ export function SideNav({ project }: { project: ProjectTree }) {
     );
   }
 
+  const firstSceneId = chapters[0]?.scenes[0]?.id;
+
   return (
     <aside className="w-72 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-screen">
-      <div className="p-4 border-b border-zinc-200 relative">
-        <ProjectMetadata project={project} />
-        <NavLinks />
-        <button
-          onClick={toggleNavCollapsed}
-          className="absolute top-2 right-2 w-7 h-7 rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 grid place-items-center text-xs"
-          title="Collapse side nav"
-        >
-          «
-        </button>
+      {/* Header: dashboard + project identity */}
+      <div className="px-3 pt-2.5 pb-3 border-b border-zinc-200">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/app"
+            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 rounded-md px-1.5 py-1 hover:bg-zinc-100"
+            title="Back to dashboard"
+          >
+            <span aria-hidden>⌂</span> Dashboard
+          </Link>
+          <button
+            onClick={toggleNavCollapsed}
+            className="w-7 h-7 rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 grid place-items-center text-xs"
+            title="Collapse side nav"
+          >
+            «
+          </button>
+        </div>
+        <div className="mt-2 px-1">
+          <ProjectMetadata project={project} />
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2">
+      {/* Tools */}
+      <div className="px-3 py-2 border-b border-zinc-200">
+        <ToolsRow />
+      </div>
+
+      {/* Chapters header + view toggle */}
+      <div className="px-3 pt-3 pb-1.5 flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-widest text-zinc-400">
+          Chapters
+        </span>
+        <SceneScrollToggle firstSceneId={firstSceneId} />
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-2 pb-2">
         {chapters.length === 0 ? (
           <p className="px-2 py-4 text-sm text-zinc-500">
             No chapters yet. Add one to begin.
@@ -178,23 +204,58 @@ export function SideNav({ project }: { project: ProjectTree }) {
         >
           + New chapter
         </button>
-        <a
-          href="/app/export"
-          download
-          className="block w-full text-center rounded-md border border-zinc-300 px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50"
-        >
-          Download manuscript (.md)
-        </a>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="w-full rounded-md px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-900"
+        <div className="flex items-center justify-between text-xs">
+          <a
+            href="/app/export"
+            download
+            className="rounded-md px-2 py-1 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+            title="Download manuscript as Markdown"
           >
-            Sign out
-          </button>
-        </form>
+            ↓ Export .md
+          </a>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-md px-2 py-1 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
     </aside>
+  );
+}
+
+function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
+  const pathname = usePathname();
+  const scrollActive = pathname === "/app/manuscript";
+  const scenesHref = firstSceneId ? `/app/scene/${firstSceneId}` : "/app/write";
+  return (
+    <div className="flex items-center rounded-md border border-zinc-200 overflow-hidden text-[11px]">
+      <Link
+        href={scenesHref}
+        className={`px-2 py-0.5 ${
+          !scrollActive
+            ? "bg-zinc-900 text-white"
+            : "bg-white text-zinc-600 hover:bg-zinc-50"
+        }`}
+        title="Edit one scene at a time"
+      >
+        Scenes
+      </Link>
+      <Link
+        href="/app/manuscript"
+        className={`px-2 py-0.5 border-l border-zinc-200 ${
+          scrollActive
+            ? "bg-zinc-900 text-white"
+            : "bg-white text-zinc-600 hover:bg-zinc-50"
+        }`}
+        title="Scroll the whole manuscript"
+      >
+        Scroll
+      </Link>
+    </div>
   );
 }
 
@@ -323,45 +384,39 @@ function MetaLine({
   );
 }
 
-function NavLinks() {
+function ToolsRow() {
   const setOpen = useOrganize((s) => s.setOpen);
   const setBsOpen = useOrganize((s) => s.setBsOpen);
+  const btn =
+    "flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] text-zinc-600 hover:bg-zinc-100 border border-zinc-200";
   return (
-    <div className="mt-3 flex flex-col gap-1 text-xs">
-      <Link
-        href="/app"
-        className="rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
-      >
-        ← Dashboard
-      </Link>
-      <Link
-        href="/app/manuscript"
-        className="rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
-      >
-        Scroll whole manuscript
-      </Link>
-      <Link
-        href="/app/tags"
-        className="rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
-      >
-        View tags
-      </Link>
+    <div className="grid grid-cols-4 gap-1.5">
       <button
         type="button"
         onClick={() => setBsOpen(true)}
-        className="text-left rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
-        title="Open the Brainstorm panel (left side, separate from Organize)"
+        className={btn}
+        title="Open the Brainstorm panel"
       >
+        <span aria-hidden className="text-base leading-none">💭</span>
         Brainstorm
       </button>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-left rounded-md px-2 py-1.5 text-zinc-600 hover:bg-zinc-100"
-        title="Open the Organize panel (notes / map / outline / characters / canvas)"
+        className={btn}
+        title="Notes · map · outline · characters · canvas"
       >
+        <span aria-hidden className="text-base leading-none">🗂️</span>
         Organize
       </button>
+      <Link href="/app/tags" className={btn} title="Tagged passages">
+        <span aria-hidden className="text-base leading-none">🏷️</span>
+        Tags
+      </Link>
+      <Link href="/app/prompts" className={btn} title="Writing prompts for this project">
+        <span aria-hidden className="text-base leading-none">🎲</span>
+        Prompts
+      </Link>
     </div>
   );
 }
