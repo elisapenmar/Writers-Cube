@@ -9,13 +9,14 @@ export type OrganizeFormat =
   | BrainstormFormat
   | "outline"
   | "characters"
-  | "canvas";
+  | "canvas"
+  | "timeline";
 
 export type PanelGroup = "organize" | "bible";
 
 export const GROUP_TABS: Record<PanelGroup, OrganizeFormat[]> = {
   organize: ["notes", "canvas"],
-  bible: ["mindmap", "outline", "characters"],
+  bible: ["mindmap", "outline", "characters", "timeline"],
 };
 
 export const GROUP_LABEL: Record<PanelGroup, string> = {

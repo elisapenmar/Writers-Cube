@@ -54,11 +54,13 @@ const TAB_LABEL: Record<OrganizeFormat, string> = {
   outline: "Outline",
   characters: "Characters",
   canvas: "Canvas",
+  timeline: "Timeline",
 };
 import { MindMap } from "@/components/mind-map";
 import { OutlineTab } from "@/components/outline-tree";
 import { CharactersTab } from "@/components/characters-tab";
 import { CanvasTab } from "@/components/canvas-tab";
+import { TimelineTab } from "@/components/timeline-tab";
 import {
   organizeBrainstorm,
   getNotes,
@@ -185,7 +187,13 @@ export function OrganizePanel() {
   const widthStyle = { width: `${panelWidth}px`, maxWidth: "95vw" };
 
   async function generate() {
-    if (format === "outline" || format === "characters" || format === "canvas") return;
+    if (
+      format === "outline" ||
+      format === "characters" ||
+      format === "canvas" ||
+      format === "timeline"
+    )
+      return;
     setOrganizing(true);
     setError(null);
     try {
@@ -262,7 +270,10 @@ export function OrganizePanel() {
               </button>
             ))}
           </div>
-          {format !== "outline" && format !== "characters" && format !== "canvas" && (
+          {format !== "outline" &&
+            format !== "characters" &&
+            format !== "canvas" &&
+            format !== "timeline" && (
             <button
               onClick={generate}
               disabled={organizing}
@@ -325,7 +336,9 @@ export function OrganizePanel() {
             </button>
           </div>
         )}
-        {format === "canvas" ? (
+        {format === "timeline" ? (
+          <TimelineTab />
+        ) : format === "canvas" ? (
           <CanvasTab />
         ) : format === "characters" ? (
           <CharactersTab />
