@@ -89,11 +89,21 @@ function parseMarkdownish(text: string, fallbackTitle: string): Parsed {
 }
 
 function htmlToMarkdownish(html: string): string {
-  return html
+  let s = html;
+  // Drop everything that isn't body content (Google Docs export ships a big
+  // <head><style>… block that would otherwise leak in as text).
+  s = s.replace(/<head[\s\S]*?<\/head>/gi, "");
+  s = s.replace(/<style[\s\S]*?<\/style>/gi, "");
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, "");
+  const bodyMatch = s.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (bodyMatch) s = bodyMatch[1];
+
+  return s
     .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n# $1\n")
     .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n## $1\n")
     .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n## $1\n")
-    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "\n$1\n")
+    .replace(/<\/(p|div|li|tr)>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&amp;/g, "&")
@@ -101,7 +111,12 @@ function htmlToMarkdownish(html: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
     .replace(/&#39;|&rsquo;|&lsquo;/g, "'")
-    .replace(/&quot;|&ldquo;|&rdquo;/g, '"');
+    .replace(/&quot;|&ldquo;|&rdquo;/g, '"')
+    .replace(/&hellip;/g, "…")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n");
 }
 
 function docFromParagraphs(paragraphs: string[]) {
@@ -175,13 +190,25 @@ async function persistParsed(
   return project.id as string;
 }
 
-/** Import HTML (e.g. from Google Docs export) as a new project. Returns the id. */
-export async function importHtmlAsProject(html: string, title: string): Promise<string> {
+/** Convert exported HTML (e.g. from Google Docs) to markdown-ish plain text. */
+export async function htmlToText(html: string): Promise<string> {
+  return htmlToMarkdownish(html);
+}
+
+/** Import markdown-ish text as a new project. Returns the id + word count. */
+export async function importTextAsProject(
+  text: string,
+  title: string,
+): Promise<{ projectId: string; words: number }> {
   const { supabase, user } = await requireUser();
-  const parsed = parseMarkdownish(htmlToMarkdownish(html), title);
-  const id = await persistParsed(supabase, user.id, parsed, title);
-  await setActiveProject(id);
-  return id;
+  const parsed = parseMarkdownish(text, title);
+  const words = parsed.chapters.reduce(
+    (n, ch) => n + ch.scenes.reduce((m, sc) => m + wordCount(sc.paragraphs), 0),
+    0,
+  );
+  const projectId = await persistParsed(supabase, user.id, parsed, title);
+  await setActiveProject(projectId);
+  return { projectId, words };
 }
 
 export async function importManuscript(formData: FormData): Promise<void> {

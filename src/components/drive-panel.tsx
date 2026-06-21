@@ -4,25 +4,27 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
-  importDriveDoc,
+  browseDrive,
+  importDriveFile,
   exportProjectToDrive,
   disconnectDrive,
-  type DriveDoc,
+  type DriveEntry,
   type DriveStatus,
 } from "@/server/drive";
 
 const DRIVE_SCOPES =
   "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file";
 
+type Crumb = { id: string; name: string };
+
 export function DrivePanel({
   status,
-  docs,
+  entries,
   projects,
   driveError = null,
-  needsReconnect = false,
 }: {
   status: DriveStatus;
-  docs: DriveDoc[];
+  entries: DriveEntry[];
   projects: { id: string; title: string }[];
   driveError?: string | null;
   needsReconnect?: boolean;
@@ -32,6 +34,11 @@ export function DrivePanel({
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(driveError);
   const [workingId, setWorkingId] = useState<string | null>(null);
+
+  // File-browser state.
+  const [items, setItems] = useState<DriveEntry[]>(entries);
+  const [path, setPath] = useState<Crumb[]>([{ id: "root", name: "My Drive" }]);
+  const [loadingFolder, setLoadingFolder] = useState(false);
 
   async function connect() {
     setError(null);
@@ -54,13 +61,37 @@ export function DrivePanel({
     });
   }
 
-  function importDoc(doc: DriveDoc) {
+  async function openFolder(folder: DriveEntry, fromCrumbIndex?: number) {
+    setError(null);
+    setLoadingFolder(true);
+    try {
+      const next = await browseDrive(folder.id);
+      setItems(next);
+      if (fromCrumbIndex != null) {
+        setPath((p) => p.slice(0, fromCrumbIndex + 1));
+      } else {
+        setPath((p) => [...p, { id: folder.id, name: folder.name }]);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open folder");
+    } finally {
+      setLoadingFolder(false);
+    }
+  }
+
+  function navigateCrumb(index: number) {
+    const crumb = path[index];
+    if (index === path.length - 1) return;
+    void openFolder({ id: crumb.id, name: crumb.name } as DriveEntry, index);
+  }
+
+  function importEntry(entry: DriveEntry) {
     setError(null);
     setNote(null);
-    setWorkingId(doc.id);
+    setWorkingId(entry.id);
     startBusy(async () => {
       try {
-        await importDriveDoc(doc.id);
+        await importDriveFile(entry.id, entry.mimeType);
         router.push("/app/manuscript");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Import failed");
@@ -86,6 +117,9 @@ export function DrivePanel({
     });
   }
 
+  const folders = items.filter((i) => i.isFolder);
+  const files = items.filter((i) => !i.isFolder);
+
   return (
     <div className="flex-1 overflow-y-auto wc-cube-bg">
       <div className="mx-auto max-w-3xl px-6 py-10 space-y-8">
@@ -95,7 +129,7 @@ export function DrivePanel({
           </div>
           <h1 className="font-serif text-3xl text-[var(--wc-ink)]">Connect your Drive</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Import Google Docs as projects, and save your manuscripts straight to Drive.
+            Browse your Drive, import documents as projects, and save manuscripts back to Drive.
           </p>
         </header>
 
@@ -132,10 +166,7 @@ export function DrivePanel({
                 Connected{status.email ? ` as ${status.email}` : ""}.
               </div>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={connect}
-                  className="text-xs text-[var(--wc-slate)] hover:underline"
-                >
+                <button onClick={connect} className="text-xs text-[var(--wc-slate)] hover:underline">
                   Reconnect
                 </button>
                 <button
@@ -152,50 +183,84 @@ export function DrivePanel({
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 <div className="font-medium">Drive is connected, but the request failed.</div>
                 <p className="mt-1 text-amber-800">{driveError}</p>
-                <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-amber-800">
-                  <li>
-                    Enable the <b>Google Drive API</b> in your Google Cloud project
-                    (APIs &amp; Services → Library → Google Drive API → Enable).
-                  </li>
-                  <li>
-                    On the OAuth consent screen, make sure the Drive scopes are added,
-                    then click <b>Reconnect</b> and check the Drive permission boxes.
-                  </li>
-                </ul>
               </div>
             )}
 
-            {/* Import */}
+            {/* File browser */}
             <section>
-              <h2 className="mb-2 font-serif text-xl text-[var(--wc-ink)]">
-                Import a Google Doc
-              </h2>
-              <p className="mb-3 text-xs text-zinc-500">
-                Headings become chapters; the document lands in a new project.
-              </p>
-              {docs.length === 0 ? (
-                <EmptyHint>No Google Docs found in your Drive.</EmptyHint>
-              ) : (
-                <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-200 bg-white">
-                  {docs.map((d) => (
-                    <div key={d.id} className="flex items-center justify-between px-4 py-2.5">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm text-zinc-800">{d.name}</div>
-                        <div className="text-[11px] text-zinc-400">
-                          Modified {new Date(d.modifiedTime).toLocaleDateString()}
-                        </div>
-                      </div>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="font-serif text-xl text-[var(--wc-ink)]">Your Drive</h2>
+                {loadingFolder && <span className="text-xs text-zinc-400">Loading…</span>}
+              </div>
+
+              {/* Breadcrumb */}
+              <div className="mb-2 flex flex-wrap items-center gap-1 text-xs text-zinc-500">
+                {path.map((c, i) => (
+                  <span key={`${c.id}-${i}`} className="flex items-center gap-1">
+                    {i > 0 && <span className="text-zinc-300">/</span>}
+                    <button
+                      onClick={() => navigateCrumb(i)}
+                      className={
+                        i === path.length - 1
+                          ? "font-medium text-zinc-700"
+                          : "text-[var(--wc-slate)] hover:underline"
+                      }
+                    >
+                      {c.name}
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-200 bg-white">
+                {items.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-sm text-zinc-400">
+                    This folder is empty.
+                  </div>
+                ) : (
+                  <>
+                    {folders.map((f) => (
                       <button
-                        onClick={() => importDoc(d)}
-                        disabled={busy}
-                        className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                        key={f.id}
+                        onClick={() => openFolder(f)}
+                        disabled={loadingFolder}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-zinc-50 disabled:opacity-50"
                       >
-                        {workingId === d.id ? "Importing…" : "Import"}
+                        <span>📁</span>
+                        <span className="flex-1 truncate text-sm text-zinc-800">{f.name}</span>
+                        <span className="text-zinc-300">›</span>
                       </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                    {files.map((f) => (
+                      <div key={f.id} className="flex items-center gap-2 px-4 py-2.5">
+                        <span>{iconFor(f.mimeType)}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm text-zinc-800">{f.name}</div>
+                          {f.modifiedTime && (
+                            <div className="text-[11px] text-zinc-400">
+                              Modified {new Date(f.modifiedTime).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                        {f.importable ? (
+                          <button
+                            onClick={() => importEntry(f)}
+                            disabled={busy}
+                            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                          >
+                            {workingId === f.id ? "Importing…" : "Import"}
+                          </button>
+                        ) : (
+                          <span className="shrink-0 text-[11px] text-zinc-300">—</span>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                Importable: Google Docs, Word (.docx), and text files. Headings become chapters.
+              </p>
             </section>
 
             {/* Export */}
@@ -230,6 +295,16 @@ export function DrivePanel({
       </div>
     </div>
   );
+}
+
+function iconFor(mime: string): string {
+  if (mime === "application/vnd.google-apps.document") return "📄";
+  if (mime.includes("wordprocessingml") || mime.includes("rtf")) return "📝";
+  if (mime.startsWith("text/")) return "📃";
+  if (mime.startsWith("image/")) return "🖼️";
+  if (mime === "application/pdf") return "📕";
+  if (mime.startsWith("application/vnd.google-apps")) return "🟢";
+  return "📎";
 }
 
 function EmptyHint({ children }: { children: React.ReactNode }) {

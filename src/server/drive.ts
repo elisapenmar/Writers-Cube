@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { importHtmlAsProject } from "@/server/import";
+import { htmlToText, importTextAsProject } from "@/server/import";
 import {
   type Manuscript,
   tiptapToParagraphs,
@@ -131,33 +131,103 @@ export async function disconnectDrive(): Promise<void> {
   await supabase.from("google_credentials").delete().eq("user_id", user.id);
 }
 
-/** List the user's Google Docs, most-recently-modified first. */
-export async function listDriveDocs(): Promise<DriveDoc[]> {
-  const q = encodeURIComponent(`mimeType='${GOOGLE_DOC}' and trashed=false`);
-  const fields = encodeURIComponent("files(id,name,modifiedTime)");
-  const res = await driveFetch(
-    `${DRIVE_API}/files?q=${q}&fields=${fields}&orderBy=modifiedTime desc&pageSize=50`,
-  );
-  if (!res.ok) throw new Error(`Drive list failed (${res.status})`);
-  const json = (await res.json()) as { files?: DriveDoc[] };
-  return json.files ?? [];
-}
-
 /** Import a Google Doc's contents as a new project. Returns the project id. */
 export async function importDriveDoc(fileId: string): Promise<{ projectId: string }> {
   // Fetch the doc name for the title.
   const metaRes = await driveFetch(`${DRIVE_API}/files/${fileId}?fields=name`);
-  const meta = metaRes.ok ? ((await metaRes.json()) as { name?: string }) : {};
+  const meta = (await metaRes.json()) as { name?: string };
   const title = meta.name ?? "Imported document";
 
   // Export as HTML to preserve headings → chapters.
-  const res = await driveFetch(
+  const htmlRes = await driveFetch(
     `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,
   );
-  if (!res.ok) throw new Error(`Could not export the document (${res.status})`);
-  const html = await res.text();
+  const html = await htmlRes.text();
+  let text = await htmlToText(html);
 
-  const projectId = await importHtmlAsProject(html, title);
+  // Fall back to a plain-text export if the HTML yielded nothing usable.
+  if (text.replace(/\s+/g, "").length < 2) {
+    const txtRes = await driveFetch(
+      `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/plain")}`,
+    );
+    text = await txtRes.text();
+  }
+
+  const { projectId } = await importTextAsProject(text, title);
+  return { projectId };
+}
+
+// ---- File browser ----
+
+const FOLDER_MIME = "application/vnd.google-apps.folder";
+
+export type DriveEntry = {
+  id: string;
+  name: string;
+  mimeType: string;
+  isFolder: boolean;
+  importable: boolean;
+  modifiedTime: string | null;
+};
+
+function isImportable(mime: string): boolean {
+  return (
+    mime === GOOGLE_DOC ||
+    mime === DOCX_MIME ||
+    mime === "text/plain" ||
+    mime === "text/markdown" ||
+    mime === "application/rtf" ||
+    mime === "text/rtf"
+  );
+}
+
+/** List the children of a Drive folder (defaults to My Drive root). */
+export async function browseDrive(folderId?: string): Promise<DriveEntry[]> {
+  const parent = folderId || "root";
+  const q = encodeURIComponent(`'${parent}' in parents and trashed=false`);
+  const fields = encodeURIComponent("files(id,name,mimeType,modifiedTime)");
+  const res = await driveFetch(
+    `${DRIVE_API}/files?q=${q}&fields=${fields}&orderBy=folder,name&pageSize=200`,
+  );
+  if (!res.ok) throw new Error(`Drive list failed (${res.status})`);
+  const json = (await res.json()) as {
+    files?: { id: string; name: string; mimeType: string; modifiedTime?: string }[];
+  };
+  return (json.files ?? []).map((f) => ({
+    id: f.id,
+    name: f.name,
+    mimeType: f.mimeType,
+    isFolder: f.mimeType === FOLDER_MIME,
+    importable: isImportable(f.mimeType),
+    modifiedTime: f.modifiedTime ?? null,
+  }));
+}
+
+/** Import any supported Drive file (Google Doc, Word, text) as a new project. */
+export async function importDriveFile(
+  fileId: string,
+  mimeType: string,
+): Promise<{ projectId: string }> {
+  if (mimeType === GOOGLE_DOC) return importDriveDoc(fileId);
+
+  const metaRes = await driveFetch(`${DRIVE_API}/files/${fileId}?fields=name`);
+  const meta = (await metaRes.json()) as { name?: string };
+  const title = (meta.name ?? "Imported document").replace(/\.(docx|txt|md|markdown|rtf)$/i, "");
+
+  // Non-Google files are downloaded directly.
+  const dl = await driveFetch(`${DRIVE_API}/files/${fileId}?alt=media`);
+
+  let text: string;
+  if (mimeType === DOCX_MIME) {
+    const buf = Buffer.from(await dl.arrayBuffer());
+    const mammoth = (await import("mammoth")).default;
+    const { value } = await mammoth.convertToHtml({ buffer: buf });
+    text = await htmlToText(value);
+  } else {
+    text = await dl.text();
+  }
+
+  const { projectId } = await importTextAsProject(text, title);
   return { projectId };
 }
 

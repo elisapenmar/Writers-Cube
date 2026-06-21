@@ -1,4 +1,4 @@
-import { getDriveStatus, listDriveDocs, type DriveDoc } from "@/server/drive";
+import { getDriveStatus, browseDrive, type DriveEntry } from "@/server/drive";
 import { listProjects } from "@/server/projects";
 import { DrivePanel } from "@/components/drive-panel";
 
@@ -10,16 +10,14 @@ export default async function DrivePage() {
     /* table missing / not connected */
   }
 
-  let docs: DriveDoc[] = [];
+  let entries: DriveEntry[] = [];
   let driveError: string | null = null;
   let needsReconnect = false;
   if (status.connected) {
     try {
-      docs = await listDriveDocs();
+      entries = await browseDrive("root");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Drive request failed";
-      // A genuine token-expiry → reconnect; anything else (API disabled, missing
-      // scopes) stays "connected" and shows the real reason so it isn't a loop.
       if (/expired|reconnect/i.test(msg)) {
         needsReconnect = true;
         status = { connected: false, email: status.email };
@@ -34,7 +32,7 @@ export default async function DrivePage() {
   return (
     <DrivePanel
       status={status}
-      docs={docs}
+      entries={entries}
       projects={projects}
       driveError={driveError}
       needsReconnect={needsReconnect}
