@@ -89,6 +89,21 @@ class ReconnectError extends Error {
   }
 }
 
+/** Pull a short, human-readable reason out of a Google API error body. */
+function summarizeDriveError(status: number, body: string): string {
+  try {
+    const json = JSON.parse(body) as {
+      error?: { message?: string; status?: string; errors?: { reason?: string }[] };
+    };
+    const msg = json.error?.message;
+    const reason = json.error?.errors?.[0]?.reason ?? json.error?.status;
+    if (msg) return reason ? `${msg} (${reason})` : msg;
+  } catch {
+    /* not JSON */
+  }
+  return `Google Drive returned HTTP ${status}.`;
+}
+
 async function driveFetch(url: string, init?: RequestInit): Promise<Response> {
   const t = await freshToken();
   if (!t) throw new ReconnectError();
@@ -96,7 +111,13 @@ async function driveFetch(url: string, init?: RequestInit): Promise<Response> {
     ...init,
     headers: { ...(init?.headers ?? {}), Authorization: `Bearer ${t.token}` },
   });
-  if (res.status === 401 || res.status === 403) throw new ReconnectError();
+  // 401 = token genuinely invalid/expired → reconnect. Everything else (esp 403:
+  // Drive API disabled or scopes not granted) should surface its real reason.
+  if (res.status === 401) throw new ReconnectError();
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(summarizeDriveError(res.status, body));
+  }
   return res;
 }
 

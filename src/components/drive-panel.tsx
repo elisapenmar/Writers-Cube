@@ -18,15 +18,19 @@ export function DrivePanel({
   status,
   docs,
   projects,
+  driveError = null,
+  needsReconnect = false,
 }: {
   status: DriveStatus;
   docs: DriveDoc[];
   projects: { id: string; title: string }[];
+  driveError?: string | null;
+  needsReconnect?: boolean;
 }) {
   const router = useRouter();
   const [busy, startBusy] = useTransition();
   const [note, setNote] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(driveError);
   const [workingId, setWorkingId] = useState<string | null>(null);
 
   async function connect() {
@@ -127,14 +131,39 @@ export function DrivePanel({
               <div className="text-sm text-zinc-700">
                 Connected{status.email ? ` as ${status.email}` : ""}.
               </div>
-              <button
-                onClick={disconnect}
-                disabled={busy}
-                className="text-xs text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
-              >
-                Disconnect
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={connect}
+                  className="text-xs text-[var(--wc-slate)] hover:underline"
+                >
+                  Reconnect
+                </button>
+                <button
+                  onClick={disconnect}
+                  disabled={busy}
+                  className="text-xs text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
+                >
+                  Disconnect
+                </button>
+              </div>
             </div>
+
+            {driveError && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="font-medium">Drive is connected, but the request failed.</div>
+                <p className="mt-1 text-amber-800">{driveError}</p>
+                <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-amber-800">
+                  <li>
+                    Enable the <b>Google Drive API</b> in your Google Cloud project
+                    (APIs &amp; Services → Library → Google Drive API → Enable).
+                  </li>
+                  <li>
+                    On the OAuth consent screen, make sure the Drive scopes are added,
+                    then click <b>Reconnect</b> and check the Drive permission boxes.
+                  </li>
+                </ul>
+              </div>
+            )}
 
             {/* Import */}
             <section>
