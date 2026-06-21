@@ -17,6 +17,7 @@ export function CanvasTab() {
   const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [cropId, setCropId] = useState<string | null>(null);
   const [urlPrompt, setUrlPrompt] = useState(false);
   const [urlDraft, setUrlDraft] = useState("");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,6 +59,19 @@ export function CanvasTab() {
     update(items.filter((it) => it.id !== id));
     if (selectedId === id) setSelectedId(null);
   }
+
+  function applyCrop(id: string, dataUrl: string, naturalW: number, naturalH: number) {
+    const maxDisplay = 360;
+    const ratio = Math.min(1, maxDisplay / Math.max(naturalW, naturalH));
+    patchItem(id, {
+      content: dataUrl,
+      width: Math.max(40, Math.round(naturalW * ratio)),
+      height: Math.max(30, Math.round(naturalH * ratio)),
+    });
+    setCropId(null);
+  }
+
+  const cropItem = cropId ? items.find((it) => it.id === cropId) ?? null : null;
 
   function addTextBox() {
     const scrollLeft = containerRef.current?.scrollLeft ?? 0;
@@ -286,10 +300,19 @@ export function CanvasTab() {
               onSelect={() => setSelectedId(item.id)}
               onPatch={(p) => patchItem(item.id, p)}
               onDelete={() => removeItem(item.id)}
+              onCrop={item.type === "image" ? () => setCropId(item.id) : undefined}
             />
           ))}
         </div>
       </div>
+
+      {cropItem && (
+        <CropOverlay
+          src={cropItem.content}
+          onCancel={() => setCropId(null)}
+          onApply={(dataUrl, w, h) => applyCrop(cropItem.id, dataUrl, w, h)}
+        />
+      )}
 
       {error && (
         <div className="bg-red-50 border-t border-red-200 px-4 py-2 text-xs text-red-800 flex items-center gap-2">
@@ -351,18 +374,159 @@ function WebpageCard({ url }: { url: string }) {
   );
 }
 
+type Rect = { x: number; y: number; w: number; h: number };
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+function CropOverlay({
+  src,
+  onCancel,
+  onApply,
+}: {
+  src: string;
+  onCancel: () => void;
+  onApply: (dataUrl: string, w: number, h: number) => void;
+}) {
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
+  const [display, setDisplay] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  const [crop, setCrop] = useState<Rect | null>(null);
+
+  function onLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    const img = e.currentTarget;
+    const nw = img.naturalWidth || img.width;
+    const nh = img.naturalHeight || img.height;
+    const maxW = Math.min(560, window.innerWidth - 80);
+    const maxH = window.innerHeight - 220;
+    const scale = Math.min(1, maxW / nw, maxH / nh);
+    const dw = Math.round(nw * scale);
+    const dh = Math.round(nh * scale);
+    setNatural({ w: nw, h: nh });
+    setDisplay({ w: dw, h: dh });
+    setCrop({ x: dw * 0.1, y: dh * 0.1, w: dw * 0.8, h: dh * 0.8 });
+  }
+
+  function startDrag(mode: "move" | "nw" | "ne" | "sw" | "se", e: React.PointerEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!crop) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const start = crop;
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      let { x, y, w, h } = start;
+      if (mode === "move") {
+        x = clamp(start.x + dx, 0, display.w - w);
+        y = clamp(start.y + dy, 0, display.h - h);
+      } else {
+        let x2 = start.x + start.w;
+        let y2 = start.y + start.h;
+        if (mode === "nw" || mode === "sw") x = clamp(start.x + dx, 0, x2 - 24);
+        if (mode === "nw" || mode === "ne") y = clamp(start.y + dy, 0, y2 - 24);
+        if (mode === "ne" || mode === "se") x2 = clamp(start.x + start.w + dx, x + 24, display.w);
+        if (mode === "sw" || mode === "se") y2 = clamp(start.y + start.h + dy, y + 24, display.h);
+        w = x2 - x;
+        h = y2 - y;
+      }
+      setCrop({ x, y, w, h });
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  function apply() {
+    const img = imgRef.current;
+    if (!crop || !natural || !img) return;
+    const scale = natural.w / display.w;
+    const sx = Math.round(crop.x * scale);
+    const sy = Math.round(crop.y * scale);
+    const sw = Math.max(1, Math.round(crop.w * scale));
+    const sh = Math.max(1, Math.round(crop.h * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = sw;
+    canvas.height = sh;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    const isPng = src.startsWith("data:image/png");
+    const out = canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.92);
+    onApply(out, sw, sh);
+  }
+
+  const handle =
+    "absolute w-3 h-3 bg-white border border-zinc-700 rounded-sm";
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 p-4">
+      <div className="rounded-xl bg-white p-4 shadow-2xl">
+        <div className="mb-2 text-sm font-medium text-zinc-700">Crop image</div>
+        <div
+          className="relative select-none"
+          style={{ width: display.w, height: display.h, touchAction: "none" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imgRef}
+            src={src}
+            alt=""
+            onLoad={onLoad}
+            draggable={false}
+            className="block h-full w-full"
+          />
+          {crop && (
+            <>
+              {/* dim outside the crop with a shadow ring */}
+              <div
+                className="absolute border-2 border-amber-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+                style={{ left: crop.x, top: crop.y, width: crop.w, height: crop.h, cursor: "move" }}
+                onPointerDown={(e) => startDrag("move", e)}
+              >
+                <div className={`${handle} -left-1.5 -top-1.5 cursor-nw-resize`} onPointerDown={(e) => startDrag("nw", e)} />
+                <div className={`${handle} -right-1.5 -top-1.5 cursor-ne-resize`} onPointerDown={(e) => startDrag("ne", e)} />
+                <div className={`${handle} -left-1.5 -bottom-1.5 cursor-sw-resize`} onPointerDown={(e) => startDrag("sw", e)} />
+                <div className={`${handle} -right-1.5 -bottom-1.5 cursor-se-resize`} onPointerDown={(e) => startDrag("se", e)} />
+              </div>
+            </>
+          )}
+        </div>
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={apply}
+            className="rounded-lg bg-zinc-900 px-4 py-1.5 text-sm text-white hover:bg-zinc-800"
+          >
+            Apply crop
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CanvasItemView({
   item,
   selected,
   onSelect,
   onPatch,
   onDelete,
+  onCrop,
 }: {
   item: CanvasItem;
   selected: boolean;
   onSelect: () => void;
   onPatch: (patch: Partial<CanvasItem>) => void;
   onDelete: () => void;
+  onCrop?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [textDraft, setTextDraft] = useState(item.content);
@@ -483,6 +647,19 @@ function CanvasItemView({
 
       {selected && (
         <>
+          {onCrop && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCrop();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title="Crop image"
+              className="absolute -top-3 -left-3 h-6 rounded-full bg-white border border-zinc-300 px-2 text-[11px] text-zinc-600 hover:bg-zinc-900 hover:text-white shadow leading-none flex items-center justify-center"
+            >
+              Crop
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();

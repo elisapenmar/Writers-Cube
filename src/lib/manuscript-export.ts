@@ -30,7 +30,7 @@ export type ExportFormat = "md" | "txt" | "html" | "docx" | "epub" | "pdf";
 
 export const EXPORT_FORMATS: { id: ExportFormat; label: string; ext: string; note: string }[] = [
   { id: "epub", label: "Ebook (.epub)", ext: "epub", note: "Kindle, Apple Books, Kobo, ebook stores" },
-  { id: "pdf", label: "Print PDF", ext: "html", note: "Print-ready pages → Save as PDF" },
+  { id: "pdf", label: "PDF", ext: "html", note: "Opens print dialog → Save as PDF" },
   { id: "docx", label: "Word (.docx)", ext: "docx", note: "For agents, editors, Word & Google Docs" },
   { id: "md", label: "Markdown (.md)", ext: "md", note: "Portable; opens in any text/markdown tool" },
   { id: "txt", label: "Plain text (.txt)", ext: "txt", note: "Universal, no formatting" },
@@ -154,13 +154,12 @@ export function renderPrintHtml(m: Manuscript, s: PublishSettings): string {
   const trim = TRIM_SIZES[s.trimSize];
 
   const front: string[] = [];
-  if (s.titlePage) {
-    front.push(
-      `<section class="page title-page"><h1 class="book-title">${esc(title)}</h1>${
-        s.subtitle ? `<p class="subtitle">${esc(s.subtitle)}</p>` : ""
-      }${author ? `<p class="byline">${esc(author)}</p>` : ""}</section>`,
-    );
-  }
+  // A title page is always included on exports.
+  front.push(
+    `<section class="page title-page"><h1 class="book-title">${esc(title)}</h1>${
+      s.subtitle ? `<p class="subtitle">${esc(s.subtitle)}</p>` : ""
+    }${author ? `<p class="byline">${esc(author)}</p>` : ""}</section>`,
+  );
   if (s.copyrightPage) {
     const year = s.copyrightYear || String(new Date().getFullYear());
     const lines = [
@@ -222,10 +221,24 @@ export function renderPrintHtml(m: Manuscript, s: PublishSettings): string {
   ${s.dropCaps ? "p.first::first-letter { font-size: 3.2em; line-height: 0.8; float: left; padding: 0.02em 0.06em 0 0; }" : ""}
   .scene-break { text-align: center; text-indent: 0; margin: 1.4em 0; letter-spacing: 0.3em; }
   .end { text-align: center; margin-top: 3em; letter-spacing: 0.2em; }
+  /* Screen-only helper bar; hidden when printing/saving to PDF. */
+  .pdf-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 0.75rem; justify-content: center; padding: 0.6rem; background: #33303a; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem; z-index: 9999; }
+  .pdf-bar button { background: #fff; color: #33303a; border: 0; border-radius: 8px; padding: 0.4rem 0.9rem; font-size: 0.85rem; cursor: pointer; }
+  .pdf-spacer { height: 2.6rem; }
+  @media print { .pdf-bar, .pdf-spacer { display: none !important; } }
 </style></head><body>
+<div class="pdf-bar no-print">
+  <span>Choose “Save as PDF” as the destination.</span>
+  <button onclick="window.print()">Save as PDF</button>
+</div>
+<div class="pdf-spacer"></div>
 ${front.join("\n")}
 ${body}
 ${s.theEnd ? `<p class="end">The End</p>` : ""}
+<script>
+  // Open the print dialog automatically so the user lands on Save-as-PDF.
+  window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 350); });
+</script>
 </body></html>`;
 }
 
@@ -248,8 +261,8 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
   const align = s && s.justify ? AlignmentType.JUSTIFIED : undefined;
   const sceneBreak = s?.sceneBreak ?? "* * *";
 
-  // Title page
-  if (!s || s.titlePage) {
+  // Title page — always included on exports.
+  {
     children.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,

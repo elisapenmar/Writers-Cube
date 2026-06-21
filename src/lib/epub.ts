@@ -94,8 +94,8 @@ export async function renderEpub(m: Manuscript, s: PublishSettings): Promise<Buf
 
   const sections: Section[] = [];
 
-  // Title page
-  if (s.titlePage) {
+  // Title page — always included on exports.
+  {
     const body = `<div class="front">
   <h1 class="book-title">${esc(title)}</h1>
   ${s.subtitle ? `<h1 class="subtitle">${esc(s.subtitle)}</h1>` : ""}

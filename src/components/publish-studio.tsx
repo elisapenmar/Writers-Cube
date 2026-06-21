@@ -155,9 +155,8 @@ export function PublishStudio({
               </div>
             </Panel>
 
-            <Panel title="Front & back matter">
+            <Panel title="Front & back matter" hint="A title page is always included.">
               <div className="flex flex-wrap gap-4">
-                <Toggle label="Title page" checked={s.titlePage} onChange={(v) => update("titlePage", v)} />
                 <Toggle label="Copyright page" checked={s.copyrightPage} onChange={(v) => update("copyrightPage", v)} />
                 <Toggle label="Table of contents" checked={s.tableOfContents} onChange={(v) => update("tableOfContents", v)} />
                 <Toggle label="“The End”" checked={s.theEnd} onChange={(v) => update("theEnd", v)} />
@@ -189,7 +188,7 @@ export function PublishStudio({
               )}
               <div className="grid grid-cols-1 gap-1.5">
                 <ExportRow href={exportHref("epub")} label="Ebook (.epub)" note="Kindle, Apple Books, Kobo" download />
-                <ExportRow href={exportHref("pdf")} label="Print PDF" note="Opens print-ready → Save as PDF" newTab />
+                <ExportRow href={exportHref("pdf")} label="PDF" note="Opens print dialog → Save as PDF" newTab />
                 <ExportRow href={exportHref("docx")} label="Word (.docx)" note="Agents, editors, Word/Docs" download />
               </div>
             </div>

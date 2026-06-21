@@ -41,7 +41,7 @@ export type PublishSettings = {
   dropCaps: boolean;
 
   // ---- Front / back matter ----
-  titlePage: boolean;
+  // (A title page is always included on export.)
   copyrightPage: boolean;
   tableOfContents: boolean;
   theEnd: boolean;
@@ -62,7 +62,6 @@ export const DEFAULT_PUBLISH_SETTINGS: PublishSettings = {
   chaptersNewPage: true,
   sceneBreak: "* * *",
   dropCaps: false,
-  titlePage: true,
   copyrightPage: true,
   tableOfContents: true,
   theEnd: true,
