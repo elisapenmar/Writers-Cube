@@ -1,7 +1,8 @@
-import { SideNav } from "@/components/side-nav";
+import { SideNav, type UncategorizedItem } from "@/components/side-nav";
 import { AppShell } from "@/components/app-shell";
 import { getOrCreateProject } from "@/server/scenes";
 import { listExercises } from "@/server/prompts";
+import { listLooseScenes } from "@/server/loose";
 
 export default async function WritingLayout({
   children,
@@ -9,21 +10,31 @@ export default async function WritingLayout({
   children: React.ReactNode;
 }) {
   const project = await getOrCreateProject();
-  let unorganized: { id: string; title: string | null; promptText: string }[] = [];
+  const uncategorized: UncategorizedItem[] = [];
+  try {
+    const loose = await listLooseScenes(project.id);
+    for (const l of loose) {
+      uncategorized.push({ id: l.id, kind: "loose", title: l.title });
+    }
+  } catch {
+    /* table may be missing */
+  }
   try {
     const exercises = await listExercises(project.id);
-    unorganized = exercises.map((e) => ({
-      id: e.id,
-      title: e.title,
-      promptText: e.prompt?.text ?? "",
-    }));
+    for (const e of exercises) {
+      uncategorized.push({
+        id: e.id,
+        kind: "exercise",
+        title: e.title?.trim() || e.prompt?.text || "Untitled exercise",
+      });
+    }
   } catch {
-    unorganized = [];
+    /* table may be missing */
   }
 
   return (
     <div className="flex flex-1 min-h-screen">
-      <SideNav project={project} unorganized={unorganized} />
+      <SideNav project={project} uncategorized={uncategorized} />
       <AppShell>{children}</AppShell>
     </div>
   );

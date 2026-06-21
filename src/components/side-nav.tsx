@@ -32,16 +32,21 @@ import {
   signOut,
 } from "@/server/scenes";
 import { EditableTitle } from "@/components/editable-title";
+import { createLooseScene } from "@/server/loose";
 import { useOrganize } from "@/store/organize-store";
 
-export type UnorganizedItem = { id: string; title: string | null; promptText: string };
+export type UncategorizedItem = {
+  id: string;
+  kind: "loose" | "exercise";
+  title: string;
+};
 
 export function SideNav({
   project,
-  unorganized = [],
+  uncategorized = [],
 }: {
   project: ProjectTree;
-  unorganized?: UnorganizedItem[];
+  uncategorized?: UncategorizedItem[];
 }) {
   const router = useRouter();
   const params = useParams<{ sceneId?: string }>();
@@ -203,26 +208,51 @@ export function SideNav({
           </DndContext>
         )}
 
-        {unorganized.length > 0 && (
-          <div className="mt-4">
-            <div className="px-2 text-[10px] uppercase tracking-widest text-zinc-400 mb-1">
-              Unorganized
-            </div>
+        <div className="mt-4">
+          <div className="px-2 flex items-center justify-between mb-1">
+            <span className="text-[10px] uppercase tracking-widest text-zinc-400">
+              Uncategorized
+            </span>
+            <button
+              onClick={() =>
+                startTransition(async () => {
+                  await createLooseScene(project.id);
+                })
+              }
+              disabled={pending}
+              className="text-xs text-zinc-400 hover:text-zinc-900 disabled:opacity-50"
+              title="Add a loose item here"
+            >
+              + add
+            </button>
+          </div>
+          {uncategorized.length === 0 ? (
+            <p className="px-2 py-1 text-xs text-zinc-400">
+              Loose items and moved-in exercises land here.
+            </p>
+          ) : (
             <ul className="space-y-0.5">
-              {unorganized.map((u) => (
-                <li key={u.id}>
+              {uncategorized.map((u) => (
+                <li key={`${u.kind}-${u.id}`}>
                   <Link
-                    href={`/app/exercises/${u.id}`}
-                    className="block truncate rounded px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
-                    title={u.title || u.promptText}
+                    href={
+                      u.kind === "loose"
+                        ? `/app/loose/${u.id}`
+                        : `/app/exercises/${u.id}`
+                    }
+                    className="flex items-center gap-1.5 truncate rounded px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
+                    title={u.title}
                   >
-                    {u.title?.trim() || u.promptText || "Untitled exercise"}
+                    <span aria-hidden className="text-[10px] text-zinc-400">
+                      {u.kind === "exercise" ? "🎲" : "✎"}
+                    </span>
+                    <span className="truncate">{u.title}</span>
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
 
       <div className="border-t border-zinc-200 p-3 space-y-2">

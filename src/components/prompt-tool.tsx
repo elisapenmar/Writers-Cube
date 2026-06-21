@@ -154,6 +154,10 @@ export function PromptTool({
 
   async function persistExercise(content: unknown, wordCount: number) {
     if (!rendered) return;
+    if (wordCount <= 0) {
+      // Nothing written — don't clutter the practice library with blanks.
+      throw new Error("Write something first — empty exercises aren't saved.");
+    }
     await saveExercise({
       projectId: mode === "existing" ? projectId : null,
       rendered,
@@ -450,7 +454,11 @@ export function PromptTool({
           initialGoalType={goalType}
           initialGoalValue={goalValue}
           persist={(doc, wc) => {
-            void persistExercise(doc, wc).then(() => setSaved(true));
+            void persistExercise(doc, wc)
+              .then(() => setSaved(true))
+              .catch(() => {
+                /* empty / transient — nothing to save */
+              });
           }}
           promptHeader={
             <div className="font-serif">
