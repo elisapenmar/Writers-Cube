@@ -7,6 +7,7 @@ import {
   updateCharacter,
   deleteCharacter,
   pullCharactersFromBrainstorm,
+  pullCharactersFromProject,
   type Character,
 } from "@/server/characters";
 
@@ -41,20 +42,24 @@ export function CharactersTab() {
     });
   }
 
-  async function onPull() {
+  async function onPull(source: "brainstorm" | "project") {
     setPulling(true);
     setError(null);
     setInfo(null);
     try {
-      const result = await pullCharactersFromBrainstorm();
+      const result =
+        source === "brainstorm"
+          ? await pullCharactersFromBrainstorm()
+          : await pullCharactersFromProject();
       await load();
       const bits: string[] = [];
       if (result.added) bits.push(`${result.added} new`);
       if (result.filled) bits.push(`${result.filled} filled`);
+      const where = source === "brainstorm" ? "brainstorm" : "manuscript";
       setInfo(
         bits.length
-          ? `Pulled from brainstorm: ${bits.join(", ")}.`
-          : "Nothing new to pull — your character list already covers what's in the brainstorm.",
+          ? `Pulled from ${where}: ${bits.join(", ")}. (Your manual edits were kept.)`
+          : `Nothing new to pull — your list already covers what's in the ${where}.`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Pull failed");
@@ -88,19 +93,27 @@ export function CharactersTab() {
           {(characters?.length ?? 0)} character
           {(characters?.length ?? 0) === 1 ? "" : "s"}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={onPull}
+            onClick={() => onPull("brainstorm")}
             disabled={pulling || pending}
-            className="rounded-md border border-zinc-300 px-2.5 py-1 hover:bg-zinc-50 disabled:opacity-40"
-            title="Use your brainstorm conversation and notes to extract characters. New names are added; existing ones are left alone unless their description is empty."
+            className="rounded-md border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-40"
+            title="Extract characters from your brainstorm conversation + notes. New names added; manual edits kept."
           >
-            {pulling ? "Pulling…" : "Pull from brainstorm"}
+            {pulling ? "…" : "Pull · brainstorm"}
+          </button>
+          <button
+            onClick={() => onPull("project")}
+            disabled={pulling || pending}
+            className="rounded-md border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-40"
+            title="Extract characters from your actual manuscript prose. New names added; manual edits kept."
+          >
+            {pulling ? "…" : "Pull · manuscript"}
           </button>
           <button
             onClick={addCharacter}
             disabled={pending || pulling}
-            className="rounded-md bg-zinc-900 px-2.5 py-1 text-xs text-white hover:bg-zinc-800 disabled:opacity-40"
+            className="rounded-md bg-zinc-900 px-2 py-1 text-xs text-white hover:bg-zinc-800 disabled:opacity-40"
           >
             + Add
           </button>

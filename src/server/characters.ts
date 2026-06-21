@@ -278,3 +278,178 @@ Call the list_characters tool. Do not write any text in your response.`,
   const total = (existing?.length ?? 0) + added;
   return { added, filled, total };
 }
+
+type ExtractedChar = { name: string; role?: string; description: string };
+
+/** Non-destructive merge: new names inserted; existing names only get blank
+ *  descriptions filled. Never overwrites the writer's manual edits. */
+async function mergeExtracted(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  userId: string,
+  extracted: ExtractedChar[],
+): Promise<{ added: number; filled: number; total: number }> {
+  const { data: existing } = await supabase
+    .from("characters")
+    .select("id, name, role, description, position")
+    .eq("user_id", userId);
+  const byNameLower = new Map<
+    string,
+    { id: string; name: string; role: string | null; description: string; position: number }
+  >();
+  for (const c of existing ?? []) byNameLower.set(c.name.toLowerCase().trim(), c as never);
+
+  let positionCursor =
+    (existing ?? []).reduce((max, c) => Math.max(max, c.position), -1) + 1;
+  let added = 0;
+  let filled = 0;
+
+  for (const x of extracted) {
+    if (!x?.name) continue;
+    const key = x.name.toLowerCase().trim();
+    const match = byNameLower.get(key);
+    if (match) {
+      if (!match.description.trim() && x.description?.trim()) {
+        const { error } = await supabase
+          .from("characters")
+          .update({
+            description: x.description.trim(),
+            role: match.role ?? x.role?.trim() ?? null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", match.id);
+        if (error) {
+          if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+          throw new Error(error.message);
+        }
+        filled += 1;
+      }
+    } else {
+      const { error } = await supabase.from("characters").insert({
+        user_id: userId,
+        name: x.name.trim() || "Unnamed",
+        role: x.role?.trim() || null,
+        description: x.description?.trim() || "",
+        position: positionCursor,
+      });
+      if (error) {
+        if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+        throw new Error(error.message);
+      }
+      positionCursor += 1;
+      added += 1;
+    }
+  }
+  revalidatePath("/app");
+  return { added, filled, total: (existing?.length ?? 0) + added };
+}
+
+function plainTextFromDoc(doc: unknown): string {
+  let text = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc);
+  return text.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Extract characters from the project's actual manuscript (scene prose) + notes
+ * and merge non-destructively into the character list.
+ */
+export async function pullCharactersFromProject(): Promise<{
+  added: number;
+  filled: number;
+  total: number;
+}> {
+  const { supabase, user } = await requireUser();
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id, notes")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!project) throw new Error("No project found.");
+  const notes = ((project.notes as string | undefined) ?? "").trim();
+
+  const { data: chapters } = await supabase
+    .from("chapters")
+    .select("id")
+    .eq("project_id", project.id);
+  const chapterIds = (chapters ?? []).map((c) => c.id);
+  let manuscript = "";
+  if (chapterIds.length > 0) {
+    const { data: scenes } = await supabase
+      .from("scenes")
+      .select("content")
+      .in("chapter_id", chapterIds)
+      .limit(60);
+    for (const s of scenes ?? []) {
+      manuscript += " " + plainTextFromDoc(s.content);
+      if (manuscript.length > 12000) break;
+    }
+  }
+  manuscript = manuscript.slice(0, 12000).trim();
+
+  if (!manuscript && !notes) {
+    throw new Error("Nothing to read yet — write some scenes first.");
+  }
+
+  const anthropic = getAnthropic();
+  const completion = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 2000,
+    system: `You're extracting a character list from a novelist's actual manuscript prose (and notes).
+
+Rules:
+- Only include people who actually appear in the text. Don't invent characters.
+- name: the most specific name used in the text.
+- role: a short descriptor inferred from the text (e.g. "protagonist", "her brother"). Omit if unclear.
+- description: 2–4 sentences grounded in what the text actually shows about them — traits, relationships, what they do. Use the writer's own details.
+- Skip walk-on names with no substance.
+
+Call list_characters. No prose.`,
+    tools: [
+      {
+        name: "list_characters",
+        description: "Extract a character list from the manuscript.",
+        input_schema: {
+          type: "object",
+          properties: {
+            characters: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  role: { type: "string" },
+                  description: { type: "string" },
+                },
+                required: ["name", "description"],
+              },
+            },
+          },
+          required: ["characters"],
+        },
+      },
+    ],
+    tool_choice: { type: "tool", name: "list_characters" },
+    messages: [
+      {
+        role: "user",
+        content: `NOTES:\n\n${notes || "(none)"}\n\n---\n\nMANUSCRIPT:\n\n${manuscript || "(none)"}\n\n---\n\nExtract the character list now.`,
+      },
+    ],
+  });
+
+  const toolUse = completion.content.find(
+    (c): c is Anthropic.ToolUseBlock => c.type === "tool_use",
+  );
+  const extracted =
+    (toolUse?.input as { characters?: ExtractedChar[] } | undefined)?.characters ?? [];
+  return mergeExtracted(supabase, user.id, extracted);
+}
