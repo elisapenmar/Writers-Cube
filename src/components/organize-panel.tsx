@@ -41,7 +41,20 @@ function clearLegacyMindMapInLocalStorage() {
   }
 }
 
-import { useOrganize } from "@/store/organize-store";
+import {
+  useOrganize,
+  GROUP_TABS,
+  GROUP_LABEL,
+  type OrganizeFormat,
+} from "@/store/organize-store";
+
+const TAB_LABEL: Record<OrganizeFormat, string> = {
+  notes: "Notes",
+  mindmap: "Map",
+  outline: "Outline",
+  characters: "Characters",
+  canvas: "Canvas",
+};
 import { MindMap } from "@/components/mind-map";
 import { OutlineTab } from "@/components/outline-tree";
 import { CharactersTab } from "@/components/characters-tab";
@@ -65,6 +78,7 @@ export function OrganizePanel() {
     positions,
     mindMapHydrated,
     format,
+    panelGroup,
     open,
     pinned,
     panelWidth,
@@ -229,59 +243,24 @@ export function OrganizePanel() {
         title="Drag to resize"
       />
       <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 gap-2">
-        <h2 className="font-serif text-base shrink-0">Organize</h2>
+        <h2 className="font-serif text-base shrink-0">{GROUP_LABEL[panelGroup]}</h2>
         <div className="flex items-center gap-1 flex-1 justify-end">
           <div className="flex flex-wrap">
-            <button
-              onClick={() => setFormat("notes")}
-              className={`rounded-l-md py-1 px-2 text-xs border ${
-                format === "notes"
-                  ? "bg-zinc-900 text-white border-zinc-900"
-                  : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              Notes
-            </button>
-            <button
-              onClick={() => setFormat("mindmap")}
-              className={`py-1 px-2 text-xs border -ml-px ${
-                format === "mindmap"
-                  ? "bg-zinc-900 text-white border-zinc-900"
-                  : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              Map
-            </button>
-            <button
-              onClick={() => setFormat("outline")}
-              className={`py-1 px-2 text-xs border -ml-px ${
-                format === "outline"
-                  ? "bg-zinc-900 text-white border-zinc-900"
-                  : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              Outline
-            </button>
-            <button
-              onClick={() => setFormat("characters")}
-              className={`py-1 px-2 text-xs border -ml-px ${
-                format === "characters"
-                  ? "bg-zinc-900 text-white border-zinc-900"
-                  : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              Characters
-            </button>
-            <button
-              onClick={() => setFormat("canvas")}
-              className={`rounded-r-md py-1 px-2 text-xs border -ml-px ${
-                format === "canvas"
-                  ? "bg-zinc-900 text-white border-zinc-900"
-                  : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-              }`}
-            >
-              Canvas
-            </button>
+            {GROUP_TABS[panelGroup].map((tab, i) => (
+              <button
+                key={tab}
+                onClick={() => setFormat(tab)}
+                className={`py-1 px-2 text-xs border ${i === 0 ? "rounded-l-md" : "-ml-px"} ${
+                  i === GROUP_TABS[panelGroup].length - 1 ? "rounded-r-md" : ""
+                } ${
+                  format === tab
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+                }`}
+              >
+                {TAB_LABEL[tab]}
+              </button>
+            ))}
           </div>
           {format !== "outline" && format !== "characters" && format !== "canvas" && (
             <button

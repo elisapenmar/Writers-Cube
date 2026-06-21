@@ -414,12 +414,12 @@ function MetaLine({
 }
 
 function ToolsRow() {
-  const setOpen = useOrganize((s) => s.setOpen);
+  const openGroup = useOrganize((s) => s.openGroup);
   const setBsOpen = useOrganize((s) => s.setBsOpen);
   const btn =
     "flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] text-zinc-600 hover:bg-zinc-100 border border-zinc-200";
   return (
-    <div className="grid grid-cols-4 gap-1.5">
+    <div className="grid grid-cols-3 gap-1.5">
       <button
         type="button"
         onClick={() => setBsOpen(true)}
@@ -431,9 +431,18 @@ function ToolsRow() {
       </button>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => openGroup("bible")}
         className={btn}
-        title="Notes · map · outline · characters · canvas"
+        title="Map · outline · characters"
+      >
+        <span aria-hidden className="text-base leading-none">📖</span>
+        Story Bible
+      </button>
+      <button
+        type="button"
+        onClick={() => openGroup("organize")}
+        className={btn}
+        title="Notes · canvas"
       >
         <span aria-hidden className="text-base leading-none">🗂️</span>
         Organize

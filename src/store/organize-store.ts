@@ -11,6 +11,18 @@ export type OrganizeFormat =
   | "characters"
   | "canvas";
 
+export type PanelGroup = "organize" | "bible";
+
+export const GROUP_TABS: Record<PanelGroup, OrganizeFormat[]> = {
+  organize: ["notes", "canvas"],
+  bible: ["mindmap", "outline", "characters"],
+};
+
+export const GROUP_LABEL: Record<PanelGroup, string> = {
+  organize: "Organize",
+  bible: "Story Bible",
+};
+
 const DEFAULT_PINNED_WIDTH = 480;
 const MIN_PANEL_WIDTH = 320;
 const MAX_PANEL_WIDTH = 1000;
@@ -36,6 +48,9 @@ type OrganizeState = {
   /** Have we loaded the saved mind map from the DB yet (this tab)? */
   mindMapHydrated: boolean;
   format: OrganizeFormat;
+  /** Which entry the right panel was opened as. */
+  panelGroup: PanelGroup;
+  openGroup: (group: PanelGroup) => void;
   open: boolean;
   pinned: boolean;
   /** Selected brainstorm id for the brainstorm side panel. null → load the latest. */
@@ -90,6 +105,13 @@ export const useOrganize = create<OrganizeState>()(
       positions: {},
       mindMapHydrated: false,
       format: "notes",
+      panelGroup: "organize",
+      openGroup: (group) =>
+        set({
+          panelGroup: group,
+          format: GROUP_TABS[group][0],
+          open: true,
+        }),
       open: false,
       pinned: false,
       currentBrainstormId: null,
@@ -141,6 +163,7 @@ export const useOrganize = create<OrganizeState>()(
       // we always hydrate from server on mount.
       partialize: (s) => ({
         format: s.format,
+        panelGroup: s.panelGroup,
         pinned: s.pinned,
         open: s.open,
         panelWidth: s.panelWidth,
