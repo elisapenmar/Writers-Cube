@@ -115,46 +115,60 @@ body {
 .wc-tag[data-kind="factcheck"]   { background: rgba(8,145,178,0.14);   color: #0e7490; }
 .wc-tag[data-kind="placeholder"] { background: rgba(163,163,163,0.18); color: #525252; }
 
-/* ---------- Writer's Cube brand (dice / cubist) ---------- */
+/* ---------- Writer's Cube brand (soft cube / muted, calming) ---------- */
 :root {
-  --wc-terracotta: #d9694c;
-  --wc-slate: #3e5c76;
-  --wc-ochre: #e0a82e;
-  --wc-sage: #7a9e7e;
-  --wc-plum: #6a557f;
-  --wc-cream: #f3efe6;
-  --wc-paper: #fffdf7;
-  --wc-ink: #211f29;
+  /* muted, desaturated palette — calm gallery feel */
+  --wc-terracotta: #c07a63;  /* soft clay (primary action) */
+  --wc-slate: #5d7384;       /* muted blue-grey (selection) */
+  --wc-ochre: #cdab6b;       /* soft gold (the die) */
+  --wc-sage: #8aa791;        /* muted sage (success) */
+  --wc-plum: #8a7a96;        /* muted mauve (seed accent) */
+  --wc-cream: #f2eee6;       /* soft warm canvas */
+  --wc-paper: #faf7f0;       /* soft paper */
+  --wc-ink: #33303a;         /* warm charcoal (not pure black) */
 }
 .wc-cream { background: var(--wc-cream); }
 .wc-paper { background: var(--wc-paper); }
 
+/* Subtle isometric-cube texture for large calm surfaces. */
+.wc-cube-bg {
+  background-color: var(--wc-cream);
+  background-image:
+    linear-gradient(135deg, rgba(51,48,58,0.022) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(51,48,58,0.022) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(51,48,58,0.022) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(51,48,58,0.022) 25%, transparent 25%);
+  background-position: 24px 0, 24px 0, 0 0, 0 0;
+  background-size: 48px 48px;
+  background-repeat: repeat;
+}
+
 /* Die-face tile used for the Step-2 selectors */
 .wc-die {
   position: relative;
-  border-radius: 18px;
-  background: linear-gradient(145deg, #fffdf7, #ece5d6);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset,
-              0 6px 14px rgba(33,31,41,0.10),
-              0 1px 2px rgba(33,31,41,0.10);
-  border: 1px solid rgba(33,31,41,0.07);
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #faf7f0, #ece6da);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset,
+              0 4px 12px rgba(51,48,58,0.07),
+              0 1px 2px rgba(51,48,58,0.06);
+  border: 1px solid rgba(51,48,58,0.06);
+  transition: transform 140ms ease, box-shadow 140ms ease;
 }
 .wc-die:hover { transform: translateY(-2px); }
 .wc-die[data-selected="true"] {
-  background: linear-gradient(145deg, #4a6a86, #34516b);
-  border-color: rgba(33,31,41,0.18);
-  box-shadow: 0 8px 18px rgba(62,92,118,0.35),
-              0 1px 0 rgba(255,255,255,0.18) inset;
+  background: linear-gradient(145deg, #6a7f8e, #54697a);
+  border-color: rgba(51,48,58,0.14);
+  box-shadow: 0 8px 18px rgba(93,115,132,0.28),
+              0 1px 0 rgba(255,255,255,0.16) inset;
 }
 .wc-die[data-seed="true"][data-selected="true"] {
-  background: linear-gradient(145deg, #7e6796, #5d4a72);
-  box-shadow: 0 8px 18px rgba(106,85,127,0.35);
+  background: linear-gradient(145deg, #948399, #7a6a86);
+  box-shadow: 0 8px 18px rgba(138,122,150,0.28);
 }
 .wc-randomizer {
-  background: radial-gradient(120% 120% at 30% 25%, #f4d27a, #e0a82e 55%, #b9871f);
-  box-shadow: 0 8px 18px rgba(224,168,46,0.4), 0 1px 0 rgba(255,255,255,0.4) inset;
-  border: 1px solid rgba(33,31,41,0.12);
+  background: radial-gradient(120% 120% at 30% 25%, #e6cf9a, #cdab6b 55%, #b1925a);
+  box-shadow: 0 6px 16px rgba(205,171,107,0.32), 0 1px 0 rgba(255,255,255,0.35) inset;
+  border: 1px solid rgba(51,48,58,0.1);
 }
 @keyframes wc-tumble {
   0%   { transform: rotate(0deg)   scale(1); }

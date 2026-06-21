@@ -172,14 +172,17 @@ export function PromptTool({
     projects.find((p) => p.id === projectId)?.title ?? "your project";
 
   return (
-    <div className="flex-1 overflow-y-auto wc-cream">
+    <div className="flex-1 overflow-y-auto wc-cube-bg">
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-serif text-3xl text-[var(--wc-ink)]">
-                Writing Prompts
+              <div className="text-[11px] uppercase tracking-[0.2em] text-[var(--wc-slate)]">
+                Writer&apos;s Cube
+              </div>
+              <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-0.5">
+                Writing prompts
               </h1>
               <p className="text-sm text-zinc-600 mt-1">
                 Roll your way out of the block.

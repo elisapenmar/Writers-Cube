@@ -45,17 +45,19 @@ export default async function Dashboard() {
   const recentProjects = [...projects].reverse().slice(0, PROJECTS_PREVIEW);
 
   return (
-    <div className="flex-1 overflow-y-auto wc-cream">
+    <div className="flex-1 overflow-y-auto wc-cube-bg">
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
         {/* Hero */}
-        <section className="rounded-3xl p-6 sm:p-8 wc-paper border border-[rgba(33,31,41,0.08)] shadow-[0_8px_30px_rgba(33,31,41,0.06)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <section className="rounded-3xl p-6 sm:p-8 wc-paper border border-[rgba(51,48,58,0.07)] shadow-[0_10px_34px_rgba(51,48,58,0.05)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-serif text-2xl text-[var(--wc-ink)]">
-              Writing Prompts
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[var(--wc-slate)]">
+              Writer&apos;s Cube
+            </div>
+            <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-1">
+              Welcome back.
             </h1>
             <p className="text-sm text-zinc-600 mt-1">
-              Roll your way out of the block — a replayable warm-up, or prompts
-              dug straight out of your own draft.
+              Pick up a project, capture a kernel, or roll a prompt to warm up.
             </p>
           </div>
           <Link
