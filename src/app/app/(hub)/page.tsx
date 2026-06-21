@@ -9,6 +9,7 @@ import { listExercises, type ExerciseSummary } from "@/server/prompts";
 import { listKernels, type StoryKernel } from "@/server/kernels";
 import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
+import { ImportExport } from "@/components/import-export";
 
 const PROJECTS_PREVIEW = 3;
 const KERNELS_PREVIEW = 3;
@@ -124,6 +125,9 @@ export default async function Dashboard() {
             </form>
           </div>
         </section>
+
+        {/* Import & export */}
+        <ImportExport />
 
         {/* Story kernels */}
         <StoryKernels initial={kernels} limit={KERNELS_PREVIEW} />
