@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { resolveProjectId } from "@/server/project-context";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 
 export type Character = {
@@ -36,10 +37,13 @@ const MIGRATION_REMINDER =
 
 export async function listCharacters(): Promise<Character[]> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return [];
   const { data, error } = await supabase
     .from("characters")
     .select("id, name, role, description, position, updated_at")
     .eq("user_id", user.id)
+    .eq("project_id", projectId)
     .order("position", { ascending: true });
   if (error) {
     if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
@@ -54,10 +58,13 @@ export async function createCharacter(initial?: {
   description?: string;
 }): Promise<Character> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
   const { data: last } = await supabase
     .from("characters")
     .select("position")
     .eq("user_id", user.id)
+    .eq("project_id", projectId)
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -67,6 +74,7 @@ export async function createCharacter(initial?: {
     .from("characters")
     .insert({
       user_id: user.id,
+      project_id: projectId,
       name: initial?.name?.trim() || "New character",
       role: initial?.role?.trim() || null,
       description: initial?.description?.trim() || "",
@@ -132,19 +140,20 @@ export async function pullCharactersFromBrainstorm(): Promise<{
   total: number;
 }> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found.");
   const { data: bs } = await supabase
     .from("brainstorms")
     .select("messages")
     .eq("user_id", user.id)
+    .eq("project_id", projectId)
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   const { data: proj } = await supabase
     .from("projects")
     .select("notes")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", projectId)
     .maybeSingle();
 
   type Msg = { role: "user" | "assistant"; text: string };
@@ -220,7 +229,8 @@ Call the list_characters tool. Do not write any text in your response.`,
   const { data: existing } = await supabase
     .from("characters")
     .select("id, name, role, description, position")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("project_id", projectId);
   const byNameLower = new Map<string, {
     id: string;
     name: string;
@@ -260,6 +270,7 @@ Call the list_characters tool. Do not write any text in your response.`,
     } else {
       const { error: insErr } = await supabase.from("characters").insert({
         user_id: user.id,
+        project_id: projectId,
         name: x.name.trim() || "Unnamed",
         role: x.role?.trim() || null,
         description: x.description.trim(),
@@ -286,12 +297,14 @@ type ExtractedChar = { name: string; role?: string; description: string };
 async function mergeExtracted(
   supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
   userId: string,
+  projectId: string,
   extracted: ExtractedChar[],
 ): Promise<{ added: number; filled: number; total: number }> {
   const { data: existing } = await supabase
     .from("characters")
     .select("id, name, role, description, position")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("project_id", projectId);
   const byNameLower = new Map<
     string,
     { id: string; name: string; role: string | null; description: string; position: number }
@@ -326,6 +339,7 @@ async function mergeExtracted(
     } else {
       const { error } = await supabase.from("characters").insert({
         user_id: userId,
+        project_id: projectId,
         name: x.name.trim() || "Unnamed",
         role: x.role?.trim() || null,
         description: x.description?.trim() || "",
@@ -366,12 +380,12 @@ export async function pullCharactersFromProject(): Promise<{
 }> {
   const { supabase, user } = await requireUser();
 
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found.");
   const { data: project } = await supabase
     .from("projects")
     .select("id, notes")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", projectId)
     .maybeSingle();
   if (!project) throw new Error("No project found.");
   const notes = ((project.notes as string | undefined) ?? "").trim();
@@ -451,5 +465,5 @@ Call list_characters. No prose.`,
   );
   const extracted =
     (toolUse?.input as { characters?: ExtractedChar[] } | undefined)?.characters ?? [];
-  return mergeExtracted(supabase, user.id, extracted);
+  return mergeExtracted(supabase, user.id, projectId, extracted);
 }

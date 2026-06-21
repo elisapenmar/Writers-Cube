@@ -207,17 +207,40 @@ body {
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
 }
 
-/* Subtle isometric-cube texture for large calm surfaces. */
+/* Calm stone canvas for large surfaces (the floating cubes live on top). */
 .wc-cube-bg {
   background-color: var(--wc-canvas);
-  background-image:
-    linear-gradient(135deg, rgba(46,50,59,0.018) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(46,50,59,0.018) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(46,50,59,0.018) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(46,50,59,0.018) 25%, transparent 25%);
-  background-position: 24px 0, 24px 0, 0 0, 0 0;
-  background-size: 48px 48px;
-  background-repeat: repeat;
+}
+
+/* Ambient floating / falling cubes ------------------------------------- */
+.wc-cube-field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.wc-cube {
+  position: absolute;
+  top: 0;
+  animation-name: wc-cube-fall;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@keyframes wc-cube-fall {
+  0%   { transform: translateY(-16vh) rotate(0deg);                     opacity: 0; }
+  12%  { opacity: 0.2; }
+  88%  { opacity: 0.2; }
+  100% { transform: translateY(116vh) rotate(var(--wc-cube-rot, 30deg)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wc-cube {
+    animation: none;
+    top: auto;
+    bottom: 50%;
+    opacity: 0.12;
+  }
 }
 
 /* Die-face tile used for the Step-2 selectors */

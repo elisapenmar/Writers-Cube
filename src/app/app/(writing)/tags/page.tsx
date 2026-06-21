@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { resolveProjectId } from "@/server/project-context";
 import { extractTags } from "@/lib/extract-tags";
 import { ALL_TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
 import { TagRow } from "@/components/tag-row";
@@ -11,19 +12,13 @@ export default async function TagsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!project) return null;
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return null;
 
   const { data: chapters } = await supabase
     .from("chapters")
     .select("id, title, position")
-    .eq("project_id", project.id)
+    .eq("project_id", projectId)
     .order("position", { ascending: true });
 
   const chapterIds = (chapters ?? []).map((c) => c.id);

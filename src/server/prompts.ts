@@ -48,7 +48,8 @@ export async function extractEntities(projectId: string): Promise<EntityBag> {
   const { data: chars } = await supabase
     .from("characters")
     .select("name")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("project_id", projectId);
   const knownCharacters = (chars ?? [])
     .map((c) => (c.name as string)?.trim())
     .filter(Boolean) as string[];

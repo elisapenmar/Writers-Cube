@@ -12,6 +12,7 @@ import { StoryKernels } from "@/components/story-kernels";
 import { ImportButton } from "@/components/import-button";
 import { ProjectExportMenu } from "@/components/project-export-menu";
 import { CubeMark } from "@/components/cube-mark";
+import { CubeField } from "@/components/cube-field";
 
 const PROJECTS_PREVIEW = 3;
 const KERNELS_PREVIEW = 3;
@@ -48,8 +49,9 @@ export default async function Dashboard() {
   const recentProjects = [...projects].reverse().slice(0, PROJECTS_PREVIEW);
 
   return (
-    <div className="flex-1 overflow-y-auto wc-cube-bg">
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
+    <div className="relative flex-1 overflow-y-auto wc-cube-bg">
+      <CubeField />
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-10 space-y-10">
         {/* Hero */}
         <section className="wc-raised rounded-[var(--wc-r-xl)] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

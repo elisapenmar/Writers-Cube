@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { resolveProjectId } from "@/server/project-context";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 import {
   type OutlineNode,
@@ -36,10 +37,13 @@ export async function getOutline(): Promise<{
   template: OutlineTemplateKey;
 } | null> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return null;
   const { data, error } = await supabase
     .from("outlines")
     .select("tree, template")
     .eq("user_id", user.id)
+    .eq("project_id", projectId)
     .maybeSingle();
   if (error) {
     if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
@@ -56,12 +60,15 @@ export async function chooseTemplate(
   templateKey: OutlineTemplateKey,
 ): Promise<{ tree: OutlineNode; template: OutlineTemplateKey }> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
   const template = getTemplate(templateKey);
   const tree = template.build();
   const { data: existing } = await supabase
     .from("outlines")
     .select("id")
     .eq("user_id", user.id)
+    .eq("project_id", projectId)
     .maybeSingle();
   if (existing) {
     const { error } = await supabase
@@ -79,6 +86,7 @@ export async function chooseTemplate(
   } else {
     const { error } = await supabase.from("outlines").insert({
       user_id: user.id,
+      project_id: projectId,
       tree,
       template: templateKey,
     });
@@ -93,10 +101,13 @@ export async function chooseTemplate(
 
 export async function saveOutline(tree: OutlineNode): Promise<void> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
   const { data: existing } = await supabase
     .from("outlines")
     .select("id")
     .eq("user_id", user.id)
+    .eq("project_id", projectId)
     .maybeSingle();
   if (existing) {
     const { error } = await supabase
@@ -110,6 +121,7 @@ export async function saveOutline(tree: OutlineNode): Promise<void> {
   } else {
     const { error } = await supabase.from("outlines").insert({
       user_id: user.id,
+      project_id: projectId,
       tree,
       template: "custom",
     });
@@ -127,13 +139,10 @@ export async function saveOutline(tree: OutlineNode): Promise<void> {
  */
 export async function fillOutlineFromNotes(tree: OutlineNode): Promise<OutlineNode> {
   const { supabase, user } = await requireUser();
-  const { data: project } = await supabase
-    .from("projects")
-    .select("notes")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const projectId = await resolveProjectId(supabase, user.id);
+  const { data: project } = projectId
+    ? await supabase.from("projects").select("notes").eq("id", projectId).maybeSingle()
+    : { data: null };
   const notes = ((project?.notes as string | undefined) ?? "").trim();
   if (!notes) {
     throw new Error(

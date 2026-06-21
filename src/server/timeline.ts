@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveProjectId } from "@/server/project-context";
 
 export type TimelineEvent = {
   id: string;
@@ -39,12 +40,12 @@ const EMPTY: TimelineState = { lanes: [] };
 
 export async function getTimeline(): Promise<TimelineState> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return EMPTY;
   const { data, error } = await supabase
     .from("projects")
     .select("timeline")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", projectId)
     .maybeSingle();
   if (error) {
     if (isMissingColumn(error)) throw new Error(MIGRATION_REMINDER);
@@ -56,14 +57,9 @@ export async function getTimeline(): Promise<TimelineState> {
 
 export async function saveTimeline(state: TimelineState): Promise<void> {
   const { supabase, user } = await requireUser();
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!project) throw new Error("No project found");
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
+  const project = { id: projectId };
   const { error } = await supabase
     .from("projects")
     .update({ timeline: state, updated_at: new Date().toISOString() })

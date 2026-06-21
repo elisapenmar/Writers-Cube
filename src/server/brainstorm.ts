@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { resolveProjectId } from "@/server/project-context";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 import type { BrainstormMode } from "@/lib/brainstorm-modes";
 
@@ -87,10 +88,12 @@ const SYSTEM_PROMPTS: Record<BrainstormMode, string> = {
 
 export async function listBrainstorms(): Promise<BrainstormSummary[]> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
   const { data, error } = await supabase
     .from("brainstorms")
     .select("id, title, summary, mode, messages, created_at, updated_at")
     .eq("user_id", user.id)
+    .eq("project_id", projectId ?? "")
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []).map((b) => {
@@ -119,6 +122,7 @@ export async function getBrainstorm(id?: string): Promise<{
   summary: string | null;
 }> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
   let row;
   if (id) {
     const { data } = await supabase
@@ -133,6 +137,7 @@ export async function getBrainstorm(id?: string): Promise<{
       .from("brainstorms")
       .select("id, messages, mode, title, summary")
       .eq("user_id", user.id)
+      .eq("project_id", projectId ?? "")
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -147,10 +152,10 @@ export async function getBrainstorm(id?: string): Promise<{
       summary: (row.summary as string | null) ?? null,
     };
   }
-  // None yet — create one
+  // None yet — create one for this project
   const { data: created, error } = await supabase
     .from("brainstorms")
-    .insert({ user_id: user.id, messages: [] })
+    .insert({ user_id: user.id, project_id: projectId, messages: [] })
     .select("id, messages, mode, title, summary")
     .single();
   if (error || !created) throw new Error(error?.message ?? "create brainstorm failed");
@@ -165,9 +170,10 @@ export async function getBrainstorm(id?: string): Promise<{
 
 export async function createBrainstorm(): Promise<{ id: string }> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
   const { data, error } = await supabase
     .from("brainstorms")
-    .insert({ user_id: user.id, messages: [], mode: "open" })
+    .insert({ user_id: user.id, project_id: projectId, messages: [], mode: "open" })
     .select("id")
     .single();
   if (error || !data) throw new Error(error?.message ?? "create failed");
@@ -394,12 +400,12 @@ const MIGRATION_REMINDER =
 
 export async function getNotes(): Promise<string> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return "";
   const { data, error } = await supabase
     .from("projects")
     .select("notes")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", projectId)
     .maybeSingle();
   if (error) {
     if (isMissingNotesColumn(error)) throw new Error(MIGRATION_REMINDER);
@@ -410,18 +416,12 @@ export async function getNotes(): Promise<string> {
 
 export async function saveNotes(text: string): Promise<void> {
   const { supabase, user } = await requireUser();
-  const { data: existing } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!existing) throw new Error("No project found");
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
   const { error } = await supabase
     .from("projects")
     .update({ notes: text, updated_at: new Date().toISOString() })
-    .eq("id", existing.id);
+    .eq("id", projectId);
   if (error) {
     if (isMissingNotesColumn(error)) throw new Error(MIGRATION_REMINDER);
     throw new Error(error.message);
@@ -433,24 +433,22 @@ export async function organizeBrainstorm(
   format: OrganizeFormat,
 ): Promise<OrganizeResult> {
   const { supabase, user } = await requireUser();
-  // Latest brainstorm conversation
+  const projectId = await resolveProjectId(supabase, user.id);
+  // Latest brainstorm conversation for this project
   const { data: latestBs } = await supabase
     .from("brainstorms")
     .select("messages")
     .eq("user_id", user.id)
+    .eq("project_id", projectId ?? "")
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   const messages = (latestBs?.messages as BrainstormMessage[] | undefined) ?? [];
 
-  // Project-level notes (single project per user in V0.5)
-  const { data: project, error: projErr } = await supabase
-    .from("projects")
-    .select("notes")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  // Project-level notes for the active project.
+  const { data: project, error: projErr } = projectId
+    ? await supabase.from("projects").select("notes").eq("id", projectId).maybeSingle()
+    : { data: null, error: null };
   if (projErr) {
     if (isMissingNotesColumn(projErr)) throw new Error(MIGRATION_REMINDER);
     throw new Error(projErr.message);
@@ -573,21 +571,14 @@ export async function organizeBrainstorm(
   // Persist the freshly generated map so positions can be tracked alongside.
   // Manual positions reset on regenerate (this is destructive — UI warns users).
   try {
-    const { data: project } = await supabase
-      .from("projects")
-      .select("id")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (project) {
+    if (projectId) {
       await supabase
         .from("projects")
         .update({
           mind_map: { nodes, positions: {} },
           updated_at: new Date().toISOString(),
         })
-        .eq("id", project.id);
+        .eq("id", projectId);
     }
   } catch {
     // mind_map column may be missing; mindmap.ts helpers will surface the migration reminder.

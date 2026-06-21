@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveProjectId } from "@/server/project-context";
 import type { MindMapNode } from "@/server/brainstorm";
 
 export type SavedPosition = { x: number; y: number };
@@ -35,26 +36,19 @@ const EMPTY: SavedMindMap = { nodes: [], positions: {} };
 
 async function getProjectId(): Promise<{ projectId: string }> {
   const { supabase, user } = await requireUser();
-  const { data, error } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("No project found");
-  return { projectId: data.id as string };
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
+  return { projectId };
 }
 
 export async function getMindMap(): Promise<SavedMindMap> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return EMPTY;
   const { data, error } = await supabase
     .from("projects")
     .select("mind_map")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", projectId)
     .maybeSingle();
   if (error) {
     if (isMissingColumn(error)) throw new Error(MIGRATION_REMINDER);

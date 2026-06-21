@@ -29,7 +29,7 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
           setOpen((o) => !o);
         }}
         disabled={pending}
-        className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50"
+        className="rounded-[var(--wc-r-sm)] border border-[var(--wc-border)] bg-[var(--wc-surface)] px-2.5 py-1 text-xs text-zinc-600 hover:border-[var(--wc-slate)] hover:text-zinc-900 disabled:opacity-50"
         title="Export or manage this project"
       >
         {pending ? "…" : "⋯"}
@@ -38,7 +38,7 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-30 mt-1 w-60 rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl">
+          <div className="absolute right-0 z-30 mt-1 w-60 rounded-[var(--wc-r-md)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 shadow-[var(--wc-shadow-md)]">
             {EXPORT_FORMATS.map((f) => (
               <Link
                 key={f.id}

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveProjectId } from "@/server/project-context";
 
 export type CanvasItem = {
   id: string;
@@ -41,12 +42,12 @@ const MIGRATION_REMINDER =
 
 export async function getCanvas(): Promise<CanvasState> {
   const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return { items: [] };
   const { data, error } = await supabase
     .from("projects")
     .select("canvas")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", projectId)
     .maybeSingle();
   if (error) {
     if (isMissingColumn(error)) throw new Error(MIGRATION_REMINDER);
@@ -58,14 +59,9 @@ export async function getCanvas(): Promise<CanvasState> {
 
 export async function saveCanvas(state: CanvasState): Promise<void> {
   const { supabase, user } = await requireUser();
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!project) throw new Error("No project found");
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found");
+  const project = { id: projectId };
   const { error } = await supabase
     .from("projects")
     .update({ canvas: state, updated_at: new Date().toISOString() })
