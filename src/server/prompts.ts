@@ -159,6 +159,32 @@ export async function generatePrompt(opts: {
   await requireUser();
   const format: PromptFormat | null = opts.scenarioSeed ? "seed" : "exercise";
 
+  // Grounding entities (shared by both the LLM-mix and library paths).
+  let bag: EntityBag = EMPTY_BAG;
+  let grounded = false;
+  if (opts.mode === "existing" && opts.projectId) {
+    bag = await extractEntities(opts.projectId);
+    grounded =
+      bag.characters.length > 0 ||
+      bag.places.length > 0 ||
+      bag.threads.length > 0 ||
+      bag.objects.length > 0;
+  }
+
+  // True "mix": scenario seed + one or more craft topics → author a fresh
+  // seed-format prompt that genuinely blends the chosen focuses, via the LLM.
+  if (opts.scenarioSeed && opts.focuses.length > 0) {
+    try {
+      const template = await authorSeedMix(opts.focuses, opts.depth);
+      if (template) {
+        const rendered = renderPrompt(template, bag, grounded);
+        return { rendered, entities: grounded ? bag : undefined };
+      }
+    } catch {
+      // fall through to the library
+    }
+  }
+
   let candidates = promptsForFilters({
     focuses: opts.focuses,
     format,
@@ -187,20 +213,80 @@ export async function generatePrompt(opts: {
   }
 
   const prompt = candidates[Math.floor(Math.random() * candidates.length)];
-
-  let bag: EntityBag = EMPTY_BAG;
-  let grounded = false;
-  if (opts.mode === "existing" && opts.projectId) {
-    bag = await extractEntities(opts.projectId);
-    grounded =
-      bag.characters.length > 0 ||
-      bag.places.length > 0 ||
-      bag.threads.length > 0 ||
-      bag.objects.length > 0;
-  }
-
   const rendered = renderPrompt(prompt, bag, grounded);
   return { rendered, entities: grounded ? bag : undefined };
+}
+
+/**
+ * Ask Claude to author a scenario-seed prompt that blends the chosen craft
+ * focuses. Returns a PromptObject template (with {{slots}}) so it flows through
+ * the same slot-fill + draft-highlight pipeline as the authored library.
+ */
+import type { PromptObject } from "@/lib/prompt-library";
+
+async function authorSeedMix(
+  focuses: PromptFocus[],
+  depth: PromptDepth,
+): Promise<PromptObject | null> {
+  const focusList = focuses.join(" + ");
+  const anthropic = getAnthropic();
+  const completion = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 600,
+    system: `You author "scenario seed" writing prompts for novelists. A scenario seed = a concrete, pre-populated SITUATION (named people in a specific place, mid-moment) PLUS an open craft QUESTION the writer answers by writing the scene.
+
+You must genuinely BLEND the requested craft focuses into one prompt — not list them. ${depth === "deep" ? "Make it a meaty deep-dive." : "Keep it a light ~5-minute warm-up."}
+
+Use these placeholder slots so the app can fill them with the writer's own characters/places when available:
+- {{character}} and {{character2}} for people
+- {{place}} for the setting
+- {{thread}} for an unresolved tension
+- {{object}} for a charged object
+Use {{character}} and {{place}} at minimum. Write naturally around the slots.
+
+Return via author_seed. The "text" is the situation (with slots). The "question" is the open craft question (it may include slots). The "deeper" is one escalation. "source" names the blended craft lineage in a few words.`,
+    tools: [
+      {
+        name: "author_seed",
+        description: "Return a scenario-seed prompt template.",
+        input_schema: {
+          type: "object",
+          properties: {
+            text: { type: "string" },
+            question: { type: "string" },
+            deeper: { type: "string" },
+            source: { type: "string" },
+          },
+          required: ["text", "question", "deeper"],
+        },
+      },
+    ],
+    tool_choice: { type: "tool", name: "author_seed" },
+    messages: [
+      {
+        role: "user",
+        content: `Author one scenario-seed prompt that blends these craft focuses: ${focusList}.`,
+      },
+    ],
+  });
+  const toolUse = completion.content.find(
+    (c): c is Anthropic.ToolUseBlock => c.type === "tool_use",
+  );
+  const out = toolUse?.input as
+    | { text?: string; question?: string; deeper?: string; source?: string }
+    | undefined;
+  if (!out?.text || !out.question) return null;
+  return {
+    id: `seed-mix-${focuses.join("-")}-${Date.now()}`,
+    format: "seed",
+    focus: focuses[0],
+    mode: "both",
+    depth: depth === "any" ? "warmup" : depth,
+    text: out.text,
+    question: out.question,
+    deeper: out.deeper || "Push the moment one beat further than is comfortable.",
+    source: out.source || `${focusList} blend`,
+  };
 }
 
 export type SaveExerciseInput = {
