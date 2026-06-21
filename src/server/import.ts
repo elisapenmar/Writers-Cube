@@ -170,5 +170,5 @@ export async function importManuscript(formData: FormData): Promise<void> {
   }
 
   await setActiveProject(project.id);
-  redirect("/app/write");
+  redirect("/app/manuscript");
 }

@@ -6,23 +6,32 @@ import Underline from "@tiptap/extension-underline";
 import { useEffect, useRef, useState } from "react";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { updateSceneContent } from "@/server/scenes";
+import { updateLooseSceneContent } from "@/server/loose";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+export type ManuscriptScene = {
+  id: string;
+  title: string;
+  content: unknown;
+  loose?: boolean;
+};
 export type ManuscriptChapter = {
   id: string;
   title: string;
-  scenes: { id: string; title: string; content: unknown }[];
+  scenes: ManuscriptScene[];
 };
 
 export function ManuscriptReader({
   projectTitle,
   chapters,
+  looseScenes = [],
 }: {
   projectTitle: string;
   chapters: ManuscriptChapter[];
+  looseScenes?: ManuscriptScene[];
 }) {
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -33,7 +42,8 @@ export function ManuscriptReader({
     if (t) setSavedAt(t);
   }
 
-  const totalScenes = chapters.reduce((n, c) => n + c.scenes.length, 0);
+  const totalScenes =
+    chapters.reduce((n, c) => n + c.scenes.length, 0) + looseScenes.length;
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-zinc-50">
@@ -76,6 +86,22 @@ export function ManuscriptReader({
               )}
             </section>
           ))}
+
+          {looseScenes.length > 0 && (
+            <section className="mb-10">
+              <h2 className="font-serif text-2xl text-zinc-800 mb-4 pb-1 border-b border-zinc-200">
+                Uncategorized
+              </h2>
+              {looseScenes.map((scene) => (
+                <SceneBlock
+                  key={scene.id}
+                  scene={scene}
+                  onStatus={bumpStatus}
+                  onFocus={setActiveEditor}
+                />
+              ))}
+            </section>
+          )}
         </div>
       </div>
     </div>
@@ -87,7 +113,7 @@ function SceneBlock({
   onStatus,
   onFocus,
 }: {
-  scene: { id: string; title: string; content: unknown };
+  scene: ManuscriptScene;
   onStatus: (status: SaveStatus, savedAt?: string) => void;
   onFocus: (editor: Editor) => void;
 }) {
@@ -122,7 +148,9 @@ function SceneBlock({
 
   async function save(doc: unknown) {
     try {
-      const result = await updateSceneContent(scene.id, doc);
+      const result = scene.loose
+        ? await updateLooseSceneContent(scene.id, doc)
+        : await updateSceneContent(scene.id, doc);
       onStatus("saved", result.savedAt);
     } catch {
       onStatus("error");

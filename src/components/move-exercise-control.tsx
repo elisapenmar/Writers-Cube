@@ -21,7 +21,11 @@ export function MoveExerciseControl({
     setError(null);
     start(async () => {
       try {
-        await moveExercise(exerciseId, projectId);
+        const { looseId } = await moveExercise(exerciseId, projectId);
+        if (looseId) {
+          // It became a project page — open it there.
+          router.push(`/app/loose/${looseId}`);
+        }
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Move failed");

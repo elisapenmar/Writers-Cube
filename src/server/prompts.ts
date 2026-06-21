@@ -171,6 +171,25 @@ export async function generatePrompt(opts: {
       bag.objects.length > 0;
   }
 
+  // Grounded "help me with my story": author a prompt that genuinely engages
+  // the writer's pulled characters/places/threads, via the LLM + slot pipeline.
+  if (opts.mode === "existing" && grounded) {
+    try {
+      const template = await authorGroundedPrompt(
+        opts.focuses,
+        format ?? "exercise",
+        opts.depth,
+        bag,
+      );
+      if (template) {
+        const rendered = renderPrompt(template, bag, true);
+        return { rendered, entities: bag };
+      }
+    } catch {
+      // fall through to the library
+    }
+  }
+
   // True "mix": scenario seed + one or more craft topics → author a fresh
   // seed-format prompt that genuinely blends the chosen focuses, via the LLM.
   if (opts.scenarioSeed && opts.focuses.length > 0) {
@@ -223,6 +242,97 @@ export async function generatePrompt(opts: {
  * the same slot-fill + draft-highlight pipeline as the authored library.
  */
 import type { PromptObject } from "@/lib/prompt-library";
+
+/**
+ * Author a writing prompt grounded in the writer's actual story material.
+ * Uses {{slots}} so the entity values are filled (and highlighted) by the
+ * existing render pipeline — guaranteeing the prompt is about her draft.
+ */
+async function authorGroundedPrompt(
+  focuses: PromptFocus[],
+  format: PromptFormat,
+  depth: PromptDepth,
+  bag: EntityBag,
+): Promise<PromptObject | null> {
+  const focusList = focuses.length ? focuses.join(" + ") : "whatever fits the material";
+  const entitySummary = [
+    bag.characters.length ? `Characters: ${bag.characters.slice(0, 10).join(", ")}` : "",
+    bag.places.length ? `Places: ${bag.places.slice(0, 8).join(", ")}` : "",
+    bag.threads.length ? `Unresolved threads: ${bag.threads.slice(0, 6).join("; ")}` : "",
+    bag.objects.length ? `Objects: ${bag.objects.slice(0, 6).join(", ")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const formatGuidance =
+    format === "seed"
+      ? `Write a SCENARIO SEED: a concrete situation (named people, a specific place, mid-moment) plus an open craft question the writer answers by writing the scene. Put the situation in "text" and the question in "question".`
+      : `Write a CRAFT EXERCISE: a clear instruction in "text" plus an explicit rule in "constraint".`;
+
+  const anthropic = getAnthropic();
+  const completion = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 700,
+    system: `You author a PERSONALIZED writing prompt for a novelist, grounded in HER OWN STORY. You are given the real characters, places, unresolved threads, and objects from her draft. The prompt MUST genuinely engage this specific material — it should be unmistakably about her story, targeting a real gap or tension in it. Never produce a generic prompt.
+
+Craft focus to emphasize: ${focusList}. Depth: ${depth === "deep" ? "a substantial deep dive" : "a ~5-minute warm-up"}.
+
+${formatGuidance}
+
+Reference her material through these placeholder slots so the app fills them with her exact names:
+- {{character}} and {{character2}} for people
+- {{place}} for a setting
+- {{thread}} for an unresolved tension
+- {{object}} for a charged object
+Use {{character}} and at least one of {{place}}/{{thread}} so the prompt is anchored in her world. Build the sentence naturally around the slots; lean on the actual threads/relationships you're given to make it pointed.
+
+"deeper" = one escalation. "source" = a few-word craft lineage. Call author_prompt; no prose.`,
+    tools: [
+      {
+        name: "author_prompt",
+        description: "Return a grounded writing prompt template.",
+        input_schema: {
+          type: "object",
+          properties: {
+            text: { type: "string" },
+            question: { type: "string" },
+            constraint: { type: "string" },
+            deeper: { type: "string" },
+            source: { type: "string" },
+          },
+          required: ["text", "deeper"],
+        },
+      },
+    ],
+    tool_choice: { type: "tool", name: "author_prompt" },
+    messages: [
+      {
+        role: "user",
+        content: `Here is the material from her draft:\n\n${entitySummary}\n\nAuthor one ${format} prompt grounded in this, emphasizing ${focusList}.`,
+      },
+    ],
+  });
+
+  const toolUse = completion.content.find(
+    (c): c is Anthropic.ToolUseBlock => c.type === "tool_use",
+  );
+  const out = toolUse?.input as
+    | { text?: string; question?: string; constraint?: string; deeper?: string; source?: string }
+    | undefined;
+  if (!out?.text) return null;
+  return {
+    id: `grounded-${focuses.join("-") || "any"}-${Date.now()}`,
+    format,
+    focus: focuses[0] ?? "character",
+    mode: "existing",
+    depth: depth === "any" ? "warmup" : depth,
+    text: out.text,
+    question: format === "seed" ? out.question : undefined,
+    constraint: format === "exercise" ? out.constraint : undefined,
+    deeper: out.deeper || "Push the moment one beat further than is comfortable.",
+    source: out.source || "grounded in your draft",
+  };
+}
 
 async function authorSeedMix(
   focuses: PromptFocus[],
@@ -423,22 +533,82 @@ export async function updateExercise(
   revalidatePath("/app/exercises");
 }
 
+/**
+ * Move an exercise's "home".
+ *  - projectId null  → return it to the standalone practice library.
+ *  - projectId set   → CONVERT it into a real, scrollable project page
+ *    (a loose scene), keeping the prompt as leading context, and remove the
+ *    standalone exercise. Returns the new loose-scene id to navigate to.
+ */
 export async function moveExercise(
   id: string,
   projectId: string | null,
-): Promise<void> {
+): Promise<{ looseId?: string }> {
   const { supabase, user } = await requireUser();
-  const { error } = await supabase
-    .from("prompt_exercises")
-    .update({ project_id: projectId, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("user_id", user.id);
-  if (error) {
-    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
-    throw new Error(error.message);
+
+  if (projectId === null) {
+    const { error } = await supabase
+      .from("prompt_exercises")
+      .update({ project_id: null, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("user_id", user.id);
+    if (error) {
+      if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+      throw new Error(error.message);
+    }
+    revalidatePath("/app", "layout");
+    revalidatePath("/app/exercises");
+    return {};
   }
+
+  // Convert → loose scene.
+  const { data: ex, error: readErr } = await supabase
+    .from("prompt_exercises")
+    .select("title, prompt, content, word_count")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readErr || !ex) {
+    if (isMissingTable(readErr)) throw new Error(MIGRATION_REMINDER);
+    throw new Error(readErr?.message ?? "exercise not found");
+  }
+
+  const promptText =
+    (ex.prompt as { text?: string } | null)?.text ?? "Prompted page";
+  const existing = (ex.content as { content?: unknown[] } | null)?.content ?? [
+    { type: "paragraph" },
+  ];
+  const looseDoc = {
+    type: "doc",
+    content: [
+      {
+        type: "blockquote",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: promptText }] },
+        ],
+      },
+      ...existing,
+    ],
+  };
+
+  const { data: loose, error: insErr } = await supabase
+    .from("loose_scenes")
+    .insert({
+      user_id: user.id,
+      project_id: projectId,
+      title: (ex.title as string | null)?.trim() || promptText.slice(0, 80),
+      content: looseDoc,
+      word_count: (ex.word_count as number) ?? 0,
+    })
+    .select("id")
+    .single();
+  if (insErr || !loose) throw new Error(insErr?.message ?? "Could not create page");
+
+  await supabase.from("prompt_exercises").delete().eq("id", id).eq("user_id", user.id);
+
   revalidatePath("/app", "layout");
   revalidatePath("/app/exercises");
+  return { looseId: loose.id as string };
 }
 
 export async function deleteExercise(id: string): Promise<void> {

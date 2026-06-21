@@ -110,11 +110,11 @@ export async function createProject(title?: string): Promise<{ id: string }> {
 export async function openProject(formData: FormData): Promise<void> {
   const projectId = String(formData.get("projectId") ?? "");
   if (projectId) await setActiveProject(projectId);
-  redirect("/app/write");
+  redirect("/app/manuscript");
 }
 
 export async function createProjectAndOpen(formData: FormData): Promise<void> {
   const title = String(formData.get("title") ?? "").trim();
   await createProject(title || undefined);
-  redirect("/app/write");
+  redirect("/app/manuscript");
 }
