@@ -34,7 +34,15 @@ import {
 import { EditableTitle } from "@/components/editable-title";
 import { useOrganize } from "@/store/organize-store";
 
-export function SideNav({ project }: { project: ProjectTree }) {
+export type UnorganizedItem = { id: string; title: string | null; promptText: string };
+
+export function SideNav({
+  project,
+  unorganized = [],
+}: {
+  project: ProjectTree;
+  unorganized?: UnorganizedItem[];
+}) {
   const router = useRouter();
   const params = useParams<{ sceneId?: string }>();
   const [chapters, setChapters] = useState<Chapter[]>(project.chapters);
@@ -193,6 +201,27 @@ export function SideNav({ project }: { project: ProjectTree }) {
               </ul>
             </SortableContext>
           </DndContext>
+        )}
+
+        {unorganized.length > 0 && (
+          <div className="mt-4">
+            <div className="px-2 text-[10px] uppercase tracking-widest text-zinc-400 mb-1">
+              Unorganized
+            </div>
+            <ul className="space-y-0.5">
+              {unorganized.map((u) => (
+                <li key={u.id}>
+                  <Link
+                    href={`/app/exercises/${u.id}`}
+                    className="block truncate rounded px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
+                    title={u.title || u.promptText}
+                  >
+                    {u.title?.trim() || u.promptText || "Untitled exercise"}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </nav>
 

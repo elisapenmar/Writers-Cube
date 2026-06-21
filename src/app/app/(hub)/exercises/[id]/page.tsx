@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getExercise } from "@/server/prompts";
+import { listProjects } from "@/server/projects";
 import { DeleteExerciseButton } from "@/components/delete-exercise-button";
 import { ExerciseEditor } from "@/components/exercise-editor";
+import { MoveExerciseControl } from "@/components/move-exercise-control";
 
 export default async function ExerciseView({
   params,
@@ -10,7 +12,10 @@ export default async function ExerciseView({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const ex = await getExercise(id).catch(() => null);
+  const [ex, projects] = await Promise.all([
+    getExercise(id).catch(() => null),
+    listProjects(),
+  ]);
   if (!ex) notFound();
 
   const backHref = ex.project_id
@@ -50,7 +55,19 @@ export default async function ExerciseView({
           />
         </div>
 
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-5 rounded-2xl border border-zinc-200 bg-white p-3">
+          <MoveExerciseControl
+            exerciseId={ex.id}
+            currentProjectId={ex.project_id}
+            projects={projects.map((p) => ({ id: p.id, title: p.title }))}
+          />
+          <p className="mt-1.5 text-[11px] text-zinc-400">
+            Moving it into a project files it under that project&apos;s{" "}
+            <b>Unorganized</b> scenes in the sidebar.
+          </p>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
           <Link
             href="/app/prompts"
             className="rounded-xl px-4 py-2 text-sm text-white"

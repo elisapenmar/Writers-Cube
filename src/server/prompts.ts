@@ -337,6 +337,24 @@ export async function updateExercise(
   revalidatePath("/app/exercises");
 }
 
+export async function moveExercise(
+  id: string,
+  projectId: string | null,
+): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("prompt_exercises")
+    .update({ project_id: projectId, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) {
+    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+    throw new Error(error.message);
+  }
+  revalidatePath("/app", "layout");
+  revalidatePath("/app/exercises");
+}
+
 export async function deleteExercise(id: string): Promise<void> {
   const { supabase, user } = await requireUser();
   const { error } = await supabase
