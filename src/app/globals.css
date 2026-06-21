@@ -45,6 +45,20 @@ body {
   font-family: var(--font-serif);
 }
 
+/* Dark theme: lighten the manuscript text on the dark writing page. */
+[data-theme="dusk"] .prose {
+  --tw-prose-body: #d9dbd7;
+  --tw-prose-headings: #f0f1ee;
+  --tw-prose-bold: #f0f1ee;
+  --tw-prose-quotes: #c4c7c2;
+  --tw-prose-quote-borders: rgba(255, 255, 255, 0.18);
+  --tw-prose-hr: rgba(255, 255, 255, 0.12);
+  color: #d9dbd7;
+}
+[data-theme="dusk"] .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6f757d;
+}
+
 @keyframes wc-celebration-fade {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -136,6 +150,7 @@ body {
   --wc-canvas: #edeeeb;      /* cool stone page background */
   --wc-surface: #f8f8f6;     /* near-white cool card surface */
   --wc-paper: #f3f4f1;       /* raised panel */
+  --wc-page: #ffffff;        /* the writing surface (manuscript paper) */
 
   /* borders */
   --wc-border: rgba(46,50,59,0.08);        /* hairline */
@@ -170,6 +185,7 @@ body {
   --wc-canvas: #1b1e23;
   --wc-surface: #23272e;
   --wc-paper: #2a2f37;
+  --wc-page: #15181c;
   --wc-border: rgba(255,255,255,0.09);
   --wc-border-strong: rgba(255,255,255,0.18);
   --wc-shadow-sm: 0 1px 2px rgba(0,0,0,0.45);
@@ -190,6 +206,7 @@ body {
   --wc-canvas: #f2eee6;
   --wc-surface: #faf7f0;
   --wc-paper: #f5efe4;
+  --wc-page: #fdfbf6;
   --wc-border: rgba(51,48,58,0.08);
   --wc-border-strong: rgba(51,48,58,0.14);
 }

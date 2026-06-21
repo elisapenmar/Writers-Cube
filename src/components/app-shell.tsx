@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <main
-        className="flex-1 flex flex-col bg-zinc-50"
+        className="flex-1 flex flex-col bg-[var(--wc-canvas)]"
         style={{
           marginRight: pinned ? `${panelWidth}px` : undefined,
           marginLeft: bsPinned ? `${bsWidth}px` : undefined,

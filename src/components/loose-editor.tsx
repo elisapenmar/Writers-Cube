@@ -91,9 +91,9 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
 
   return (
     <div className="flex flex-col flex-1 h-screen">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3 gap-3">
+      <header className="flex items-center justify-between border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-3 gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[10px] uppercase tracking-widest text-zinc-400 shrink-0">
+          <span className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)] shrink-0">
             Uncategorized
           </span>
           <input
@@ -103,23 +103,23 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
             className="font-serif text-lg bg-transparent outline-none min-w-0 flex-1"
           />
         </div>
-        <div className="flex items-center gap-3 text-xs text-zinc-500 shrink-0">
+        <div className="flex items-center gap-3 text-xs text-[var(--wc-faint)] shrink-0">
           <span className="tabular-nums">{wordCount} words</span>
           <SaveLabel status={status} savedAt={savedAt} />
           <button
             onClick={remove}
-            className="rounded-md px-2 py-1 text-zinc-500 hover:text-red-700"
+            className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-red-700"
           >
             Delete
           </button>
         </div>
       </header>
 
-      <div className="border-b border-zinc-200 bg-white px-6 py-1.5">
+      <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
         <EditorToolbar editor={editor} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-12 bg-zinc-50">
+      <div className="flex-1 overflow-y-auto px-6 py-12 bg-[var(--wc-page)]">
         {editor && <TagBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>

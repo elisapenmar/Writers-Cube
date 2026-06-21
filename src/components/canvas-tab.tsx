@@ -200,7 +200,7 @@ export function CanvasTab() {
 
   if (!hydrated) {
     return (
-      <div className="flex-1 grid place-items-center text-sm text-zinc-500 p-6">
+      <div className="flex-1 grid place-items-center text-sm text-[var(--wc-faint)] p-6">
         Loading canvas…
       </div>
     );
@@ -208,28 +208,28 @@ export function CanvasTab() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-zinc-200 px-3 py-2 text-xs">
+      <div className="flex items-center gap-2 border-b border-[var(--wc-border)] px-3 py-2 text-xs">
         <button
           onClick={addTextBox}
-          className="rounded-md bg-zinc-900 px-2.5 py-1 text-white hover:bg-zinc-800"
+          className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-white hover:bg-[var(--wc-slate)]"
         >
           + Text
         </button>
         <button
           onClick={triggerImagePick}
-          className="rounded-md border border-zinc-300 px-2.5 py-1 text-zinc-700 hover:bg-zinc-50"
+          className="rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
         >
           + Image
         </button>
         <div className="relative">
           <button
             onClick={() => setUrlPrompt((o) => !o)}
-            className="rounded-md border border-zinc-300 px-2.5 py-1 text-zinc-700 hover:bg-zinc-50"
+            className="rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
           >
             + Webpage
           </button>
           {urlPrompt && (
-            <div className="absolute left-0 z-30 mt-1 w-72 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl">
+            <div className="absolute left-0 z-30 mt-1 w-72 rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-2 shadow-xl">
               <input
                 autoFocus
                 value={urlDraft}
@@ -239,18 +239,18 @@ export function CanvasTab() {
                   if (e.key === "Escape") setUrlPrompt(false);
                 }}
                 placeholder="Paste a link… e.g. example.com/article"
-                className="w-full rounded-md border border-zinc-300 px-2 py-1 text-xs focus:border-zinc-500 focus:outline-none"
+                className="w-full rounded-md border border-[var(--wc-border-strong)] px-2 py-1 text-xs focus:border-[var(--wc-slate)] focus:outline-none"
               />
               <div className="mt-2 flex justify-end gap-2">
                 <button
                   onClick={() => setUrlPrompt(false)}
-                  className="rounded px-2 py-1 text-[11px] text-zinc-500 hover:bg-zinc-100"
+                  className="rounded px-2 py-1 text-[11px] text-[var(--wc-faint)] hover:bg-[var(--wc-paper)]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => addWebpage(urlDraft)}
-                  className="rounded bg-zinc-900 px-2.5 py-1 text-[11px] text-white hover:bg-zinc-800"
+                  className="rounded bg-[var(--wc-slate)] px-2.5 py-1 text-[11px] text-white hover:bg-[var(--wc-slate)]"
                 >
                   Add
                 </button>
@@ -269,7 +269,7 @@ export function CanvasTab() {
             if (e.target) e.target.value = "";
           }}
         />
-        <span className="ml-auto text-zinc-400">
+        <span className="ml-auto text-[var(--wc-faint)]">
           Drag files in · drag items to arrange · double-click text to edit
         </span>
       </div>
@@ -279,7 +279,7 @@ export function CanvasTab() {
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDropFile}
         onClick={() => setSelectedId(null)}
-        className="flex-1 overflow-auto bg-zinc-100"
+        className="flex-1 overflow-auto bg-[var(--wc-paper)]"
         style={{ touchAction: "none" }}
       >
         <div
@@ -341,12 +341,12 @@ function WebpageCard({ url }: { url: string }) {
   const shot = `https://image.thum.io/get/width/800/${url}`;
 
   return (
-    <div className="w-full h-full rounded shadow border border-zinc-200 bg-white overflow-hidden flex flex-col">
-      <div className="flex-1 min-h-0 bg-zinc-50 grid place-items-center overflow-hidden">
+    <div className="w-full h-full rounded shadow border border-[var(--wc-border)] bg-[var(--wc-surface)] overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-[var(--wc-canvas)] grid place-items-center overflow-hidden">
         {failed ? (
           <div className="text-center px-3">
             <div className="text-2xl">🔗</div>
-            <div className="mt-1 text-[11px] text-zinc-500 break-all">{host}</div>
+            <div className="mt-1 text-[11px] text-[var(--wc-faint)] break-all">{host}</div>
           </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
@@ -366,7 +366,7 @@ function WebpageCard({ url }: { url: string }) {
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         title={url}
-        className="shrink-0 truncate border-t border-zinc-200 bg-white px-2 py-1 text-[11px] text-zinc-600 hover:text-[var(--wc-slate)] hover:underline"
+        className="shrink-0 truncate border-t border-[var(--wc-border)] bg-[var(--wc-surface)] px-2 py-1 text-[11px] text-[var(--wc-muted)] hover:text-[var(--wc-slate)] hover:underline"
       >
         🔗 {host}
       </a>
@@ -459,12 +459,12 @@ function CropOverlay({
   }
 
   const handle =
-    "absolute w-3 h-3 bg-white border border-zinc-700 rounded-sm";
+    "absolute w-3 h-3 bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] rounded-sm";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 p-4">
-      <div className="rounded-xl bg-white p-4 shadow-2xl">
-        <div className="mb-2 text-sm font-medium text-zinc-700">Crop image</div>
+      <div className="rounded-xl bg-[var(--wc-surface)] p-4 shadow-2xl">
+        <div className="mb-2 text-sm font-medium text-[var(--wc-muted)]">Crop image</div>
         <div
           className="relative select-none"
           style={{ width: display.w, height: display.h, touchAction: "none" }}
@@ -497,13 +497,13 @@ function CropOverlay({
         <div className="mt-3 flex justify-end gap-2">
           <button
             onClick={onCancel}
-            className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100"
+            className="rounded-lg px-3 py-1.5 text-sm text-[var(--wc-muted)] hover:bg-[var(--wc-paper)]"
           >
             Cancel
           </button>
           <button
             onClick={apply}
-            className="rounded-lg bg-zinc-900 px-4 py-1.5 text-sm text-white hover:bg-zinc-800"
+            className="rounded-lg bg-[var(--wc-slate)] px-4 py-1.5 text-sm text-white hover:bg-[var(--wc-slate)]"
           >
             Apply crop
           </button>
@@ -624,12 +624,12 @@ function CanvasItemView({
                 setEditing(false);
               }
             }}
-            className="w-full h-full bg-white border border-zinc-300 rounded p-2 text-sm font-serif resize-none focus:outline-none focus:border-zinc-500 shadow"
+            className="w-full h-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] rounded p-2 text-sm font-serif resize-none focus:outline-none focus:border-[var(--wc-slate)] shadow"
           />
         ) : (
-          <div className="w-full h-full bg-white border border-zinc-200 rounded p-2 text-sm font-serif text-zinc-800 overflow-hidden whitespace-pre-wrap shadow hover:border-zinc-400">
+          <div className="w-full h-full bg-[var(--wc-surface)] border border-[var(--wc-border)] rounded p-2 text-sm font-serif text-[var(--wc-ink)] overflow-hidden whitespace-pre-wrap shadow hover:border-[var(--wc-border-strong)]">
             {item.content || (
-              <span className="italic text-zinc-400">Double-click to edit</span>
+              <span className="italic text-[var(--wc-faint)]">Double-click to edit</span>
             )}
           </div>
         )
@@ -638,7 +638,7 @@ function CanvasItemView({
         <img
           src={item.content}
           alt=""
-          className="w-full h-full object-cover rounded shadow border border-zinc-200 pointer-events-none"
+          className="w-full h-full object-cover rounded shadow border border-[var(--wc-border)] pointer-events-none"
           draggable={false}
         />
       ) : (
@@ -655,7 +655,7 @@ function CanvasItemView({
               }}
               onPointerDown={(e) => e.stopPropagation()}
               title="Crop image"
-              className="absolute -top-3 -left-3 h-6 rounded-full bg-white border border-zinc-300 px-2 text-[11px] text-zinc-600 hover:bg-zinc-900 hover:text-white shadow leading-none flex items-center justify-center"
+              className="absolute -top-3 -left-3 h-6 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] px-2 text-[11px] text-[var(--wc-muted)] hover:bg-[var(--wc-slate)] hover:text-white shadow leading-none flex items-center justify-center"
             >
               Crop
             </button>
@@ -666,7 +666,7 @@ function CanvasItemView({
               onDelete();
             }}
             title="Delete"
-            className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-white border border-zinc-300 text-zinc-500 hover:bg-red-600 hover:text-white shadow text-xs leading-none flex items-center justify-center"
+            className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-faint)] hover:bg-red-600 hover:text-white shadow text-xs leading-none flex items-center justify-center"
           >
             ×
           </button>

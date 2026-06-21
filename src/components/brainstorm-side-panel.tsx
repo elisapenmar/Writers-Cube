@@ -39,10 +39,10 @@ export function BrainstormSidePanel() {
 
   return (
     <aside
-      className="fixed inset-y-0 z-30 bg-white border-r border-zinc-200 flex flex-col shadow-2xl"
+      className="fixed inset-y-0 z-30 bg-[var(--wc-surface)] border-r border-[var(--wc-border)] flex flex-col shadow-2xl"
       style={{ left: `${leftOffset}px`, width: `${bsWidth}px`, maxWidth: "95vw" }}
     >
-      <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 gap-2">
+      <header className="flex items-center justify-between border-b border-[var(--wc-border)] px-4 py-3 gap-2">
         <h2 className="font-serif text-base">Brainstorm</h2>
         <div className="flex items-center gap-1">
           <button
@@ -50,7 +50,7 @@ export function BrainstormSidePanel() {
             className={`rounded-md px-2 py-1 text-xs border ${
               bsPinned
                 ? "bg-amber-100 text-amber-900 border-amber-300"
-                : "border-zinc-300 text-zinc-600 hover:bg-zinc-50"
+                : "border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
             }`}
             title={bsPinned ? "Unpin" : "Pin to side (keeps visible across pages)"}
           >
@@ -61,7 +61,7 @@ export function BrainstormSidePanel() {
               setBsOpen(false);
               if (bsPinned) useOrganize.setState({ bsPinned: false });
             }}
-            className="text-zinc-500 hover:text-zinc-900 text-lg leading-none px-1"
+            className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] text-lg leading-none px-1"
             title="Close"
           >
             ×
@@ -74,7 +74,7 @@ export function BrainstormSidePanel() {
       {/* Resize handle on right edge */}
       <div
         onPointerDown={onResizeStart}
-        className="absolute inset-y-0 right-0 w-1.5 translate-x-1/2 cursor-col-resize hover:bg-zinc-300 active:bg-zinc-400 z-40"
+        className="absolute inset-y-0 right-0 w-1.5 translate-x-1/2 cursor-col-resize hover:bg-[var(--wc-stone)] active:bg-[var(--wc-stone)] z-40"
         title="Drag to resize"
       />
     </aside>

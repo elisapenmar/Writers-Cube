@@ -228,7 +228,7 @@ export function BrainstormPanel() {
 
   if (!hydrated) {
     return (
-      <div className="flex-1 grid place-items-center text-sm text-zinc-500 p-6">
+      <div className="flex-1 grid place-items-center text-sm text-[var(--wc-faint)] p-6">
         Loading brainstorm…
       </div>
     );
@@ -243,7 +243,7 @@ export function BrainstormPanel() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Toolbar: title + history + mode */}
-      <div className="border-b border-zinc-200 px-4 py-2 space-y-2">
+      <div className="border-b border-[var(--wc-border)] px-4 py-2 space-y-2">
         <div className="flex items-center gap-2">
           <EditableTitle title={title} onSave={rename} />
           <HistoryButton
@@ -261,7 +261,7 @@ export function BrainstormPanel() {
           <button
             onClick={clearCurrent}
             disabled={isEmpty || pending}
-            className="ml-auto rounded-md px-2 py-0.5 text-zinc-500 hover:text-zinc-900 disabled:opacity-40"
+            className="ml-auto rounded-md px-2 py-0.5 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-40"
             title="Clear the current conversation"
           >
             Clear
@@ -274,13 +274,13 @@ export function BrainstormPanel() {
         <div className="space-y-4">
           {isEmpty && (
             <div className="space-y-3">
-              <p className="font-serif text-base text-zinc-700 leading-relaxed">
+              <p className="font-serif text-base text-[var(--wc-muted)] leading-relaxed">
                 Tell me your idea — out loud or in writing. I&apos;ll ask one question at a time.
               </p>
-              <p className="text-xs text-zinc-500">
-                Mode: <b className="text-zinc-700">{BRAINSTORM_MODES[mode].name}</b> — {BRAINSTORM_MODES[mode].description}
+              <p className="text-xs text-[var(--wc-faint)]">
+                Mode: <b className="text-[var(--wc-muted)]">{BRAINSTORM_MODES[mode].name}</b> — {BRAINSTORM_MODES[mode].description}
               </p>
-              <ul className="space-y-1 text-xs text-zinc-600 font-serif italic">
+              <ul className="space-y-1 text-xs text-[var(--wc-muted)] font-serif italic">
                 {BRAINSTORM_MODES[mode].openers.map((p) => (
                   <li key={p}>— {p}</li>
                 ))}
@@ -295,9 +295,9 @@ export function BrainstormPanel() {
       </div>
 
       {/* Composer */}
-      <div className="border-t border-zinc-200 px-4 py-3">
+      <div className="border-t border-[var(--wc-border)] px-4 py-3">
         {lastAssistant && !isEmpty && (
-          <p className="font-serif text-xs text-zinc-500 mb-2 italic">↑ {lastAssistant}</p>
+          <p className="font-serif text-xs text-[var(--wc-faint)] mb-2 italic">↑ {lastAssistant}</p>
         )}
         <div className="flex items-end gap-2">
           <button
@@ -306,7 +306,7 @@ export function BrainstormPanel() {
             className={`shrink-0 w-9 h-9 rounded-full grid place-items-center ${
               recording
                 ? "bg-red-600 text-white animate-pulse"
-                : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
+                : "bg-[var(--wc-paper)] hover:bg-[var(--wc-stone)] text-[var(--wc-muted)]"
             } disabled:opacity-40`}
             title={
               speechSupported
@@ -328,12 +328,12 @@ export function BrainstormPanel() {
             }}
             placeholder={recording ? "Listening…" : "Type or speak. ⌘↩ to send."}
             rows={2}
-            className="flex-1 resize-none rounded-md border border-zinc-300 px-2 py-1.5 text-sm font-serif focus:outline-none focus:border-zinc-500"
+            className="flex-1 resize-none rounded-md border border-[var(--wc-border-strong)] px-2 py-1.5 text-sm font-serif focus:outline-none focus:border-[var(--wc-slate)]"
           />
           <button
             onClick={send}
             disabled={!input.trim() || pending}
-            className="shrink-0 rounded-md bg-zinc-900 px-3 py-1.5 text-xs text-white hover:bg-zinc-800 disabled:opacity-40"
+            className="shrink-0 rounded-md bg-[var(--wc-slate)] px-3 py-1.5 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
           >
             Send
           </button>
@@ -373,7 +373,7 @@ function EditableTitle({
           }
         }}
         placeholder="Untitled brainstorm"
-        className="flex-1 font-serif text-base bg-white border border-zinc-300 rounded px-1.5 py-0.5 outline-none"
+        className="flex-1 font-serif text-base bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] rounded px-1.5 py-0.5 outline-none"
       />
     );
   }
@@ -381,8 +381,8 @@ function EditableTitle({
     <button
       onClick={() => setEditing(true)}
       title="Click to rename"
-      className={`flex-1 text-left font-serif text-base truncate hover:bg-zinc-50 rounded px-1 -ml-1 ${
-        title ? "text-zinc-900" : "text-zinc-400 italic"
+      className={`flex-1 text-left font-serif text-base truncate hover:bg-[var(--wc-canvas)] rounded px-1 -ml-1 ${
+        title ? "text-[var(--wc-ink)]" : "text-[var(--wc-faint)] italic"
       }`}
     >
       {title || "Untitled brainstorm"}
@@ -411,7 +411,7 @@ function HistoryButton({
     <div className="relative shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+        className="rounded-md border border-[var(--wc-border-strong)] px-2 py-1 text-xs hover:bg-[var(--wc-canvas)]"
         title="Switch brainstorms or start a new one"
       >
         History ({history.length})
@@ -419,17 +419,17 @@ function HistoryButton({
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-1 w-[22rem] max-h-[60vh] overflow-y-auto bg-white border border-zinc-200 rounded-md shadow-xl z-40">
-            <div className="p-2 border-b border-zinc-200">
+          <div className="absolute right-0 mt-1 w-[22rem] max-h-[60vh] overflow-y-auto bg-[var(--wc-surface)] border border-[var(--wc-border)] rounded-md shadow-xl z-40">
+            <div className="p-2 border-b border-[var(--wc-border)]">
               <button
                 onClick={onNew}
-                className="w-full rounded-md bg-zinc-900 text-white px-3 py-1.5 text-xs hover:bg-zinc-800"
+                className="w-full rounded-md bg-[var(--wc-slate)] text-white px-3 py-1.5 text-xs hover:bg-[var(--wc-slate)]"
               >
                 + New brainstorm
               </button>
             </div>
             {history.length === 0 ? (
-              <p className="p-3 text-xs text-zinc-500">No brainstorms yet.</p>
+              <p className="p-3 text-xs text-[var(--wc-faint)]">No brainstorms yet.</p>
             ) : (
               <ul>
                 {history.map((b) => {
@@ -450,8 +450,8 @@ function HistoryButton({
                   return (
                     <li
                       key={b.id}
-                      className={`border-b border-zinc-100 last:border-0 group ${
-                        isCurrent ? "bg-amber-50" : "hover:bg-zinc-50"
+                      className={`border-b border-[var(--wc-border)] last:border-0 group ${
+                        isCurrent ? "bg-amber-50" : "hover:bg-[var(--wc-canvas)]"
                       }`}
                     >
                       <div className="flex items-start gap-2 p-2">
@@ -459,29 +459,29 @@ function HistoryButton({
                           onClick={() => onSwitch(b.id)}
                           className="flex-1 min-w-0 text-left"
                         >
-                          <div className="flex items-baseline gap-1.5 text-[10px] text-zinc-500">
+                          <div className="flex items-baseline gap-1.5 text-[10px] text-[var(--wc-faint)]">
                             <span>{date}</span>
                             <span>·</span>
                             <span>{time}</span>
                             <span>·</span>
                             <span>{b.message_count} msg</span>
                           </div>
-                          <div className="font-serif text-sm text-zinc-900 mt-0.5 truncate">
+                          <div className="font-serif text-sm text-[var(--wc-ink)] mt-0.5 truncate">
                             {b.title || (
-                              <span className="italic text-zinc-400">
+                              <span className="italic text-[var(--wc-faint)]">
                                 Untitled
                               </span>
                             )}
                           </div>
                           {b.summary && (
-                            <div className="text-[11px] text-zinc-600 mt-0.5 leading-snug line-clamp-2">
+                            <div className="text-[11px] text-[var(--wc-muted)] mt-0.5 leading-snug line-clamp-2">
                               {b.summary}
                             </div>
                           )}
                         </button>
                         <button
                           onClick={() => onDelete(b.id)}
-                          className="text-xs text-zinc-300 hover:text-red-700 opacity-0 group-hover:opacity-100 shrink-0 self-start mt-1"
+                          className="text-xs text-[var(--wc-faint)] hover:text-red-700 opacity-0 group-hover:opacity-100 shrink-0 self-start mt-1"
                           title="Delete"
                         >
                           ×
@@ -507,15 +507,15 @@ function ModeToggle({
   setMode: (m: BrainstormMode) => void;
 }) {
   return (
-    <div className="flex items-center rounded-md border border-zinc-300 overflow-hidden">
+    <div className="flex items-center rounded-md border border-[var(--wc-border-strong)] overflow-hidden">
       {(Object.keys(BRAINSTORM_MODES) as BrainstormMode[]).map((m) => (
         <button
           key={m}
           onClick={() => setMode(m)}
           className={`px-2 py-0.5 ${
             mode === m
-              ? "bg-zinc-900 text-white"
-              : "bg-white text-zinc-600 hover:bg-zinc-50"
+              ? "bg-[var(--wc-slate)] text-white"
+              : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
           }`}
           title={BRAINSTORM_MODES[m].description}
         >
@@ -539,7 +539,7 @@ function Bubble({
     return (
       <div
         className={`font-serif text-sm leading-relaxed ${
-          subtle ? "text-zinc-400" : "text-zinc-800"
+          subtle ? "text-[var(--wc-faint)]" : "text-[var(--wc-ink)]"
         }`}
       >
         {text}
@@ -547,7 +547,7 @@ function Bubble({
     );
   }
   return (
-    <div className="bg-zinc-100 rounded-2xl rounded-tr-sm px-3 py-2 ml-auto max-w-[85%] font-serif text-sm text-zinc-800 leading-relaxed">
+    <div className="bg-[var(--wc-paper)] rounded-2xl rounded-tr-sm px-3 py-2 ml-auto max-w-[85%] font-serif text-sm text-[var(--wc-ink)] leading-relaxed">
       {text}
     </div>
   );

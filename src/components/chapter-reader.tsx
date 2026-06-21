@@ -26,8 +26,8 @@ export function ChapterReader({ scenes }: { scenes: SceneInput[] }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-zinc-50">
-      <div className="sticky top-0 z-10 flex justify-end px-6 py-2 text-xs text-zinc-500 bg-zinc-50/80 backdrop-blur">
+    <div className="flex-1 overflow-y-auto bg-[var(--wc-page)]">
+      <div className="sticky top-0 z-10 flex justify-end px-6 py-2 text-xs text-[var(--wc-faint)] bg-[var(--wc-canvas)]/80 backdrop-blur">
         <SaveLabel status={status} savedAt={savedAt} />
       </div>
       <div className="max-w-3xl mx-auto py-8 px-6">

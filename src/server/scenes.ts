@@ -394,6 +394,101 @@ export async function splitScene(
   return { created: newChapters.length, firstContent: docOf(segments[0].blocks) };
 }
 
+/**
+ * Split a scene at a specific top-level block index (e.g. from a right-click in
+ * the editor). Blocks before `blockIndex` stay; blocks from `blockIndex` on go
+ * to a new scene (same chapter) or a new chapter right after this one.
+ */
+export async function splitSceneAt(
+  sceneId: string,
+  blockIndex: number,
+  into: "scenes" | "chapters",
+): Promise<{ firstContent: { type: "doc"; content: unknown[] } }> {
+  const { supabase } = await requireUser();
+  const { data: scene } = await supabase
+    .from("scenes")
+    .select("id, chapter_id, title, position, content")
+    .eq("id", sceneId)
+    .maybeSingle();
+  if (!scene) throw new Error("Scene not found");
+
+  const doc = scene.content as { content?: Block[] } | null;
+  const blocks: Block[] = Array.isArray(doc?.content) ? (doc!.content as Block[]) : [];
+  if (blockIndex <= 0 || blockIndex >= blocks.length) {
+    throw new Error("Pick a spot inside the text (not the very start or end) to split.");
+  }
+  const head = blocks.slice(0, blockIndex);
+  const tail = blocks.slice(blockIndex);
+
+  await supabase
+    .from("scenes")
+    .update({
+      content: docOf(head),
+      word_count: countWordsInDoc(docOf(head)),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", scene.id);
+
+  if (into === "scenes") {
+    const { data: siblings } = await supabase
+      .from("scenes")
+      .select("id, position")
+      .eq("chapter_id", scene.chapter_id)
+      .gt("position", scene.position as number)
+      .order("position", { ascending: false });
+    for (const s of siblings ?? []) {
+      await supabase
+        .from("scenes")
+        .update({ position: (s.position as number) + 1 })
+        .eq("id", s.id);
+    }
+    const pos = (scene.position as number) + 1;
+    await supabase.from("scenes").insert({
+      chapter_id: scene.chapter_id,
+      title: `Scene ${pos + 1}`,
+      position: pos,
+      content: docOf(tail),
+      word_count: countWordsInDoc(docOf(tail)),
+    });
+  } else {
+    const { data: chapter } = await supabase
+      .from("chapters")
+      .select("id, project_id, position")
+      .eq("id", scene.chapter_id)
+      .maybeSingle();
+    if (!chapter) throw new Error("Chapter not found");
+    const { data: later } = await supabase
+      .from("chapters")
+      .select("id, position")
+      .eq("project_id", chapter.project_id)
+      .gt("position", chapter.position as number)
+      .order("position", { ascending: false });
+    for (const c of later ?? []) {
+      await supabase
+        .from("chapters")
+        .update({ position: (c.position as number) + 1 })
+        .eq("id", c.id);
+    }
+    const title = blockText(tail[0]).slice(0, 80) || "New chapter";
+    const { data: ch } = await supabase
+      .from("chapters")
+      .insert({ project_id: chapter.project_id, title, position: (chapter.position as number) + 1 })
+      .select("id")
+      .single();
+    if (ch) {
+      await supabase.from("scenes").insert({
+        chapter_id: ch.id,
+        title: "Scene 1",
+        position: 0,
+        content: docOf(tail),
+        word_count: countWordsInDoc(docOf(tail)),
+      });
+    }
+  }
+  revalidatePath("/app", "layout");
+  return { firstContent: docOf(head) };
+}
+
 export async function updateSceneContent(sceneId: string, content: unknown) {
   const { supabase } = await requireUser();
   const word_count = countWordsInDoc(content);

@@ -51,7 +51,7 @@ export function TimelineTab() {
 
   if (!state) {
     return (
-      <div className="flex-1 grid place-items-center text-sm text-zinc-500 p-6">
+      <div className="flex-1 grid place-items-center text-sm text-[var(--wc-faint)] p-6">
         Loading timeline…
       </div>
     );
@@ -121,14 +121,14 @@ export function TimelineTab() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 text-xs">
-        <span className="text-zinc-500">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--wc-border)] text-xs">
+        <span className="text-[var(--wc-faint)]">
           {state.lanes.length} parallel timeline{state.lanes.length === 1 ? "" : "s"}
           {saving && " · saving…"}
         </span>
         <button
           onClick={addLane}
-          className="rounded-md bg-zinc-900 px-2.5 py-1 text-white hover:bg-zinc-800"
+          className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-white hover:bg-[var(--wc-slate)]"
         >
           + Timeline
         </button>
@@ -141,7 +141,7 @@ export function TimelineTab() {
           </div>
         )}
         {state.lanes.length === 0 ? (
-          <p className="text-sm text-zinc-500 rounded-2xl border border-dashed border-zinc-300 px-4 py-6">
+          <p className="text-sm text-[var(--wc-faint)] rounded-2xl border border-dashed border-[var(--wc-border-strong)] px-4 py-6">
             No timelines yet. Add one — then add more to track parallel threads
             (e.g. two characters, two eras) side by side.
           </p>
@@ -149,10 +149,10 @@ export function TimelineTab() {
           state.lanes.map((lane) => (
             <div
               key={lane.id}
-              className="rounded-2xl border border-zinc-200 bg-white"
+              className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)]"
               style={{ borderLeft: `4px solid ${lane.color}` }}
             >
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-100">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--wc-border)]">
                 <input
                   value={lane.name}
                   onChange={(e) => patchLane(lane.id, { name: e.target.value })}
@@ -161,13 +161,13 @@ export function TimelineTab() {
                 />
                 <button
                   onClick={() => addEvent(lane.id)}
-                  className="text-xs text-zinc-500 hover:text-zinc-900"
+                  className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
                 >
                   + event
                 </button>
                 <button
                   onClick={() => removeLane(lane.id)}
-                  className="text-xs text-zinc-300 hover:text-red-700"
+                  className="text-xs text-[var(--wc-faint)] hover:text-red-700"
                   title="Delete lane"
                 >
                   ×
@@ -175,39 +175,39 @@ export function TimelineTab() {
               </div>
 
               {lane.events.length === 0 ? (
-                <p className="px-3 py-3 text-xs text-zinc-400">No events yet.</p>
+                <p className="px-3 py-3 text-xs text-[var(--wc-faint)]">No events yet.</p>
               ) : (
                 <div className="flex gap-2 overflow-x-auto p-3">
                   {lane.events.map((ev, i) => (
                     <div
                       key={ev.id}
-                      className="shrink-0 w-52 rounded-xl border border-zinc-200 bg-zinc-50 p-2 group"
+                      className="shrink-0 w-52 rounded-xl border border-[var(--wc-border)] bg-[var(--wc-canvas)] p-2 group"
                     >
                       <input
                         value={ev.when}
                         onChange={(e) => patchEvent(lane.id, ev.id, { when: e.target.value })}
                         placeholder="When…"
-                        className="w-full bg-transparent text-[11px] uppercase tracking-wide text-zinc-500 outline-none mb-1"
+                        className="w-full bg-transparent text-[11px] uppercase tracking-wide text-[var(--wc-faint)] outline-none mb-1"
                       />
                       <input
                         value={ev.title}
                         onChange={(e) => patchEvent(lane.id, ev.id, { title: e.target.value })}
                         placeholder="Event"
-                        className="w-full bg-transparent font-serif text-sm text-zinc-800 outline-none mb-1"
+                        className="w-full bg-transparent font-serif text-sm text-[var(--wc-ink)] outline-none mb-1"
                       />
                       <textarea
                         value={ev.notes}
                         onChange={(e) => patchEvent(lane.id, ev.id, { notes: e.target.value })}
                         placeholder="Notes…"
                         rows={2}
-                        className="w-full bg-transparent text-xs text-zinc-600 resize-none outline-none"
+                        className="w-full bg-transparent text-xs text-[var(--wc-muted)] resize-none outline-none"
                       />
                       <div className="flex items-center justify-between mt-1 opacity-0 group-hover:opacity-100 transition">
                         <div className="flex gap-1">
                           <button
                             onClick={() => moveEvent(lane.id, ev.id, -1)}
                             disabled={i === 0}
-                            className="text-zinc-400 hover:text-zinc-900 disabled:opacity-30"
+                            className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-30"
                             title="Move earlier"
                           >
                             <SquareArrow dir="left" />
@@ -215,7 +215,7 @@ export function TimelineTab() {
                           <button
                             onClick={() => moveEvent(lane.id, ev.id, 1)}
                             disabled={i === lane.events.length - 1}
-                            className="text-zinc-400 hover:text-zinc-900 disabled:opacity-30"
+                            className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-30"
                             title="Move later"
                           >
                             <SquareArrow dir="right" />
@@ -223,7 +223,7 @@ export function TimelineTab() {
                         </div>
                         <button
                           onClick={() => removeEvent(lane.id, ev.id)}
-                          className="text-xs text-zinc-400 hover:text-red-700"
+                          className="text-xs text-[var(--wc-faint)] hover:text-red-700"
                         >
                           delete
                         </button>

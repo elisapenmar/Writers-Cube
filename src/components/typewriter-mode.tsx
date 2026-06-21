@@ -42,6 +42,7 @@ export function TypewriterMode({
   const [goalType, setGoalType] = useState<GoalType>(initialGoalType ?? "words");
   const [goalValue, setGoalValue] = useState<number>(initialGoalValue ?? 250);
   const [fontSize, setFontSize] = useState<FontSize>("comfortable");
+  const [lockBackspace, setLockBackspace] = useState(false);
 
   const [startWords, setStartWords] = useState(scene.word_count);
   const [startTime, setStartTime] = useState<number>(Date.now());
@@ -112,6 +113,8 @@ export function TypewriterMode({
           setGoalValue={setGoalValue}
           fontSize={fontSize}
           setFontSize={setFontSize}
+          lockBackspace={lockBackspace}
+          setLockBackspace={setLockBackspace}
           sceneTitle={scene.title}
           onStart={start}
           onCancel={exit}
@@ -128,6 +131,7 @@ export function TypewriterMode({
           setFontSize={setFontSize}
           goalType={goalType}
           goalValue={goalValue}
+          lockBackspace={lockBackspace}
           wordsWritten={wordsWritten}
           elapsedSec={elapsedSec}
           goalMet={phase === "done"}
@@ -152,6 +156,8 @@ function ConfigScreen({
   setGoalValue,
   fontSize,
   setFontSize,
+  lockBackspace,
+  setLockBackspace,
   sceneTitle,
   onStart,
   onCancel,
@@ -162,6 +168,8 @@ function ConfigScreen({
   setGoalValue: (n: number) => void;
   fontSize: FontSize;
   setFontSize: (f: FontSize) => void;
+  lockBackspace: boolean;
+  setLockBackspace: (v: boolean) => void;
   sceneTitle: string;
   onStart: () => void;
   onCancel: () => void;
@@ -235,6 +243,17 @@ function ConfigScreen({
           </div>
         </div>
 
+        <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={lockBackspace}
+            onChange={(e) => setLockBackspace(e.target.checked)}
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
+          />
+          Don&apos;t allow backspace
+          <span className="text-xs text-zinc-500">— no deleting, only forward</span>
+        </label>
+
         <div className="flex gap-2 pt-2">
           <button
             onClick={onCancel}
@@ -263,6 +282,7 @@ function ActiveSession({
   setFontSize,
   goalType,
   goalValue,
+  lockBackspace,
   wordsWritten,
   elapsedSec,
   goalMet,
@@ -278,6 +298,7 @@ function ActiveSession({
   setFontSize: (f: FontSize) => void;
   goalType: GoalType;
   goalValue: number;
+  lockBackspace: boolean;
   wordsWritten: number;
   elapsedSec: number;
   goalMet: boolean;
@@ -311,6 +332,16 @@ function ActiveSession({
           class: "focus:outline-none font-serif leading-relaxed",
           spellcheck: "false",
         },
+        handleKeyDown: lockBackspace
+          ? (_view, event) => {
+              // Hardcore mode: no deleting — only forward.
+              if (event.key === "Backspace" || event.key === "Delete") {
+                event.preventDefault();
+                return true;
+              }
+              return false;
+            }
+          : undefined,
       },
       onUpdate: ({ editor }) => {
         if (saveTimer.current) clearTimeout(saveTimer.current);

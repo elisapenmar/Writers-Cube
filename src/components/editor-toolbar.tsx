@@ -75,7 +75,7 @@ function Btn({
       onClick={onClick}
       title={title}
       className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center ${
-        active ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-100"
+        active ? "bg-[var(--wc-slate)] text-white" : "text-[var(--wc-muted)] hover:bg-[var(--wc-paper)]"
       }`}
       style={{
         fontWeight: bold ? 700 : 500,
@@ -89,5 +89,5 @@ function Btn({
 }
 
 function Divider() {
-  return <span className="w-px h-5 bg-zinc-200 mx-1" />;
+  return <span className="w-px h-5 bg-[var(--wc-stone)] mx-1" />;
 }

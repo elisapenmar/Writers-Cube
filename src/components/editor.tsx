@@ -6,7 +6,7 @@ import Underline from "@tiptap/extension-underline";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Scene } from "@/lib/types";
-import { updateSceneContent, splitScene } from "@/server/scenes";
+import { updateSceneContent, splitScene, splitSceneAt } from "@/server/scenes";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
@@ -22,6 +22,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitting, setSplitting] = useState(false);
   const [splitMsg, setSplitMsg] = useState<string | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
@@ -85,6 +86,40 @@ export function Editor({ scene }: { scene: Scene }) {
     }
   }
 
+  function onContextMenu(e: React.MouseEvent) {
+    if (!editor) return;
+    const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+    if (!coords) return;
+    e.preventDefault();
+    const index = editor.state.doc.resolve(coords.pos).index(0);
+    setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex: index });
+  }
+
+  async function doSplitAt(into: "scenes" | "chapters") {
+    if (!ctxMenu) return;
+    const blockIndex = ctxMenu.blockIndex;
+    setCtxMenu(null);
+    setSplitting(true);
+    setSplitMsg(null);
+    try {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (editor) await save(editor.getJSON());
+      const { firstContent } = await splitSceneAt(scene.id, blockIndex, into);
+      if (editor && firstContent) {
+        editor.commands.setContent(firstContent as object, { emitUpdate: false });
+        setWordCount(countWords(firstContent));
+      }
+      setSplitMsg(
+        into === "scenes" ? "Split into a new scene here." : "Split into a new chapter here.",
+      );
+      router.refresh();
+    } catch (err) {
+      setSplitMsg(err instanceof Error ? err.message : "Split failed");
+    } finally {
+      setSplitting(false);
+    }
+  }
+
   // Flush on unmount / scene switch.
   useEffect(() => {
     return () => {
@@ -111,17 +146,17 @@ export function Editor({ scene }: { scene: Scene }) {
 
   return (
     <div className="flex flex-col flex-1 h-screen">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3">
+      <header className="flex items-center justify-between border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-3">
         <h2 className="font-serif text-lg truncate">{scene.title}</h2>
-        <div className="flex items-center gap-3 text-xs text-zinc-500 shrink-0">
+        <div className="flex items-center gap-3 text-xs text-[var(--wc-faint)] shrink-0">
           <span className="tabular-nums">{wordCount} words</span>
-          <span className="text-zinc-300">·</span>
+          <span className="text-[var(--wc-faint)]">·</span>
           <SaveLabel status={status} savedAt={savedAt} />
           <div className="relative">
             <button
               onClick={() => setSplitOpen((o) => !o)}
               disabled={splitting}
-              className="rounded-md border border-zinc-300 px-3 py-1 hover:bg-zinc-50 text-zinc-700 disabled:opacity-50"
+              className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)] disabled:opacity-50"
               title="Split this scene's text into multiple scenes or chapters"
             >
               {splitting ? "Splitting…" : "Split"}
@@ -129,22 +164,22 @@ export function Editor({ scene }: { scene: Scene }) {
             {splitOpen && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setSplitOpen(false)} />
-                <div className="absolute right-0 z-30 mt-1 w-64 rounded-lg border border-zinc-200 bg-white p-1.5 text-left shadow-xl">
+                <div className="absolute right-0 z-30 mt-1 w-64 rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 text-left shadow-xl">
                   <button
                     onClick={() => doSplit("scenes")}
-                    className="block w-full rounded-md px-2.5 py-1.5 text-left hover:bg-zinc-50"
+                    className="block w-full rounded-md px-2.5 py-1.5 text-left hover:bg-[var(--wc-canvas)]"
                   >
-                    <div className="text-sm text-zinc-800">Into scenes</div>
-                    <div className="text-[11px] text-zinc-400">
+                    <div className="text-sm text-[var(--wc-ink)]">Into scenes</div>
+                    <div className="text-[11px] text-[var(--wc-faint)]">
                       Breaks where a line is just <span className="font-mono">* * *</span>
                     </div>
                   </button>
                   <button
                     onClick={() => doSplit("chapters")}
-                    className="block w-full rounded-md px-2.5 py-1.5 text-left hover:bg-zinc-50"
+                    className="block w-full rounded-md px-2.5 py-1.5 text-left hover:bg-[var(--wc-canvas)]"
                   >
-                    <div className="text-sm text-zinc-800">Into chapters</div>
-                    <div className="text-[11px] text-zinc-400">
+                    <div className="text-sm text-[var(--wc-ink)]">Into chapters</div>
+                    <div className="text-[11px] text-[var(--wc-faint)]">
                       Breaks at headings or <span className="font-mono"># </span>lines
                     </div>
                   </button>
@@ -154,7 +189,7 @@ export function Editor({ scene }: { scene: Scene }) {
           </div>
           <button
             onClick={() => setTypewriterOpen(true)}
-            className="rounded-md border border-zinc-300 px-3 py-1 hover:bg-zinc-50 text-zinc-700"
+            className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
             title="Enter focused, distraction-free writing"
           >
             Focus mode
@@ -167,7 +202,7 @@ export function Editor({ scene }: { scene: Scene }) {
         </div>
       )}
 
-      <div className="border-b border-zinc-200 bg-white px-6 py-1.5">
+      <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
         <EditorToolbar editor={editor} />
       </div>
 
@@ -192,10 +227,36 @@ export function Editor({ scene }: { scene: Scene }) {
           }}
         />
       )}
-      <div className="flex-1 overflow-y-auto px-6 py-12 bg-zinc-50">
+      <div
+        className="flex-1 overflow-y-auto px-6 py-12 bg-[var(--wc-page)]"
+        onContextMenu={onContextMenu}
+      >
         {editor && <TagBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>
+
+      {ctxMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
+          <div
+            className="fixed z-50 w-56 rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
+            style={{ left: Math.min(ctxMenu.x, window.innerWidth - 230), top: Math.min(ctxMenu.y, window.innerHeight - 120) }}
+          >
+            <button
+              onClick={() => doSplitAt("scenes")}
+              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+            >
+              ✂ Split into a new scene here
+            </button>
+            <button
+              onClick={() => doSplitAt("chapters")}
+              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+            >
+              ✂ Split into a new chapter here
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -106,7 +106,7 @@ export function OutlineTab() {
 
   if (!hydrated) {
     return (
-      <div className="flex-1 grid place-items-center text-sm text-zinc-500 p-6">
+      <div className="flex-1 grid place-items-center text-sm text-[var(--wc-faint)] p-6">
         Loading outline…
       </div>
     );
@@ -128,9 +128,9 @@ export function OutlineTab() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 text-xs">
-        <div className="text-zinc-500">
-          <span className="text-zinc-700 font-medium">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--wc-border)] text-xs">
+        <div className="text-[var(--wc-faint)]">
+          <span className="text-[var(--wc-muted)] font-medium">
             {OUTLINE_TEMPLATES.find((t) => t.key === loaded.template)?.name ??
               "Custom"}
           </span>
@@ -139,7 +139,7 @@ export function OutlineTab() {
           <button
             onClick={onFillFromNotes}
             disabled={filling || pending}
-            className="rounded-md border border-zinc-300 px-2.5 py-1 hover:bg-zinc-50 disabled:opacity-40"
+            className="rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
             title="Use your brainstorm notes to suggest content for empty sections"
           >
             {filling ? "Filling…" : "Fill from notes"}
@@ -147,7 +147,7 @@ export function OutlineTab() {
           <button
             onClick={onChangeTemplate}
             disabled={filling || pending}
-            className="rounded-md px-2.5 py-1 text-zinc-500 hover:text-zinc-900 disabled:opacity-40"
+            className="rounded-md px-2.5 py-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-40"
           >
             Change template…
           </button>
@@ -181,7 +181,7 @@ function TemplatePicker({
 }) {
   return (
     <div className="flex-1 overflow-y-auto p-5">
-      <p className="text-sm text-zinc-600 mb-4">
+      <p className="text-sm text-[var(--wc-muted)] mb-4">
         Pick a starting structure or begin from scratch. You can rename, add, or
         delete sections at any time.
       </p>
@@ -191,10 +191,10 @@ function TemplatePicker({
             <button
               onClick={() => onPick(t.key)}
               disabled={pending}
-              className="w-full text-left rounded-md border border-zinc-200 hover:border-zinc-400 bg-white px-4 py-3 disabled:opacity-40"
+              className="w-full text-left rounded-md border border-[var(--wc-border)] hover:border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-4 py-3 disabled:opacity-40"
             >
-              <div className="font-serif text-base text-zinc-900">{t.name}</div>
-              <div className="text-xs text-zinc-500 mt-0.5">{t.description}</div>
+              <div className="font-serif text-base text-[var(--wc-ink)]">{t.name}</div>
+              <div className="text-xs text-[var(--wc-faint)] mt-0.5">{t.description}</div>
             </button>
           </li>
         ))}
@@ -245,7 +245,7 @@ function OutlineNodeView({
     <div className={isRoot ? "" : "ml-4"}>
       <div className="group flex items-start gap-2 py-1">
         {!isRoot && (
-          <span className="font-serif text-zinc-500 text-sm pt-1 min-w-[2.2rem] text-right">
+          <span className="font-serif text-[var(--wc-faint)] text-sm pt-1 min-w-[2.2rem] text-right">
             {numbering}
           </span>
         )}
@@ -262,17 +262,17 @@ function OutlineNodeView({
                 if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                 if (e.key === "Escape") setEditingTitle(false);
               }}
-              className={`w-full bg-white border border-zinc-300 rounded px-1.5 py-0.5 outline-none ${
+              className={`w-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] rounded px-1.5 py-0.5 outline-none ${
                 isRoot ? "font-serif text-lg" : "font-serif text-base"
               }`}
             />
           ) : (
             <div
               onClick={() => setEditingTitle(true)}
-              className={`cursor-text hover:bg-zinc-50 rounded px-1 py-0.5 ${
+              className={`cursor-text hover:bg-[var(--wc-canvas)] rounded px-1 py-0.5 ${
                 isRoot
-                  ? "font-serif text-lg text-zinc-900"
-                  : "font-serif text-base text-zinc-900"
+                  ? "font-serif text-lg text-[var(--wc-ink)]"
+                  : "font-serif text-base text-[var(--wc-ink)]"
               }`}
               title="Click to edit"
             >
@@ -297,7 +297,7 @@ function OutlineNodeView({
           {!editingNotes && !node.notes && (
             <button
               onClick={() => setEditingNotes(true)}
-              className="text-xs text-zinc-400 hover:text-zinc-900"
+              className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
               title="Add notes"
             >
               + notes
@@ -305,7 +305,7 @@ function OutlineNodeView({
           )}
           <button
             onClick={addChild}
-            className="text-xs text-zinc-400 hover:text-zinc-900"
+            className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
             title="Add a sub-section"
           >
             +sub
@@ -314,14 +314,14 @@ function OutlineNodeView({
             <>
               <button
                 onClick={addSiblingAfter}
-                className="text-xs text-zinc-400 hover:text-zinc-900"
+                className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
                 title="Add a sibling below"
               >
                 +
               </button>
               <button
                 onClick={deleteSelf}
-                className="text-xs text-zinc-400 hover:text-red-700"
+                className="text-xs text-[var(--wc-faint)] hover:text-red-700"
                 title="Delete"
               >
                 ×
@@ -382,16 +382,16 @@ function NotesEditor({
         }}
         rows={Math.max(2, Math.ceil(draft.length / 60))}
         placeholder="Notes for this section…"
-        className="w-full mt-1 bg-zinc-50 border border-zinc-200 rounded px-2 py-1.5 text-sm font-serif leading-relaxed outline-none focus:border-zinc-400"
+        className="w-full mt-1 bg-[var(--wc-canvas)] border border-[var(--wc-border)] rounded px-2 py-1.5 text-sm font-serif leading-relaxed outline-none focus:border-[var(--wc-border-strong)]"
       />
     );
   }
   return (
     <div
       onClick={onStartEdit}
-      className="mt-0.5 ml-1 cursor-text text-sm text-zinc-600 font-serif leading-relaxed hover:bg-zinc-50 rounded px-1"
+      className="mt-0.5 ml-1 cursor-text text-sm text-[var(--wc-muted)] font-serif leading-relaxed hover:bg-[var(--wc-canvas)] rounded px-1"
     >
-      {value || <span className="italic text-zinc-400">Add notes…</span>}
+      {value || <span className="italic text-[var(--wc-faint)]">Add notes…</span>}
     </div>
   );
 }
@@ -403,13 +403,13 @@ function SaveLabel({
   saving: boolean;
   savedAt: string | null;
 }) {
-  if (saving) return <span className="text-zinc-400">Saving…</span>;
+  if (saving) return <span className="text-[var(--wc-faint)]">Saving…</span>;
   if (savedAt) {
     const d = new Date(savedAt);
     const hh = String(d.getHours()).padStart(2, "0");
     const mm = String(d.getMinutes()).padStart(2, "0");
     return (
-      <span className="text-zinc-400">
+      <span className="text-[var(--wc-faint)]">
         Saved {hh}:{mm}
       </span>
     );

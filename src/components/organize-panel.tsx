@@ -243,15 +243,15 @@ export function OrganizePanel() {
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-30 bg-white border-l border-zinc-200 flex flex-col shadow-2xl"
+      className="fixed inset-y-0 right-0 z-30 bg-[var(--wc-surface)] border-l border-[var(--wc-border)] flex flex-col shadow-2xl"
       style={widthStyle}
     >
       <div
         onPointerDown={onResizeStart}
-        className="absolute inset-y-0 left-0 w-1.5 -translate-x-1/2 cursor-col-resize hover:bg-zinc-300 active:bg-zinc-400 z-40"
+        className="absolute inset-y-0 left-0 w-1.5 -translate-x-1/2 cursor-col-resize hover:bg-[var(--wc-stone)] active:bg-[var(--wc-stone)] z-40"
         title="Drag to resize"
       />
-      <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 gap-2">
+      <header className="flex items-center justify-between border-b border-[var(--wc-border)] px-4 py-3 gap-2">
         <h2 className="font-serif text-base shrink-0">{GROUP_LABEL[panelGroup]}</h2>
         <div className="flex items-center gap-1 flex-1 justify-end">
           <div className="flex flex-wrap">
@@ -263,8 +263,8 @@ export function OrganizePanel() {
                   i === GROUP_TABS[panelGroup].length - 1 ? "rounded-r-md" : ""
                 } ${
                   format === tab
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+                    ? "bg-[var(--wc-slate)] text-white border-[var(--wc-slate)]"
+                    : "bg-[var(--wc-surface)] border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
                 }`}
               >
                 {TAB_LABEL[tab]}
@@ -278,7 +278,7 @@ export function OrganizePanel() {
             <button
               onClick={generate}
               disabled={organizing}
-              className="rounded-md bg-zinc-900 px-2.5 py-1 text-xs text-white hover:bg-zinc-800 disabled:opacity-40"
+              className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
               title={
                 format === "notes"
                   ? hasCurrent
@@ -301,7 +301,7 @@ export function OrganizePanel() {
             className={`rounded-md px-2 py-1 text-xs border ${
               pinned
                 ? "bg-amber-100 text-amber-900 border-amber-300"
-                : "border-zinc-300 text-zinc-600 hover:bg-zinc-50"
+                : "border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
             }`}
             title={
               pinned
@@ -316,7 +316,7 @@ export function OrganizePanel() {
               setOpen(false);
               if (pinned) useOrganize.setState({ pinned: false });
             }}
-            className="text-zinc-500 hover:text-zinc-900 text-lg leading-none px-1"
+            className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] text-lg leading-none px-1"
             title="Close"
           >
             ×
@@ -358,12 +358,12 @@ export function OrganizePanel() {
         ) : nodes && nodes.length > 0 ? (
           <>
             <MindMap rawNodes={nodes} initialPositions={positions} />
-            <p className="px-4 py-2 text-xs text-zinc-500 border-t border-zinc-200">
+            <p className="px-4 py-2 text-xs text-[var(--wc-faint)] border-t border-[var(--wc-border)]">
               Double-click to edit a bubble. Hover for + (add child) and × (delete). Drag to rearrange — positions and edits save automatically.
             </p>
           </>
         ) : (
-          <div className="flex-1 grid place-items-center text-sm text-zinc-500 p-6 text-center">
+          <div className="flex-1 grid place-items-center text-sm text-[var(--wc-faint)] p-6 text-center">
             {organizing
               ? "Generating…"
               : "Click Generate to draw a thought map you can rearrange and edit."}
@@ -387,7 +387,7 @@ function NotesEditor({
 }) {
   return (
     <div className="flex-1 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-1 text-xs text-zinc-400 border-b border-zinc-100">
+      <div className="flex items-center justify-between px-4 py-1 text-xs text-[var(--wc-faint)] border-b border-[var(--wc-border)]">
         <ImportDocButton
           onImported={(text) => onChange(value ? `${value}\n\n${text}` : text)}
         />
@@ -400,7 +400,7 @@ function NotesEditor({
         placeholder="Your working notes will appear here. Edit freely — your changes save automatically.
 
 Run a brainstorm session, then click 'Generate' (or 'Add from chat' once notes exist) to have the AI distill the conversation into notes here."
-        className="flex-1 resize-none p-5 bg-white text-sm text-zinc-800 leading-relaxed font-serif focus:outline-none whitespace-pre-wrap"
+        className="flex-1 resize-none p-5 bg-[var(--wc-surface)] text-sm text-[var(--wc-ink)] leading-relaxed font-serif focus:outline-none whitespace-pre-wrap"
       />
     </div>
   );
@@ -435,7 +435,7 @@ function ImportDocButton({ onImported }: { onImported: (text: string) => void })
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        className="rounded-md px-1.5 py-0.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 disabled:opacity-50"
+        className="rounded-md px-1.5 py-0.5 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-paper)] disabled:opacity-50"
         title="Import a .docx, .md, or .txt into your notes"
       >
         {busy ? "Importing…" : "↑ Import doc"}

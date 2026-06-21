@@ -10,8 +10,21 @@ import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
+import { TypewriterMode } from "@/components/typewriter-mode";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+function countWords(doc: unknown): number {
+  let text = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc);
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
 
 export type ManuscriptScene = {
   id: string;
@@ -38,26 +51,50 @@ export function ManuscriptReader({
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
+  const [focusScene, setFocusScene] = useState<ManuscriptScene | null>(null);
+  // Per-scene content override + version, so a block remounts with the text it
+  // ended up with after a focus session.
+  const [override, setOverride] = useState<Record<string, unknown>>({});
+  const [version, setVersion] = useState<Record<string, number>>({});
 
   function bumpStatus(s: SaveStatus, t?: string) {
     setStatus(s);
     if (t) setSavedAt(t);
   }
 
+  function persistFor(scene: ManuscriptScene) {
+    return (doc: unknown) => {
+      if (scene.kind === "loose") return updateLooseSceneContent(scene.id, doc).then(() => {});
+      if (scene.kind === "exercise") return updateExercise(scene.id, { content: doc }).then(() => {});
+      return updateSceneContent(scene.id, doc).then(() => {});
+    };
+  }
+
+  const renderScene = (scene: ManuscriptScene) => (
+    <SceneBlock
+      key={`${scene.id}:${version[scene.id] ?? 0}`}
+      scene={scene}
+      contentOverride={override[scene.id]}
+      onStatus={bumpStatus}
+      onFocus={setActiveEditor}
+      onRequestFocus={() => setFocusScene(scene)}
+    />
+  );
+
   const totalScenes =
     chapters.reduce((n, c) => n + c.scenes.length, 0) + looseScenes.length;
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-zinc-50">
+    <div className="flex-1 flex flex-col h-screen bg-[var(--wc-page)]">
       {/* Sticky toolbar — operates on whichever block is focused */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-zinc-200 bg-white px-6 py-2">
-        <span className="font-serif text-sm text-zinc-700 shrink-0">
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
+        <span className="font-serif text-sm text-[var(--wc-muted)] shrink-0">
           {projectTitle}
         </span>
         <div className="flex-1 min-w-0 overflow-x-auto">
           <EditorToolbar editor={activeEditor} />
         </div>
-        <span className="shrink-0 text-xs text-zinc-500">
+        <span className="shrink-0 text-xs text-[var(--wc-faint)]">
           <SaveLabel status={status} savedAt={savedAt} />
         </span>
       </div>
@@ -65,66 +102,77 @@ export function ManuscriptReader({
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto py-10 px-6">
           {totalScenes === 0 && (
-            <p className="text-sm text-zinc-500 text-center py-16">
+            <p className="text-sm text-[var(--wc-faint)] text-center py-16">
               Nothing to scroll yet — add chapters and scenes from the sidebar.
             </p>
           )}
           {chapters.map((chapter) => (
             <section key={chapter.id} className="mb-10">
-              <h2 className="font-serif text-2xl text-zinc-800 mb-4 pb-1 border-b border-zinc-200">
+              <h2 className="font-serif text-2xl text-[var(--wc-ink)] mb-4 pb-1 border-b border-[var(--wc-border)]">
                 {chapter.title}
               </h2>
               {chapter.scenes.length === 0 ? (
-                <p className="text-sm text-zinc-400 italic">No scenes yet.</p>
+                <p className="text-sm text-[var(--wc-faint)] italic">No scenes yet.</p>
               ) : (
-                chapter.scenes.map((scene) => (
-                  <SceneBlock
-                    key={scene.id}
-                    scene={scene}
-                    onStatus={bumpStatus}
-                    onFocus={setActiveEditor}
-                  />
-                ))
+                chapter.scenes.map(renderScene)
               )}
             </section>
           ))}
 
           {looseScenes.length > 0 && (
             <section className="mb-10">
-              <h2 className="font-serif text-2xl text-zinc-800 mb-4 pb-1 border-b border-zinc-200">
+              <h2 className="font-serif text-2xl text-[var(--wc-ink)] mb-4 pb-1 border-b border-[var(--wc-border)]">
                 Uncategorized
               </h2>
-              {looseScenes.map((scene) => (
-                <SceneBlock
-                  key={scene.id}
-                  scene={scene}
-                  onStatus={bumpStatus}
-                  onFocus={setActiveEditor}
-                />
-              ))}
+              {looseScenes.map(renderScene)}
             </section>
           )}
         </div>
       </div>
+
+      {focusScene && (
+        <TypewriterMode
+          scene={{
+            id: focusScene.id,
+            title: focusScene.title,
+            content: override[focusScene.id] ?? focusScene.content,
+            word_count: countWords(override[focusScene.id] ?? focusScene.content),
+          }}
+          persist={persistFor(focusScene)}
+          onExit={(finalDoc) => {
+            const id = focusScene.id;
+            if (finalDoc) {
+              setOverride((o) => ({ ...o, [id]: finalDoc }));
+              setVersion((v) => ({ ...v, [id]: (v[id] ?? 0) + 1 }));
+            }
+            setFocusScene(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function SceneBlock({
   scene,
+  contentOverride,
   onStatus,
   onFocus,
+  onRequestFocus,
 }: {
   scene: ManuscriptScene;
+  contentOverride?: unknown;
   onStatus: (status: SaveStatus, savedAt?: string) => void;
   onFocus: (editor: Editor) => void;
+  onRequestFocus: () => void;
 }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor(
     {
       extensions: [StarterKit, Underline, ...ALL_TAG_MARKS],
-      content: (scene.content as object | null) ?? {
+      content: (contentOverride as object | null) ??
+        (scene.content as object | null) ?? {
         type: "doc",
         content: [{ type: "paragraph" }],
       },
@@ -188,9 +236,18 @@ function SceneBlock({
   }, [editor]);
 
   return (
-    <div className="wc-scene-block mb-6">
-      <div className="text-[11px] uppercase tracking-wider text-zinc-400 mb-1">
-        {scene.title}
+    <div className="wc-scene-block mb-6 group">
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-[11px] uppercase tracking-wider text-[var(--wc-faint)]">
+          {scene.title}
+        </div>
+        <button
+          onClick={onRequestFocus}
+          className="text-[11px] text-[var(--wc-faint)] opacity-0 group-hover:opacity-100 hover:text-[var(--wc-muted)] transition"
+          title="Write this scene in focus mode"
+        >
+          ✶ Focus
+        </button>
       </div>
       {editor && <TagBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />

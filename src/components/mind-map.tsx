@@ -46,9 +46,9 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
   useEffect(() => setText(label), [label]);
 
   const styleByLevel: Record<0 | 1 | 2, string> = {
-    0: "bg-zinc-900 text-zinc-50 border-zinc-900 font-serif text-base px-5 py-3 rounded-2xl shadow-lg",
-    1: "bg-white text-zinc-900 border-zinc-300 font-serif text-sm px-4 py-2.5 rounded-2xl shadow",
-    2: "bg-zinc-50 text-zinc-700 border-zinc-200 font-serif text-xs px-3 py-2 rounded-2xl",
+    0: "bg-[var(--wc-slate)] text-zinc-50 border-[var(--wc-slate)] font-serif text-base px-5 py-3 rounded-2xl shadow-lg",
+    1: "bg-[var(--wc-surface)] text-[var(--wc-ink)] border-[var(--wc-border-strong)] font-serif text-sm px-4 py-2.5 rounded-2xl shadow",
+    2: "bg-[var(--wc-canvas)] text-[var(--wc-muted)] border-[var(--wc-border)] font-serif text-xs px-3 py-2 rounded-2xl",
   };
 
   return (
@@ -102,7 +102,7 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
             onAddChild(id);
           }}
           title="Add child node"
-          className="w-7 h-7 rounded-full bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-900 hover:text-white shadow text-sm leading-none flex items-center justify-center"
+          className="w-7 h-7 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-slate)] hover:text-white shadow text-sm leading-none flex items-center justify-center"
         >
           +
         </button>
@@ -113,7 +113,7 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
               onDelete(id);
             }}
             title="Delete node + its children"
-            className="w-7 h-7 rounded-full bg-white border border-zinc-300 text-zinc-400 hover:bg-red-600 hover:text-white shadow text-sm leading-none flex items-center justify-center"
+            className="w-7 h-7 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-faint)] hover:bg-red-600 hover:text-white shadow text-sm leading-none flex items-center justify-center"
           >
             ×
           </button>
@@ -423,14 +423,14 @@ export function MindMap({
 
   if (nodesData.length === 0) {
     return (
-      <div className="flex-1 grid place-items-center text-sm text-zinc-500 p-6">
+      <div className="flex-1 grid place-items-center text-sm text-[var(--wc-faint)] p-6">
         Nothing to map yet.
       </div>
     );
   }
 
   return (
-    <div className="flex-1 w-full h-full bg-zinc-100">
+    <div className="flex-1 w-full h-full bg-[var(--wc-paper)]">
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}

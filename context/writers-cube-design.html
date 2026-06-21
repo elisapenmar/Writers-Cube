@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writer's Cube — Architecture &amp; Design Overview</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e7e9ee; --muted:#9aa3b2;
+    --line:#2a2f3a; --accent:#7c9cff; --accent2:#5ad1a8; --accent3:#f0a868; --accent4:#d98ed6;
+    --radius:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0c0e12,#0f1115);color:var(--ink);
+    font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 96px}
+  header.hero{border:1px solid var(--line);border-radius:var(--radius);
+    background:radial-gradient(120% 140% at 0% 0%,#222a3d 0%,#151821 55%);padding:34px 32px;margin-bottom:34px}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+  h1{margin:.35em 0 .15em;font-size:34px;letter-spacing:-.01em}
+  .sub{color:var(--muted);max-width:62ch}
+  .pills{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .pill{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--panel2);
+    border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  h2{margin:42px 0 14px;font-size:21px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+  h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  h2.g .dot{background:var(--accent2)} h2.o .dot{background:var(--accent3)} h2.p .dot{background:var(--accent4)}
+  p.lead{color:var(--muted);margin-top:-4px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .card h3{margin:0 0 4px;font-size:15px}
+  .card .role{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em}
+  .card p{margin:6px 0 0;color:var(--muted);font-size:13.5px}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--panel2);border:1px solid var(--line);
+    padding:1px 6px;border-radius:6px;color:#cdd5e6}
+  /* layered architecture diagram */
+  .stack{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .layer{padding:16px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .layer:last-child{border-bottom:0}
+  .layer .lh{font-weight:600;font-size:14px;margin-bottom:8px;display:flex;gap:10px;align-items:center}
+  .layer .lh small{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;color:var(--ink)}
+  .chip b{color:var(--accent2);font-weight:600}
+  .arrow{height:26px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line)}
+  .l-client{background:linear-gradient(90deg,#1a2030,#171a21)}
+  .l-server{background:linear-gradient(90deg,#19261f,#171a21)}
+  .l-ext{background:linear-gradient(90deg,#2a2030,#171a21)}
+  /* route map */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--panel2);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  td:first-child{font-family:var(--mono);font-size:12.5px;color:var(--accent);white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  .note{border-left:3px solid var(--accent3);background:var(--panel);padding:12px 16px;border-radius:0 10px 10px 0;color:var(--muted);font-size:13.5px}
+  footer{margin-top:50px;color:var(--muted);font-size:12px;font-family:var(--mono);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">Architecture &amp; Design Overview · v0.5.0</div>
+    <h1>Writer's Cube</h1>
+    <p class="sub">A web app for novelists — brainstorming, outlining, drafting in a rich-text editor,
+    organizing scenes/chapters on a visual canvas, and exporting a finished manuscript. Built as a
+    server-rendered Next.js app with an AI-assisted writing layer.</p>
+    <div class="pills">
+      <span class="pill">TypeScript</span>
+      <span class="pill">Next.js 16 · App Router</span>
+      <span class="pill">React 19 (RSC)</span>
+      <span class="pill">Supabase / Postgres</span>
+      <span class="pill">Anthropic · claude-sonnet-4-5</span>
+      <span class="pill">Tailwind CSS v4</span>
+    </div>
+  </header>
+
+  <!-- LANGUAGES -->
+  <h2><span class="dot"></span>Languages</h2>
+  <p class="lead">One typed language end-to-end, plus the supporting markup, styling, and schema languages.</p>
+  <div class="grid g3">
+    <div class="card"><div class="role">Primary</div><h3>TypeScript</h3>
+      <p>All application code (<code>strict</code> mode). Shared types in <code>src/lib/types.ts</code>; client &amp; server share the same models.</p></div>
+    <div class="card"><div class="role">UI</div><h3>TSX / JSX</h3>
+      <p>React 19 components — a mix of Server Components and <code>"use client"</code> islands for interactive surfaces.</p></div>
+    <div class="card"><div class="role">Styling</div><h3>CSS · Tailwind v4</h3>
+      <p>Utility-first via the Tailwind v4 PostCSS pipeline, with a small <code>globals.css</code>.</p></div>
+    <div class="card"><div class="role">Data</div><h3>SQL</h3>
+      <p>20 versioned Postgres migrations in <code>supabase/migrations/</code> defining the writing schema.</p></div>
+    <div class="card"><div class="role">Config</div><h3>JS / MJS</h3>
+      <p><code>next.config.ts</code>, <code>eslint.config.mjs</code>, <code>postcss.config.mjs</code>, plus a small Node build script for PDF docs.</p></div>
+    <div class="card"><div class="role">Content</div><h3>HTML &amp; Markdown</h3>
+      <p>Editor content is serialized to/from Markdown (<code>tiptap-to-markdown.ts</code>); design docs authored as HTML.</p></div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <h2 class="g"><span class="dot"></span>How it's structured</h2>
+  <p class="lead">A three-tier flow: a React client, a Next.js server-action data layer, and two external services.
+  There is almost no REST surface — the UI calls typed <em>Server Actions</em> directly.</p>
+
+  <div class="stack">
+    <div class="layer l-client">
+      <div class="lh">① Client — the browser <small>React 19 · App Router</small></div>
+      <div class="chips">
+        <span class="chip"><b>Tiptap</b> (ProseMirror) — rich-text scene editor &amp; manuscript scroll mode</span>
+        <span class="chip"><b>@xyflow/react</b> — visual story canvas / mind-map</span>
+        <span class="chip"><b>dnd-kit</b> — drag &amp; drop reordering</span>
+        <span class="chip"><b>TanStack Query</b> — fetching &amp; cache</span>
+        <span class="chip"><b>Zustand</b> — local UI state (appearance, tags, organize)</span>
+      </div>
+    </div>
+    <div class="arrow">▼ &nbsp; typed Server Action calls &nbsp; ▼</div>
+    <div class="layer l-server">
+      <div class="lh">② Server — Next.js runtime <small>"use server" · src/server/*</small></div>
+      <div class="chips">
+        <span class="chip">projects · scenes · characters · kernels</span>
+        <span class="chip">outline · timeline · mindmap · canvas</span>
+        <span class="chip">brainstorm · prompts</span>
+        <span class="chip">import · publish · export · drive</span>
+        <span class="chip">project-context (assembles AI context)</span>
+        <span class="chip">+ route handlers: <code>/export</code>, <code>/auth/callback</code></span>
+      </div>
+    </div>
+    <div class="arrow">▼ &nbsp; persistence &amp; AI &nbsp; ▼</div>
+    <div class="layer l-ext">
+      <div class="lh">③ External services <small>via @supabase/ssr &amp; @anthropic-ai/sdk</small></div>
+      <div class="chips">
+        <span class="chip"><b>Supabase</b> — Postgres data, Auth, per-project isolation (SSR client + middleware)</span>
+        <span class="chip"><b>Anthropic API</b> — <code>claude-sonnet-4-5</code> for brainstorm/AI assistance (server-side key)</span>
+        <span class="chip"><b>Google Drive</b> — optional import/export integration</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROUTING -->
+  <h2 class="o"><span class="dot"></span>Routing &amp; layout</h2>
+  <p class="lead">App Router with two <em>route groups</em> that share data but use different chrome:
+  a project-focused writing space and a top-level hub.</p>
+  <table>
+    <thead><tr><th>Route group</th><th>Layout</th><th>Surfaces</th></tr></thead>
+    <tbody>
+      <tr><td>(writing)</td><td>Project side-nav</td>
+        <td><code>write</code> · <code>manuscript</code> (scroll mode) · <code>scene/[sceneId]</code> · <code>chapter/[chapterId]</code> · <code>loose/[id]</code> · <code>tags</code> · <code>publish</code></td></tr>
+      <tr><td>(hub)</td><td>Clean top-bar</td>
+        <td><code>projects</code> · <code>kernels</code> · <code>prompts</code> (Writing Prompts) · <code>exercises/[id]</code> · <code>archive</code> · <code>drive</code> · <code>why-this-works</code></td></tr>
+      <tr><td>app/*</td><td>—</td>
+        <td><code>brainstorm</code> · <code>export</code> (download route)</td></tr>
+      <tr><td>auth/*</td><td>Minimal</td>
+        <td><code>login</code> · <code>auth/callback</code> (Supabase OAuth)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- FEATURE MODULES -->
+  <h2 class="p"><span class="dot"></span>Feature modules</h2>
+  <div class="grid g2">
+    <div class="card"><div class="role">Draft</div><h3>Rich-text editor</h3>
+      <p>Tiptap with bold/italic/underline/strike, H1–H3, lists, quotes; a bubble toolbar; and a whole-manuscript continuous scroll mode.</p></div>
+    <div class="card"><div class="role">Plan</div><h3>Canvas &amp; mind-map</h3>
+      <p>React Flow board for arranging story kernels, scenes, and relationships; outline templates and a project timeline.</p></div>
+    <div class="card"><div class="role">Ideate</div><h3>AI brainstorm</h3>
+      <p>Mode-driven prompts (<code>brainstorm-modes.ts</code>) sent to Claude with assembled project context; history saved per project.</p></div>
+    <div class="card"><div class="role">Organize</div><h3>Scenes, chapters &amp; tags</h3>
+      <p>Drag-and-drop ordering, loose vs. chaptered scenes, custom tag marks inside the prose, and tag extraction.</p></div>
+    <div class="card"><div class="role">In</div><h3>Import</h3>
+      <p>.docx ingestion via <code>mammoth</code>; Google Drive file browser; paragraph-aware import into scenes.</p></div>
+    <div class="card"><div class="role">Out</div><h3>Publish &amp; export</h3>
+      <p>Manuscript export to <code>docx</code> and <code>EPUB</code> (<code>jszip</code>); publish settings; a separate Node/PDF build for briefs.</p></div>
+  </div>
+
+  <!-- DATA / DESIGN NOTES -->
+  <h2><span class="dot"></span>Design principles in play</h2>
+  <div class="grid g2">
+    <div class="card"><h3>Server Actions over REST</h3>
+      <p>The data layer is typed functions marked <code>"use server"</code>, called straight from components — fewer endpoints, end-to-end type safety, no client/API drift.</p></div>
+    <div class="card"><h3>Per-project isolation</h3>
+      <p>Most tables carry a <code>project_id</code> (see migrations 0018–0020); Story Bible, organize state, tags, and brainstorm are scoped per project.</p></div>
+    <div class="card"><h3>AI as a server capability</h3>
+      <p>The Anthropic key lives only on the server; <code>project-context.ts</code> builds the model's context so prompts stay grounded in the user's story.</p></div>
+    <div class="card"><h3>Content as portable Markdown</h3>
+      <p>Editor JSON converts to Markdown for storage/export, keeping the manuscript format-independent and round-trippable.</p></div>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <strong>Deployment &amp; build:</strong> <code>next build</code> / <code>next dev</code>, deployed on Vercel,
+    with Supabase as the managed Postgres + Auth backend. Local dev runs at <code>http://localhost:3000</code>.
+  </div>
+
+  <footer>
+    Generated from the <code>writers-cube</code> codebase (v0.5.0) · branch <code>elisapenmar/writers-cube-prototype</code>.
+    Reflects package.json + src/ structure at time of writing.
+  </footer>
+
+</div>
+</body>
+</html>

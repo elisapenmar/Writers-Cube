@@ -116,15 +116,15 @@ export function SideNav({
 
   if (navCollapsed) {
     return (
-      <aside className="w-12 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-screen items-center py-3 gap-3">
+      <aside className="w-12 shrink-0 border-r border-[var(--wc-border)] bg-[var(--wc-surface)] flex flex-col h-screen items-center py-3 gap-3">
         <button
           onClick={toggleNavCollapsed}
-          className="w-8 h-8 rounded-lg text-zinc-500 hover:bg-zinc-100 grid place-items-center"
+          className="w-8 h-8 rounded-lg text-[var(--wc-faint)] hover:bg-[var(--wc-paper)] grid place-items-center"
           title="Expand side nav"
         >
           <SidebarToggle collapsed />
         </button>
-        <div className="text-[10px] text-zinc-400 [writing-mode:vertical-rl] rotate-180 font-serif tracking-wider">
+        <div className="text-[10px] text-[var(--wc-faint)] [writing-mode:vertical-rl] rotate-180 font-serif tracking-wider">
           {project.title}
         </div>
       </aside>
@@ -134,20 +134,20 @@ export function SideNav({
   const firstSceneId = chapters[0]?.scenes[0]?.id;
 
   return (
-    <aside className="w-72 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-screen">
+    <aside className="w-72 shrink-0 border-r border-[var(--wc-border)] bg-[var(--wc-surface)] flex flex-col h-screen">
       {/* Header: dashboard + project identity */}
-      <div className="px-3 pt-2.5 pb-3 border-b border-zinc-200">
+      <div className="px-3 pt-2.5 pb-3 border-b border-[var(--wc-border)]">
         <div className="flex items-center justify-between">
           <Link
             href="/app"
-            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 rounded-lg px-1.5 py-1 hover:bg-zinc-100"
+            className="flex items-center gap-1.5 text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] rounded-lg px-1.5 py-1 hover:bg-[var(--wc-paper)]"
             title="Back to dashboard"
           >
             <CubeMark className="text-[var(--wc-slate)]" /> Dashboard
           </Link>
           <button
             onClick={toggleNavCollapsed}
-            className="w-7 h-7 rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 grid place-items-center"
+            className="w-7 h-7 rounded-lg text-[var(--wc-faint)] hover:bg-[var(--wc-paper)] hover:text-[var(--wc-ink)] grid place-items-center"
             title="Collapse side nav"
           >
             <SidebarToggle />
@@ -159,13 +159,13 @@ export function SideNav({
       </div>
 
       {/* Tools */}
-      <div className="px-3 py-2 border-b border-zinc-200">
+      <div className="px-3 py-2 border-b border-[var(--wc-border)]">
         <ToolsRow />
       </div>
 
       {/* Chapters header + view toggle */}
       <div className="px-3 pt-3 pb-1.5 flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-400">
+        <span className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)]">
           Chapters
         </span>
         <SceneScrollToggle firstSceneId={firstSceneId} />
@@ -173,7 +173,7 @@ export function SideNav({
 
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
         {chapters.length === 0 ? (
-          <p className="px-2 py-4 text-sm text-zinc-500">
+          <p className="px-2 py-4 text-sm text-[var(--wc-faint)]">
             No chapters yet. Add one to begin.
           </p>
         ) : !mounted ? (
@@ -211,7 +211,7 @@ export function SideNav({
 
         <div className="mt-4">
           <div className="px-2 flex items-center justify-between mb-1">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-400">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)]">
               Uncategorized
             </span>
             <button
@@ -221,14 +221,14 @@ export function SideNav({
                 })
               }
               disabled={pending}
-              className="text-xs text-zinc-400 hover:text-zinc-900 disabled:opacity-50"
+              className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-50"
               title="Add a loose item here"
             >
               + add
             </button>
           </div>
           {uncategorized.length === 0 ? (
-            <p className="px-2 py-1 text-xs text-zinc-400">
+            <p className="px-2 py-1 text-xs text-[var(--wc-faint)]">
               Loose items and moved-in exercises land here.
             </p>
           ) : (
@@ -241,10 +241,10 @@ export function SideNav({
                         ? `/app/loose/${u.id}`
                         : `/app/exercises/${u.id}`
                     }
-                    className="flex items-center gap-1.5 truncate rounded px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
+                    className="flex items-center gap-1.5 truncate rounded px-2 py-1 text-sm text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
                     title={u.title}
                   >
-                    <span aria-hidden className="text-[10px] text-zinc-400">
+                    <span aria-hidden className="text-[10px] text-[var(--wc-faint)]">
                       {u.kind === "exercise" ? "🎲" : "✎"}
                     </span>
                     <span className="truncate">{u.title}</span>
@@ -256,18 +256,18 @@ export function SideNav({
         </div>
       </nav>
 
-      <div className="border-t border-zinc-200 p-3 space-y-2">
+      <div className="border-t border-[var(--wc-border)] p-3 space-y-2">
         <button
           onClick={addChapter}
           disabled={pending}
-          className="w-full rounded-md bg-zinc-900 px-3 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-50"
+          className="w-full rounded-md bg-[var(--wc-slate)] px-3 py-2 text-sm text-white hover:bg-[var(--wc-slate)] disabled:opacity-50"
         >
           + New chapter
         </button>
         <div className="flex items-center justify-between text-xs">
           <Link
             href="/app/publish"
-            className="rounded-md px-2 py-1 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+            className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
             title="Prepare & export your book for publication"
           >
             ✦ Publish
@@ -275,7 +275,7 @@ export function SideNav({
           <form action={signOut}>
             <button
               type="submit"
-              className="rounded-md px-2 py-1 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+              className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
             >
               Sign out
             </button>
@@ -291,13 +291,13 @@ function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
   const scrollActive = pathname === "/app/manuscript";
   const scenesHref = firstSceneId ? `/app/scene/${firstSceneId}` : "/app/write";
   return (
-    <div className="flex items-center rounded-md border border-zinc-200 overflow-hidden text-[11px]">
+    <div className="flex items-center rounded-md border border-[var(--wc-border)] overflow-hidden text-[11px]">
       <Link
         href={scenesHref}
         className={`px-2 py-0.5 ${
           !scrollActive
-            ? "bg-zinc-900 text-white"
-            : "bg-white text-zinc-600 hover:bg-zinc-50"
+            ? "bg-[var(--wc-slate)] text-white"
+            : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
         }`}
         title="Edit one scene at a time"
       >
@@ -305,10 +305,10 @@ function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
       </Link>
       <Link
         href="/app/manuscript"
-        className={`px-2 py-0.5 border-l border-zinc-200 ${
+        className={`px-2 py-0.5 border-l border-[var(--wc-border)] ${
           scrollActive
-            ? "bg-zinc-900 text-white"
-            : "bg-white text-zinc-600 hover:bg-zinc-50"
+            ? "bg-[var(--wc-slate)] text-white"
+            : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
         }`}
         title="Scroll the whole manuscript"
       >
@@ -327,18 +327,18 @@ function StaticChapter({
 }) {
   return (
     <li>
-      <div className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-zinc-700">
+      <div className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-[var(--wc-muted)]">
         <span className="flex-1 truncate">{chapter.title}</span>
       </div>
-      <ul className="ml-2 border-l border-zinc-200 pl-2">
+      <ul className="ml-2 border-l border-[var(--wc-border)] pl-2">
         {chapter.scenes.map((scene) => (
           <li key={scene.id}>
             <Link
               href={`/app/scene/${scene.id}`}
               className={`block truncate rounded px-2 py-1 text-sm ${
                 activeSceneId === scene.id
-                  ? "bg-zinc-100 text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-50"
+                  ? "bg-[var(--wc-paper)] text-[var(--wc-ink)]"
+                  : "text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
               }`}
             >
               {scene.title}
@@ -353,7 +353,7 @@ function StaticChapter({
 function ProjectMetadata({ project }: { project: ProjectTree }) {
   return (
     <div className="space-y-1">
-      <div className="text-[10px] uppercase tracking-widest text-zinc-400">
+      <div className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)]">
         Working title
       </div>
       <EditableTitle
@@ -361,84 +361,10 @@ function ProjectMetadata({ project }: { project: ProjectTree }) {
         onSave={(next) =>
           updateProjectMetadata(project.id, { title: next })
         }
-        className="font-serif text-lg text-zinc-900 block"
+        className="font-serif text-lg text-[var(--wc-ink)] block"
         inputClassName="font-serif text-lg w-full"
       />
-      <div className="pt-2 space-y-0.5">
-        <MetaLine
-          label="by"
-          value={project.author_name}
-          placeholder="Your name"
-          onSave={(v) =>
-            updateProjectMetadata(project.id, { author_name: v })
-          }
-        />
-        <MetaLine
-          label="agent"
-          value={project.agent_name}
-          placeholder="—"
-          onSave={(v) =>
-            updateProjectMetadata(project.id, { agent_name: v })
-          }
-        />
-      </div>
-    </div>
-  );
-}
-
-function MetaLine({
-  label,
-  value,
-  placeholder,
-  onSave,
-}: {
-  label: string;
-  value: string | null;
-  placeholder: string;
-  onSave: (next: string | null) => Promise<unknown> | unknown;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ?? "");
-  useEffect(() => setDraft(value ?? ""), [value]);
-
-  async function commit() {
-    setEditing(false);
-    const next = draft.trim();
-    if (next !== (value ?? "")) {
-      await onSave(next.length === 0 ? null : next);
-    }
-  }
-
-  return (
-    <div className="flex items-baseline gap-2 text-xs">
-      <span className="text-zinc-400 w-10 shrink-0">{label}</span>
-      {editing ? (
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            if (e.key === "Escape") {
-              setDraft(value ?? "");
-              setEditing(false);
-            }
-          }}
-          className="flex-1 bg-white border border-zinc-300 rounded px-1 py-0.5 outline-none text-zinc-800"
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className={`flex-1 text-left truncate hover:text-zinc-900 ${
-            value ? "text-zinc-600" : "text-zinc-300 italic"
-          }`}
-          title="Click to edit"
-        >
-          {value || placeholder}
-        </button>
-      )}
+      {/* Author/agent live in Prepare for publication now. */}
     </div>
   );
 }
@@ -447,7 +373,7 @@ function ToolsRow() {
   const openGroup = useOrganize((s) => s.openGroup);
   const setBsOpen = useOrganize((s) => s.setBsOpen);
   const btn =
-    "flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] text-zinc-600 hover:bg-zinc-100 border border-zinc-200";
+    "flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] text-[var(--wc-muted)] hover:bg-[var(--wc-paper)] border border-[var(--wc-border)]";
   return (
     <div className="grid grid-cols-3 gap-1.5">
       <button
@@ -515,9 +441,9 @@ function SortableChapter({
 
   return (
     <li ref={setNodeRef} style={style}>
-      <div className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-zinc-700 group">
+      <div className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-[var(--wc-muted)] group">
         <span
-          className="cursor-grab text-zinc-300 hover:text-zinc-500 mr-1 select-none"
+          className="cursor-grab text-[var(--wc-faint)] hover:text-[var(--wc-faint)] mr-1 select-none"
           {...attributes}
           {...listeners}
           title="Drag to reorder"
@@ -526,7 +452,7 @@ function SortableChapter({
         </span>
         <Link
           href={`/app/chapter/${chapter.id}`}
-          className="flex-1 hover:text-zinc-900 truncate"
+          className="flex-1 hover:text-[var(--wc-ink)] truncate"
           title="Read whole chapter"
         >
           <EditableTitle
@@ -537,7 +463,7 @@ function SortableChapter({
         <button
           onClick={() => onAddScene(chapter.id)}
           disabled={pending}
-          className="text-xs text-zinc-400 hover:text-zinc-900 disabled:opacity-50 ml-2"
+          className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-50 ml-2"
           title="Add scene"
         >
           + scene
@@ -549,7 +475,7 @@ function SortableChapter({
           items={chapter.scenes.map((s) => s.id)}
           strategy={verticalListSortingStrategy}
         >
-          <ul className="ml-2 border-l border-zinc-200 pl-2">
+          <ul className="ml-2 border-l border-[var(--wc-border)] pl-2">
             {chapter.scenes.map((scene) => (
               <SortableScene
                 key={scene.id}
@@ -577,7 +503,7 @@ function SortableScene({ scene, active }: { scene: Scene; active: boolean }) {
   return (
     <li ref={setNodeRef} style={style} className="group flex items-center">
       <span
-        className="cursor-grab text-zinc-300 hover:text-zinc-500 mr-1 select-none opacity-0 group-hover:opacity-100"
+        className="cursor-grab text-[var(--wc-faint)] hover:text-[var(--wc-faint)] mr-1 select-none opacity-0 group-hover:opacity-100"
         {...attributes}
         {...listeners}
         title="Drag to reorder"
@@ -587,7 +513,7 @@ function SortableScene({ scene, active }: { scene: Scene; active: boolean }) {
       <Link
         href={`/app/scene/${scene.id}`}
         className={`flex-1 truncate rounded px-2 py-1 text-sm ${
-          active ? "bg-zinc-100 text-zinc-900" : "text-zinc-600 hover:bg-zinc-50"
+          active ? "bg-[var(--wc-paper)] text-[var(--wc-ink)]" : "text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
         }`}
       >
         <EditableTitle

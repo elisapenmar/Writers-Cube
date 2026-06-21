@@ -125,11 +125,14 @@ export async function getBrainstorm(id?: string): Promise<{
   const projectId = await resolveProjectId(supabase, user.id);
   let row;
   if (id) {
+    // Validate the id belongs to the ACTIVE project — a persisted id from
+    // another project must not leak its conversation in here.
     const { data } = await supabase
       .from("brainstorms")
       .select("id, messages, mode, title, summary")
       .eq("id", id)
       .eq("user_id", user.id)
+      .eq("project_id", projectId ?? "")
       .maybeSingle();
     row = data;
   } else {
