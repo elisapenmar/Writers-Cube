@@ -114,6 +114,10 @@ body {
 .wc-tag[data-kind="weak"]        { background: rgba(220,38,38,0.14);   color: #991b1b; }
 .wc-tag[data-kind="factcheck"]   { background: rgba(8,145,178,0.14);   color: #0e7490; }
 .wc-tag[data-kind="placeholder"] { background: rgba(163,163,163,0.18); color: #525252; }
+.wc-tag-custom {
+  background: color-mix(in srgb, var(--wc-custom) 16%, transparent);
+  color: color-mix(in srgb, var(--wc-custom) 72%, #2e2b33);
+}
 
 /* ---------- Writer's Cube brand (soft cube / muted, calming) ---------- */
 :root {

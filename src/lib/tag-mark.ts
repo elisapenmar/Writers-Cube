@@ -18,6 +18,10 @@ declare module "@tiptap/core" {
     tagPlaceholder: {
       toggleTagPlaceholder: () => ReturnType;
     };
+    customTag: {
+      setCustomTag: (attrs: { label: string; color: string }) => ReturnType;
+      unsetCustomTag: () => ReturnType;
+    };
   }
 }
 
@@ -67,6 +71,62 @@ export const TagWeak = makeTagMark("weak");
 export const TagFactcheck = makeTagMark("factcheck");
 export const TagPlaceholder = makeTagMark("placeholder");
 
+/**
+ * A single mark for user-defined custom tags. Carries the label + color as
+ * attributes (both non-empty, so they round-trip through ProseMirror's toJSON).
+ */
+export const CustomTag = Mark.create({
+  name: "customTag",
+  inclusive: false,
+  excludes:
+    "tagLookup tagRevise tagWeak tagFactcheck tagPlaceholder customTag",
+
+  addAttributes() {
+    return {
+      label: {
+        default: "",
+        parseHTML: (el) => el.getAttribute("data-label") ?? "",
+        renderHTML: (attrs) => ({ "data-label": attrs.label as string }),
+      },
+      color: {
+        default: "#8a7a96",
+        parseHTML: (el) => el.getAttribute("data-color") ?? "#8a7a96",
+        renderHTML: (attrs) => ({ "data-color": attrs.color as string }),
+      },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "span[data-custom-tag]" }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const color = (HTMLAttributes["data-color"] as string) ?? "#8a7a96";
+    return [
+      "span",
+      mergeAttributes(HTMLAttributes, {
+        "data-custom-tag": "true",
+        class: "wc-tag wc-tag-custom",
+        style: `--wc-custom: ${color};`,
+      }),
+      0,
+    ];
+  },
+
+  addCommands() {
+    return {
+      setCustomTag:
+        (attrs: { label: string; color: string }) =>
+        ({ commands }: { commands: { setMark: (n: string, a: unknown) => boolean } }) =>
+          commands.setMark("customTag", attrs),
+      unsetCustomTag:
+        () =>
+        ({ commands }: { commands: { unsetMark: (n: string) => boolean } }) =>
+          commands.unsetMark("customTag"),
+    } as never;
+  },
+});
+
 export const TAG_MARK_NAMES: Record<TagKind, string> = {
   lookup: "tagLookup",
   revise: "tagRevise",
@@ -75,4 +135,11 @@ export const TAG_MARK_NAMES: Record<TagKind, string> = {
   placeholder: "tagPlaceholder",
 };
 
-export const ALL_TAG_MARKS = [TagLookup, TagRevise, TagWeak, TagFactcheck, TagPlaceholder];
+export const ALL_TAG_MARKS = [
+  TagLookup,
+  TagRevise,
+  TagWeak,
+  TagFactcheck,
+  TagPlaceholder,
+  CustomTag,
+];

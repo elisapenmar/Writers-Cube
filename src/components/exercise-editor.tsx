@@ -1,14 +1,13 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { useEffect, useRef, useState } from "react";
 import { updateExercise } from "@/server/prompts";
 import { EditorToolbar } from "@/components/editor-toolbar";
-import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
-import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
+import { ALL_TAG_MARKS } from "@/lib/tag-mark";
+import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -128,30 +127,7 @@ export function ExerciseEditor({
         <EditorToolbar editor={editor} />
       </div>
       <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-        {editor && (
-          <BubbleMenu
-            editor={editor}
-            options={{ placement: "top" }}
-            shouldShow={({ editor, from, to }) => from !== to && editor.isEditable}
-            className="flex items-center gap-1 rounded-md bg-zinc-900 text-white px-1.5 py-1 shadow-lg text-xs"
-          >
-            {TAG_KINDS.map((kind: TagKind) => {
-              const markName = TAG_MARK_NAMES[kind];
-              const active = editor.isActive(markName);
-              return (
-                <button
-                  key={kind}
-                  onClick={() => editor.chain().focus().toggleMark(markName).run()}
-                  className={`px-2 py-1 rounded hover:bg-zinc-700 ${active ? "bg-zinc-700" : ""}`}
-                  style={{ borderBottom: `2px solid ${TAG_COLORS[kind].underline}` }}
-                  title={TAG_LABELS[kind]}
-                >
-                  {TAG_LABELS[kind]}
-                </button>
-              );
-            })}
-          </BubbleMenu>
-        )}
+        {editor && <TagBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>
     </div>
