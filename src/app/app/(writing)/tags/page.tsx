@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { extractTags } from "@/lib/extract-tags";
-import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
+import { ALL_TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
 import { TagRow } from "@/components/tag-row";
 
 export default async function TagsPage() {
@@ -86,7 +86,7 @@ export default async function TagsPage() {
         </p>
       ) : (
         <div className="space-y-10 max-w-3xl">
-          {TAG_KINDS.map((kind) => {
+          {ALL_TAG_KINDS.map((kind) => {
             const list = byKind.get(kind) ?? [];
             if (list.length === 0) return null;
             return (

@@ -1,4 +1,4 @@
-import { TAG_KINDS, type TagKind } from "@/lib/tags";
+import { ALL_TAG_KINDS, type TagKind } from "@/lib/tags";
 import { TAG_MARK_NAMES } from "@/lib/tag-mark";
 
 type Node = {
@@ -97,7 +97,7 @@ export function extractTags(doc: unknown): TaggedPassage[] {
       paragraphText += text;
       const end = paragraphText.length;
 
-      if (kind && (TAG_KINDS as readonly string[]).includes(kind)) {
+      if (kind && (ALL_TAG_KINDS as readonly string[]).includes(kind)) {
         if (current && current.kind === kind) {
           current.end = end;
         } else {

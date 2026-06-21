@@ -338,31 +338,14 @@ export function PromptTool({
               />
               {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-              {/* Free-write surface */}
-              {writeOpen && writingMode === "free" && (
-                <FreeWrite
-                  key={rendered!.id + (saved ? "-saved" : "")}
-                  onSave={async (content) => {
-                    setError(null);
-                    try {
-                      await persistExercise(content, countWords(content));
-                      setSaved(true);
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : "Save failed");
-                    }
-                  }}
-                  saved={saved}
-                />
-              )}
-
-              {/* Secondary actions */}
-              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-zinc-200 pt-4">
+              {/* Actions — directly above the writing surface */}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <button
                   onClick={rollAndWrite}
                   disabled={generating}
                   className="rounded-xl px-4 py-2 text-sm border border-zinc-300 hover:bg-zinc-50 disabled:opacity-50"
                 >
-                  Not for me — reroll
+                  {generating ? "Rolling…" : "↻ Not for me — reroll"}
                 </button>
                 <button
                   onClick={() => setShowDeeper((v) => !v)}
@@ -380,11 +363,28 @@ export function PromptTool({
                   </button>
                 )}
                 {saved && (
-                  <span className="text-xs px-2 py-1 rounded-md wc-grounded-badge">
+                  <span className="ml-auto text-xs px-2 py-1 rounded-md wc-grounded-badge">
                     Saved to {mode === "existing" ? "this story" : "your practice library"}
                   </span>
                 )}
               </div>
+
+              {/* Free-write surface */}
+              {writeOpen && writingMode === "free" && (
+                <FreeWrite
+                  key={rendered!.id + (saved ? "-saved" : "")}
+                  onSave={async (content) => {
+                    setError(null);
+                    try {
+                      await persistExercise(content, countWords(content));
+                      setSaved(true);
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : "Save failed");
+                    }
+                  }}
+                  saved={saved}
+                />
+              )}
             </div>
           )}
         </div>
