@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { updateSceneContent } from "@/server/scenes";
 import { updateLooseSceneContent } from "@/server/loose";
+import { updateExercise } from "@/server/prompts";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 
@@ -16,7 +17,8 @@ export type ManuscriptScene = {
   id: string;
   title: string;
   content: unknown;
-  loose?: boolean;
+  /** undefined = chapter scene; "loose"/"exercise" = uncategorized item. */
+  kind?: "loose" | "exercise";
 };
 export type ManuscriptChapter = {
   id: string;
@@ -148,10 +150,16 @@ function SceneBlock({
 
   async function save(doc: unknown) {
     try {
-      const result = scene.loose
-        ? await updateLooseSceneContent(scene.id, doc)
-        : await updateSceneContent(scene.id, doc);
-      onStatus("saved", result.savedAt);
+      let savedAt: string;
+      if (scene.kind === "loose") {
+        savedAt = (await updateLooseSceneContent(scene.id, doc)).savedAt;
+      } else if (scene.kind === "exercise") {
+        await updateExercise(scene.id, { content: doc });
+        savedAt = new Date().toISOString();
+      } else {
+        savedAt = (await updateSceneContent(scene.id, doc)).savedAt;
+      }
+      onStatus("saved", savedAt);
     } catch {
       onStatus("error");
     }

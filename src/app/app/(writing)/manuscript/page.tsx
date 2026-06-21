@@ -1,23 +1,37 @@
 import { getOrCreateProject } from "@/server/scenes";
 import { listLooseScenes } from "@/server/loose";
+import { listExercises } from "@/server/prompts";
 import {
   ManuscriptReader,
   type ManuscriptChapter,
   type ManuscriptScene,
 } from "@/components/manuscript-reader";
 
-async function safeLooseScenes(projectId: string): Promise<ManuscriptScene[]> {
+/** All uncategorized items (loose scenes + project exercises) for the scroll. */
+async function uncategorizedScenes(projectId: string): Promise<ManuscriptScene[]> {
+  const out: ManuscriptScene[] = [];
   try {
     const loose = await listLooseScenes(projectId);
-    return loose.map((l) => ({
-      id: l.id,
-      title: l.title,
-      content: l.content,
-      loose: true,
-    }));
+    for (const l of loose) {
+      out.push({ id: l.id, title: l.title, content: l.content, kind: "loose" });
+    }
   } catch {
-    return [];
+    /* table may be missing */
   }
+  try {
+    const exercises = await listExercises(projectId);
+    for (const e of exercises) {
+      out.push({
+        id: e.id,
+        title: e.title?.trim() || e.prompt?.text || "Untitled exercise",
+        content: e.content,
+        kind: "exercise",
+      });
+    }
+  } catch {
+    /* table may be missing */
+  }
+  return out;
 }
 
 export default async function ManuscriptPage() {
@@ -31,7 +45,7 @@ export default async function ManuscriptPage() {
       content: s.content,
     })),
   }));
-  const looseScenes = await safeLooseScenes(project.id);
+  const looseScenes = await uncategorizedScenes(project.id);
   return (
     <ManuscriptReader
       projectTitle={project.title}
