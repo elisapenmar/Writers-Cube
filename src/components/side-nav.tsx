@@ -29,6 +29,7 @@ import {
   reorderChapters,
   reorderScenes,
   updateProjectMetadata,
+  attachUncategorizedToChapter,
   signOut,
 } from "@/server/scenes";
 import { EditableTitle } from "@/components/editable-title";
@@ -54,6 +55,20 @@ export function SideNav({
   const [chapters, setChapters] = useState<Chapter[]>(project.chapters);
   const [pending, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
+  const [dragItem, setDragItem] = useState<{ id: string; kind: "loose" | "exercise" } | null>(null);
+  const [overChapter, setOverChapter] = useState<string | null>(null);
+
+  function dropOnChapter(chapterId: string) {
+    const item = dragItem;
+    setDragItem(null);
+    setOverChapter(null);
+    if (!item) return;
+    startTransition(async () => {
+      const { sceneId } = await attachUncategorizedToChapter(item.id, item.kind, chapterId);
+      router.push(`/app/scene/${sceneId}`);
+      router.refresh();
+    });
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -179,7 +194,15 @@ export function SideNav({
         ) : !mounted ? (
           <ul className="space-y-1">
             {chapters.map((chapter) => (
-              <StaticChapter key={chapter.id} chapter={chapter} activeSceneId={params.sceneId} />
+              <StaticChapter
+                key={chapter.id}
+                chapter={chapter}
+                activeSceneId={params.sceneId}
+                dropActive={overChapter === chapter.id && !!dragItem}
+                onItemDragOver={() => dragItem && setOverChapter(chapter.id)}
+                onItemDragLeave={() => setOverChapter((c) => (c === chapter.id ? null : c))}
+                onItemDrop={() => dropOnChapter(chapter.id)}
+              />
             ))}
           </ul>
         ) : (
@@ -202,6 +225,10 @@ export function SideNav({
                     pending={pending}
                     onAddScene={addScene}
                     onDragScenes={(e) => onScenesDragEnd(chapter.id, e)}
+                    dropActive={overChapter === chapter.id && !!dragItem}
+                    onItemDragOver={() => dragItem && setOverChapter(chapter.id)}
+                    onItemDragLeave={() => setOverChapter((c) => (c === chapter.id ? null : c))}
+                    onItemDrop={() => dropOnChapter(chapter.id)}
                   />
                 ))}
               </ul>
@@ -234,15 +261,29 @@ export function SideNav({
           ) : (
             <ul className="space-y-0.5">
               {uncategorized.map((u) => (
-                <li key={`${u.kind}-${u.id}`}>
+                <li
+                  key={`${u.kind}-${u.id}`}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", `${u.kind}:${u.id}`);
+                    setDragItem({ id: u.id, kind: u.kind });
+                  }}
+                  onDragEnd={() => {
+                    setDragItem(null);
+                    setOverChapter(null);
+                  }}
+                  className={dragItem?.id === u.id ? "opacity-50" : ""}
+                >
                   <Link
                     href={
                       u.kind === "loose"
                         ? `/app/loose/${u.id}`
                         : `/app/exercises/${u.id}`
                     }
-                    className="flex items-center gap-1.5 truncate rounded px-2 py-1 text-sm text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
-                    title={u.title}
+                    draggable={false}
+                    className="flex items-center gap-1.5 truncate rounded px-2 py-1 text-sm text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] cursor-grab active:cursor-grabbing"
+                    title={`${u.title} — drag onto a chapter to file it there`}
                   >
                     <span aria-hidden className="text-[10px] text-[var(--wc-faint)]">
                       {u.kind === "exercise" ? "🎲" : "✎"}
@@ -318,16 +359,45 @@ function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
   );
 }
 
+type DropProps = {
+  dropActive?: boolean;
+  onItemDragOver?: () => void;
+  onItemDragLeave?: () => void;
+  onItemDrop?: () => void;
+};
+
+function dropHandlers(p: DropProps) {
+  return {
+    onDragOver: (e: React.DragEvent) => {
+      if (!p.onItemDragOver) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      p.onItemDragOver();
+    },
+    onDragLeave: () => p.onItemDragLeave?.(),
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      p.onItemDrop?.();
+    },
+  };
+}
+
 function StaticChapter({
   chapter,
   activeSceneId,
+  ...drop
 }: {
   chapter: Chapter;
   activeSceneId: string | undefined;
-}) {
+} & DropProps) {
   return (
     <li>
-      <div className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-[var(--wc-muted)]">
+      <div
+        {...dropHandlers(drop)}
+        className={`flex items-center justify-between px-2 py-1.5 text-sm font-medium text-[var(--wc-muted)] rounded ${
+          drop.dropActive ? "ring-2 ring-[var(--wc-slate)] bg-[var(--wc-paper)]" : ""
+        }`}
+      >
         <span className="flex-1 truncate">{chapter.title}</span>
       </div>
       <ul className="ml-2 border-l border-[var(--wc-border)] pl-2">
@@ -422,6 +492,7 @@ function SortableChapter({
   pending,
   onAddScene,
   onDragScenes,
+  ...drop
 }: {
   chapter: Chapter;
   activeSceneId: string | undefined;
@@ -429,7 +500,7 @@ function SortableChapter({
   pending: boolean;
   onAddScene: (chapterId: string) => void;
   onDragScenes: (e: DragEndEvent) => void;
-}) {
+} & DropProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: chapter.id });
 
@@ -441,7 +512,12 @@ function SortableChapter({
 
   return (
     <li ref={setNodeRef} style={style}>
-      <div className="flex items-center justify-between px-2 py-1.5 text-sm font-medium text-[var(--wc-muted)] group">
+      <div
+        {...dropHandlers(drop)}
+        className={`flex items-center justify-between px-2 py-1.5 text-sm font-medium text-[var(--wc-muted)] group rounded ${
+          drop.dropActive ? "ring-2 ring-[var(--wc-slate)] bg-[var(--wc-paper)]" : ""
+        }`}
+      >
         <span
           className="cursor-grab text-[var(--wc-faint)] hover:text-[var(--wc-faint)] mr-1 select-none"
           {...attributes}

@@ -68,6 +68,8 @@ import {
   saveNotes,
 } from "@/server/brainstorm";
 import { getMindMap, saveMindMap } from "@/server/mindmap";
+import { generateMindMapFromManuscript } from "@/server/ai-generate";
+import { AiDiamond } from "@/components/icons";
 import type { MindMapNode } from "@/server/brainstorm";
 
 export function OrganizePanel() {
@@ -105,6 +107,7 @@ export function OrganizePanel() {
 
   const visible = open || pinned;
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mapGenOpen, setMapGenOpen] = useState(false);
 
   // Hydrate notes from the server on first mount
   useEffect(() => {
@@ -213,6 +216,26 @@ export function OrganizePanel() {
     }
   }
 
+  async function generateMapFrom(source: "brainstorm" | "manuscript") {
+    setMapGenOpen(false);
+    setOrganizing(true);
+    setError(null);
+    try {
+      const result =
+        source === "manuscript"
+          ? await generateMindMapFromManuscript()
+          : await organizeBrainstorm("mindmap");
+      if ("nodes" in result) {
+        setNodes(result.nodes);
+        setPositions({});
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generate failed");
+    } finally {
+      setOrganizing(false);
+    }
+  }
+
   const hasCurrent =
     format === "notes"
       ? notes.trim().length > 0
@@ -271,30 +294,52 @@ export function OrganizePanel() {
               </button>
             ))}
           </div>
-          {format !== "outline" &&
-            format !== "characters" &&
-            format !== "canvas" &&
-            format !== "timeline" && (
+          {format === "notes" && (
             <button
               onClick={generate}
               disabled={organizing}
-              className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
+              className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
               title={
-                format === "notes"
-                  ? hasCurrent
-                    ? "Have the AI add new ideas from the conversation to your notes"
-                    : "Have the AI distill the conversation into notes"
-                  : hasCurrent
-                  ? "Redraw the thought map from the conversation"
-                  : "Generate a thought map from the conversation"
+                hasCurrent
+                  ? "Have the AI add new ideas from the conversation to your notes"
+                  : "Have the AI distill the conversation into notes"
               }
             >
-              {organizing
-                ? "…"
-                : format === "notes" && hasCurrent
-                ? "Add from chat"
-                : "Generate"}
+              <AiDiamond className="text-white" />
+              {organizing ? "…" : hasCurrent ? "Add from chat" : "Generate"}
             </button>
+          )}
+          {format === "mindmap" && (
+            <div className="relative">
+              <button
+                onClick={() => setMapGenOpen((o) => !o)}
+                disabled={organizing}
+                className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
+                title="Generate a thought map"
+              >
+                <AiDiamond className="text-white" />
+                {organizing ? "…" : "Generate"}
+              </button>
+              {mapGenOpen && !organizing && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMapGenOpen(false)} />
+                  <div className="absolute right-0 z-50 mt-1 w-44 rounded-md border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 shadow-lg">
+                    <button
+                      onClick={() => generateMapFrom("manuscript")}
+                      className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+                    >
+                      <AiDiamond className="text-[var(--wc-slate)]" /> From manuscript
+                    </button>
+                    <button
+                      onClick={() => generateMapFrom("brainstorm")}
+                      className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+                    >
+                      <AiDiamond className="text-[var(--wc-slate)]" /> From brainstorm
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
           <button
             onClick={togglePin}

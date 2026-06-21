@@ -14,6 +14,7 @@ import {
   saveOutline,
   fillOutlineFromNotes,
 } from "@/server/outline";
+import { AiDiamond } from "@/components/icons";
 
 type Loaded = { tree: OutlineNode; template: OutlineTemplateKey } | null;
 
@@ -139,9 +140,10 @@ export function OutlineTab() {
           <button
             onClick={onFillFromNotes}
             disabled={filling || pending}
-            className="rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
             title="Use your brainstorm notes to suggest content for empty sections"
           >
+            <AiDiamond className="text-[var(--wc-slate)]" />
             {filling ? "Filling…" : "Fill from notes"}
           </button>
           <button

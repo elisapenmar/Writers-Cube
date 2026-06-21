@@ -199,6 +199,77 @@ export async function createScene(chapterId: string) {
   return data.id;
 }
 
+/** Move an uncategorized item (loose scene or exercise) into a chapter as a scene. */
+export async function attachUncategorizedToChapter(
+  itemId: string,
+  kind: "loose" | "exercise",
+  chapterId: string,
+): Promise<{ sceneId: string }> {
+  const { supabase, user } = await requireUser();
+  const { data: last } = await supabase
+    .from("scenes")
+    .select("position")
+    .eq("chapter_id", chapterId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = (last?.position ?? -1) + 1;
+
+  let title = "Scene";
+  let content: unknown = { type: "doc", content: [{ type: "paragraph" }] };
+  let word_count = 0;
+
+  if (kind === "loose") {
+    const { data } = await supabase
+      .from("loose_scenes")
+      .select("title, content, word_count")
+      .eq("id", itemId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!data) throw new Error("Item not found");
+    title = (data.title as string) || "Scene";
+    content = data.content ?? content;
+    word_count = (data.word_count as number) ?? 0;
+  } else {
+    const { data } = await supabase
+      .from("prompt_exercises")
+      .select("title, prompt, content, word_count")
+      .eq("id", itemId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!data) throw new Error("Item not found");
+    const promptText = (data.prompt as { text?: string } | null)?.text ?? "";
+    title = (data.title as string) || promptText || "Scene";
+    const existing = (data.content as { content?: unknown[] } | null)?.content ?? [];
+    content = promptText
+      ? {
+          type: "doc",
+          content: [
+            {
+              type: "blockquote",
+              content: [{ type: "paragraph", content: [{ type: "text", text: promptText }] }],
+            },
+            ...existing,
+          ],
+        }
+      : data.content ?? content;
+    word_count = (data.word_count as number) ?? 0;
+  }
+
+  const { data: scene, error } = await supabase
+    .from("scenes")
+    .insert({ chapter_id: chapterId, title: title.slice(0, 200), position, content, word_count })
+    .select("id")
+    .single();
+  if (error || !scene) throw new Error(error?.message ?? "Could not move item");
+
+  if (kind === "loose") await supabase.from("loose_scenes").delete().eq("id", itemId);
+  else await supabase.from("prompt_exercises").delete().eq("id", itemId);
+
+  revalidatePath("/app", "layout");
+  return { sceneId: scene.id as string };
+}
+
 function countWordsInDoc(doc: unknown): number {
   let text = "";
   const walk = (node: unknown) => {

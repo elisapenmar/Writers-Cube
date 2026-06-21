@@ -10,6 +10,7 @@ import {
   pullCharactersFromProject,
   type Character,
 } from "@/server/characters";
+import { AiDiamond } from "@/components/icons";
 
 export function CharactersTab() {
   const [characters, setCharacters] = useState<Character[] | null>(null);
@@ -97,17 +98,19 @@ export function CharactersTab() {
           <button
             onClick={() => onPull("brainstorm")}
             disabled={pulling || pending}
-            className="rounded-md border border-[var(--wc-border-strong)] px-2 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
             title="Extract characters from your brainstorm conversation + notes. New names added; manual edits kept."
           >
+            <AiDiamond className="text-[var(--wc-slate)]" />
             {pulling ? "…" : "Pull · brainstorm"}
           </button>
           <button
             onClick={() => onPull("project")}
             disabled={pulling || pending}
-            className="rounded-md border border-[var(--wc-border-strong)] px-2 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+            className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
             title="Extract characters from your actual manuscript prose. New names added; manual edits kept."
           >
+            <AiDiamond className="text-[var(--wc-slate)]" />
             {pulling ? "…" : "Pull · manuscript"}
           </button>
           <button

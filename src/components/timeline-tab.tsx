@@ -8,7 +8,8 @@ import {
   type TimelineLane,
   type TimelineEvent,
 } from "@/server/timeline";
-import { SquareArrow } from "@/components/icons";
+import { SquareArrow, AiDiamond } from "@/components/icons";
+import { generateTimelineFromManuscript } from "@/server/ai-generate";
 
 const LANE_COLORS = ["#8a7a96", "#5d7384", "#8aa791", "#c07a63", "#cdab6b", "#7f8aa6"];
 
@@ -20,6 +21,7 @@ export function TimelineTab() {
   const [state, setState] = useState<TimelineState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -126,12 +128,34 @@ export function TimelineTab() {
           {state.lanes.length} parallel timeline{state.lanes.length === 1 ? "" : "s"}
           {saving && " · saving…"}
         </span>
-        <button
-          onClick={addLane}
-          className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-white hover:bg-[var(--wc-slate)]"
-        >
-          + Timeline
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={async () => {
+              setGenerating(true);
+              setError(null);
+              try {
+                const next = await generateTimelineFromManuscript();
+                setState(next);
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "Generate failed");
+              } finally {
+                setGenerating(false);
+              }
+            }}
+            disabled={generating}
+            className="flex items-center gap-1 rounded-md border border-[var(--wc-slate)] px-2.5 py-1 text-[var(--wc-slate)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+            title="Build a timeline from your manuscript & notes"
+          >
+            <AiDiamond />
+            {generating ? "Reading…" : "Generate from story"}
+          </button>
+          <button
+            onClick={addLane}
+            className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-white hover:bg-[var(--wc-slate)]"
+          >
+            + Timeline
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-5">

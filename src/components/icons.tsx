@@ -56,6 +56,27 @@ export function SidebarToggle({
   );
 }
 
+/** A small diamond that marks any AI-powered action. */
+export function AiDiamond({ className = "", size = 12 }: { className?: string; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 12 12"
+      fill="none"
+      className={`inline-block shrink-0 ${className}`}
+      aria-hidden
+    >
+      <path
+        d="M6 0.6 L11.4 6 L6 11.4 L0.6 6 Z"
+        fill="currentColor"
+        opacity="0.92"
+      />
+      <path d="M6 3.2 L8.8 6 L6 8.8 L3.2 6 Z" fill="#fff" opacity="0.35" />
+    </svg>
+  );
+}
+
 /** Small rounded-cube emblem for brand accents. */
 export function CubeMark({ className = "", size = 16 }: { className?: string; size?: number }) {
   return (
