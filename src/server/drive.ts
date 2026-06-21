@@ -1,0 +1,208 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { importHtmlAsProject } from "@/server/import";
+import {
+  type Manuscript,
+  tiptapToParagraphs,
+  renderDocx,
+  safeName,
+} from "@/lib/manuscript-export";
+import { getPublishSettings } from "@/server/publish";
+
+const DRIVE_API = "https://www.googleapis.com/drive/v3";
+const DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
+const GOOGLE_DOC = "application/vnd.google-apps.document";
+const DOCX_MIME =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+export type DriveStatus = { connected: boolean; email: string | null };
+export type DriveDoc = { id: string; name: string; modifiedTime: string };
+
+async function requireUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  return { supabase, user };
+}
+
+type Creds = {
+  access_token: string | null;
+  refresh_token: string | null;
+  expires_at: string | null;
+  email: string | null;
+};
+
+async function loadCreds(): Promise<{ userId: string; creds: Creds | null }> {
+  const { supabase, user } = await requireUser();
+  const { data } = await supabase
+    .from("google_credentials")
+    .select("access_token, refresh_token, expires_at, email")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return { userId: user.id, creds: (data as Creds) ?? null };
+}
+
+/** Refresh the Google access token if expired and we have the means to. */
+async function freshToken(): Promise<{ token: string; email: string | null } | null> {
+  const { userId, creds } = await loadCreds();
+  if (!creds?.access_token) return null;
+
+  const expired =
+    creds.expires_at != null && Date.now() > new Date(creds.expires_at).getTime() - 60_000;
+
+  if (expired && creds.refresh_token && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    try {
+      const res = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          refresh_token: creds.refresh_token,
+          grant_type: "refresh_token",
+        }),
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { access_token: string; expires_in?: number };
+        const expiresAt = new Date(Date.now() + (json.expires_in ?? 3500) * 1000).toISOString();
+        const { supabase } = await requireUser();
+        await supabase
+          .from("google_credentials")
+          .update({ access_token: json.access_token, expires_at: expiresAt, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+        return { token: json.access_token, email: creds.email };
+      }
+    } catch {
+      /* fall through to the stored token */
+    }
+  }
+  return { token: creds.access_token, email: creds.email };
+}
+
+class ReconnectError extends Error {
+  constructor() {
+    super("Your Google Drive session expired. Please reconnect.");
+  }
+}
+
+async function driveFetch(url: string, init?: RequestInit): Promise<Response> {
+  const t = await freshToken();
+  if (!t) throw new ReconnectError();
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...(init?.headers ?? {}), Authorization: `Bearer ${t.token}` },
+  });
+  if (res.status === 401 || res.status === 403) throw new ReconnectError();
+  return res;
+}
+
+export async function getDriveStatus(): Promise<DriveStatus> {
+  const { creds } = await loadCreds();
+  return { connected: !!creds?.access_token, email: creds?.email ?? null };
+}
+
+export async function disconnectDrive(): Promise<void> {
+  const { supabase, user } = await requireUser();
+  await supabase.from("google_credentials").delete().eq("user_id", user.id);
+}
+
+/** List the user's Google Docs, most-recently-modified first. */
+export async function listDriveDocs(): Promise<DriveDoc[]> {
+  const q = encodeURIComponent(`mimeType='${GOOGLE_DOC}' and trashed=false`);
+  const fields = encodeURIComponent("files(id,name,modifiedTime)");
+  const res = await driveFetch(
+    `${DRIVE_API}/files?q=${q}&fields=${fields}&orderBy=modifiedTime desc&pageSize=50`,
+  );
+  if (!res.ok) throw new Error(`Drive list failed (${res.status})`);
+  const json = (await res.json()) as { files?: DriveDoc[] };
+  return json.files ?? [];
+}
+
+/** Import a Google Doc's contents as a new project. Returns the project id. */
+export async function importDriveDoc(fileId: string): Promise<{ projectId: string }> {
+  // Fetch the doc name for the title.
+  const metaRes = await driveFetch(`${DRIVE_API}/files/${fileId}?fields=name`);
+  const meta = metaRes.ok ? ((await metaRes.json()) as { name?: string }) : {};
+  const title = meta.name ?? "Imported document";
+
+  // Export as HTML to preserve headings → chapters.
+  const res = await driveFetch(
+    `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,
+  );
+  if (!res.ok) throw new Error(`Could not export the document (${res.status})`);
+  const html = await res.text();
+
+  const projectId = await importHtmlAsProject(html, title);
+  return { projectId };
+}
+
+/** Export a project to the user's Google Drive as a Google Doc. */
+export async function exportProjectToDrive(projectId: string): Promise<{ name: string }> {
+  const { supabase, user } = await requireUser();
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id, title, author_name, agent_name")
+    .eq("id", projectId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!project) throw new Error("Project not found");
+
+  const { data: chapters } = await supabase
+    .from("chapters")
+    .select("id, title, position")
+    .eq("project_id", project.id)
+    .order("position", { ascending: true });
+
+  const chapterIds = (chapters ?? []).map((c) => c.id);
+  const { data: scenes } = chapterIds.length
+    ? await supabase
+        .from("scenes")
+        .select("id, chapter_id, title, position, content, word_count")
+        .in("chapter_id", chapterIds)
+        .order("position", { ascending: true })
+    : { data: [] };
+
+  let totalWords = 0;
+  const manuscript: Manuscript = {
+    title: project.title,
+    author: project.author_name ?? null,
+    agent: project.agent_name ?? null,
+    totalWords: 0,
+    chapters: (chapters ?? []).map((c) => ({
+      title: c.title,
+      scenes: (scenes ?? [])
+        .filter((s) => s.chapter_id === c.id)
+        .map((s) => {
+          totalWords += s.word_count ?? 0;
+          return { title: s.title, paragraphs: tiptapToParagraphs(s.content) };
+        }),
+    })),
+  };
+  manuscript.totalWords = totalWords;
+
+  const settings = await getPublishSettings(project.id);
+  const docx = await renderDocx(manuscript, settings);
+  const name = safeName(settings.title || project.title);
+
+  // Multipart upload: docx media + metadata; mimeType GOOGLE_DOC converts it.
+  const boundary = `wcube${Date.now()}`;
+  const metadata = JSON.stringify({ name, mimeType: GOOGLE_DOC });
+  const pre =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n` +
+    `--${boundary}\r\nContent-Type: ${DOCX_MIME}\r\n\r\n`;
+  const post = `\r\n--${boundary}--`;
+  const body = Buffer.concat([Buffer.from(pre, "utf-8"), docx, Buffer.from(post, "utf-8")]);
+
+  const res = await driveFetch(`${DRIVE_UPLOAD}?uploadType=multipart`, {
+    method: "POST",
+    headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+    body: body as unknown as BodyInit,
+  });
+  if (!res.ok) throw new Error(`Upload to Drive failed (${res.status})`);
+  return { name };
+}

@@ -131,6 +131,13 @@ export default async function Dashboard() {
               </button>
             </form>
             <ImportButton />
+            <Link
+              href="/app/drive"
+              className="rounded-2xl border border-zinc-300 bg-white px-4 py-2.5 text-center text-sm text-[var(--wc-ink)] hover:border-zinc-400"
+              title="Connect Google Drive — import Docs and export to Drive"
+            >
+              ☁ Drive
+            </Link>
           </div>
         </section>
 

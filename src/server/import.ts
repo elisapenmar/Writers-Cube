@@ -134,37 +134,22 @@ export async function extractDocumentText(formData: FormData): Promise<string> {
   throw new Error("Unsupported file. Use .docx, .md, or .txt.");
 }
 
-export async function importManuscript(formData: FormData): Promise<void> {
-  const { supabase, user } = await requireUser();
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    throw new Error("Choose a file to import.");
-  }
-  const name = file.name.toLowerCase();
-  const buf = Buffer.from(await file.arrayBuffer());
+type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
 
-  let text: string;
-  if (name.endsWith(".docx")) {
-    const { value } = await mammoth.convertToHtml({ buffer: buf });
-    text = htmlToMarkdownish(value);
-  } else if (name.endsWith(".md") || name.endsWith(".markdown") || name.endsWith(".txt")) {
-    text = buf.toString("utf-8");
-  } else {
-    throw new Error("Unsupported file. Use .docx, .md, or .txt.");
-  }
-
-  const baseTitle = file.name.replace(/\.(docx|md|markdown|txt)$/i, "");
-  const parsed = parseMarkdownish(text, baseTitle);
-
-  // Create the project.
+/** Persist a parsed manuscript as a new project; returns the project id. */
+async function persistParsed(
+  supabase: SupabaseLike,
+  userId: string,
+  parsed: Parsed,
+  fallbackTitle: string,
+): Promise<string> {
   const { data: project, error: projErr } = await supabase
     .from("projects")
-    .insert({ user_id: user.id, title: parsed.title || baseTitle || "Imported manuscript" })
+    .insert({ user_id: userId, title: parsed.title || fallbackTitle || "Imported manuscript" })
     .select("id")
     .single();
   if (projErr || !project) throw new Error(projErr?.message ?? "Could not create project");
 
-  // Insert chapters + scenes.
   for (let ci = 0; ci < parsed.chapters.length; ci++) {
     const ch = parsed.chapters[ci];
     const { data: chapter, error: chErr } = await supabase
@@ -187,7 +172,41 @@ export async function importManuscript(formData: FormData): Promise<void> {
       if (scErr) throw new Error(scErr.message);
     }
   }
+  return project.id as string;
+}
 
-  await setActiveProject(project.id);
+/** Import HTML (e.g. from Google Docs export) as a new project. Returns the id. */
+export async function importHtmlAsProject(html: string, title: string): Promise<string> {
+  const { supabase, user } = await requireUser();
+  const parsed = parseMarkdownish(htmlToMarkdownish(html), title);
+  const id = await persistParsed(supabase, user.id, parsed, title);
+  await setActiveProject(id);
+  return id;
+}
+
+export async function importManuscript(formData: FormData): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Choose a file to import.");
+  }
+  const name = file.name.toLowerCase();
+  const buf = Buffer.from(await file.arrayBuffer());
+
+  let text: string;
+  if (name.endsWith(".docx")) {
+    const { value } = await mammoth.convertToHtml({ buffer: buf });
+    text = htmlToMarkdownish(value);
+  } else if (name.endsWith(".md") || name.endsWith(".markdown") || name.endsWith(".txt")) {
+    text = buf.toString("utf-8");
+  } else {
+    throw new Error("Unsupported file. Use .docx, .md, or .txt.");
+  }
+
+  const baseTitle = file.name.replace(/\.(docx|md|markdown|txt)$/i, "");
+  const parsed = parseMarkdownish(text, baseTitle);
+  const projectId = await persistParsed(supabase, user.id, parsed, baseTitle);
+
+  await setActiveProject(projectId);
   redirect("/app/manuscript");
 }
