@@ -211,6 +211,189 @@ function countWordsInDoc(doc: unknown): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+type Block = { type?: string; content?: unknown[]; attrs?: Record<string, unknown> };
+
+function blockText(b: Block): string {
+  let t = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") t += node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(b);
+  return t.trim();
+}
+
+/** A paragraph that is only a scene-break glyph (`* * *`, `---`, `❧`, …). */
+function isSceneBreak(b: Block): boolean {
+  if (b.type !== "paragraph") return false;
+  const norm = blockText(b).replace(/\s+/g, "");
+  if (!norm) return false;
+  return /^(\*{3,}|-{3,}|~{3,}|#{3,}|•{3,}|◆{3,}|·{3,})$/.test(norm) || /^(❧|⁂|§)$/.test(norm);
+}
+
+/** A heading node, or a markdown-ish `#`/`##` line → starts a new chapter. */
+function chapterBreakTitle(b: Block): string | null {
+  if (b.type === "heading") return blockText(b) || "Untitled chapter";
+  if (b.type === "paragraph") {
+    const m = blockText(b).match(/^#{1,3}\s+(.+)$/);
+    if (m) return m[1].trim() || "Untitled chapter";
+  }
+  return null;
+}
+
+function docOf(blocks: unknown[]): { type: "doc"; content: unknown[] } {
+  return { type: "doc", content: blocks.length ? blocks : [{ type: "paragraph" }] };
+}
+
+/**
+ * Split an existing scene's text into multiple scenes or chapters.
+ *  - "scenes":   break at scene-break lines (`* * *`); new scenes go in the
+ *    same chapter, right after the original.
+ *  - "chapters": break at headings (or `#`/`##` lines); each becomes a new
+ *    chapter (with one scene) after the current one.
+ */
+export async function splitScene(
+  sceneId: string,
+  into: "scenes" | "chapters",
+): Promise<{ created: number; firstContent: { type: "doc"; content: unknown[] } }> {
+  const { supabase } = await requireUser();
+  const { data: scene } = await supabase
+    .from("scenes")
+    .select("id, chapter_id, title, position, content")
+    .eq("id", sceneId)
+    .maybeSingle();
+  if (!scene) throw new Error("Scene not found");
+
+  const doc = scene.content as { content?: Block[] } | null;
+  const blocks: Block[] = Array.isArray(doc?.content) ? (doc!.content as Block[]) : [];
+
+  if (into === "scenes") {
+    // Partition at scene-break blocks (dropping the breaks).
+    const segments: Block[][] = [[]];
+    for (const b of blocks) {
+      if (isSceneBreak(b)) segments.push([]);
+      else segments[segments.length - 1].push(b);
+    }
+    const nonEmpty = segments.filter((s) => s.some((b) => blockText(b) !== ""));
+    if (nonEmpty.length <= 1) {
+      throw new Error(
+        "No scene breaks found. Put “* * *” on its own line where each new scene should begin, then split.",
+      );
+    }
+    const rest = nonEmpty.slice(1);
+
+    // Shift later scenes in this chapter to make room.
+    const { data: siblings } = await supabase
+      .from("scenes")
+      .select("id, position")
+      .eq("chapter_id", scene.chapter_id)
+      .gt("position", scene.position as number)
+      .order("position", { ascending: false });
+    for (const s of siblings ?? []) {
+      await supabase
+        .from("scenes")
+        .update({ position: (s.position as number) + rest.length })
+        .eq("id", s.id);
+    }
+
+    // Original scene keeps the first segment.
+    await supabase
+      .from("scenes")
+      .update({
+        content: docOf(nonEmpty[0]),
+        word_count: countWordsInDoc(docOf(nonEmpty[0])),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", scene.id);
+
+    // Insert the rest.
+    for (let i = 0; i < rest.length; i++) {
+      const pos = (scene.position as number) + 1 + i;
+      await supabase.from("scenes").insert({
+        chapter_id: scene.chapter_id,
+        title: `Scene ${pos + 1}`,
+        position: pos,
+        content: docOf(rest[i]),
+        word_count: countWordsInDoc(docOf(rest[i])),
+      });
+    }
+    revalidatePath("/app", "layout");
+    return { created: rest.length, firstContent: docOf(nonEmpty[0]) };
+  }
+
+  // into === "chapters"
+  const { data: chapter } = await supabase
+    .from("chapters")
+    .select("id, project_id, position")
+    .eq("id", scene.chapter_id)
+    .maybeSingle();
+  if (!chapter) throw new Error("Chapter not found");
+
+  const segments: { title: string | null; blocks: Block[] }[] = [{ title: null, blocks: [] }];
+  for (const b of blocks) {
+    const title = chapterBreakTitle(b);
+    if (title) segments.push({ title, blocks: [] });
+    else segments[segments.length - 1].blocks.push(b);
+  }
+  const newChapters = segments.slice(1).filter((s) => s.title);
+  if (newChapters.length === 0) {
+    throw new Error(
+      "No chapter breaks found. Make a heading (or a line starting with “# ”) where each new chapter should begin, then split.",
+    );
+  }
+
+  // Original scene keeps the content before the first chapter break.
+  await supabase
+    .from("scenes")
+    .update({
+      content: docOf(segments[0].blocks),
+      word_count: countWordsInDoc(docOf(segments[0].blocks)),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", scene.id);
+
+  // Shift later chapters to make room.
+  const { data: laterChapters } = await supabase
+    .from("chapters")
+    .select("id, position")
+    .eq("project_id", chapter.project_id)
+    .gt("position", chapter.position as number)
+    .order("position", { ascending: false });
+  for (const c of laterChapters ?? []) {
+    await supabase
+      .from("chapters")
+      .update({ position: (c.position as number) + newChapters.length })
+      .eq("id", c.id);
+  }
+
+  // Create each new chapter with a single scene.
+  for (let i = 0; i < newChapters.length; i++) {
+    const seg = newChapters[i];
+    const { data: ch } = await supabase
+      .from("chapters")
+      .insert({
+        project_id: chapter.project_id,
+        title: seg.title,
+        position: (chapter.position as number) + 1 + i,
+      })
+      .select("id")
+      .single();
+    if (ch) {
+      await supabase.from("scenes").insert({
+        chapter_id: ch.id,
+        title: "Scene 1",
+        position: 0,
+        content: docOf(seg.blocks),
+        word_count: countWordsInDoc(docOf(seg.blocks)),
+      });
+    }
+  }
+  revalidatePath("/app", "layout");
+  return { created: newChapters.length, firstContent: docOf(segments[0].blocks) };
+}
+
 export async function updateSceneContent(sceneId: string, content: unknown) {
   const { supabase } = await requireUser();
   const word_count = countWordsInDoc(content);

@@ -127,7 +127,9 @@ body {
   --wc-plum: #847c93;        /* cool mauve (seed / kernel accent) */
   --wc-clay: #bd8268;        /* single muted warm accent (sparingly, CTAs) */
   --wc-ochre: #c9b487;       /* soft, desaturated gold (the die) */
-  --wc-ink: #2e323b;         /* cool charcoal (not pure black) */
+  --wc-ink: #2e323b;         /* cool charcoal (not pure black) — primary text */
+  --wc-muted: #6f7680;       /* secondary text */
+  --wc-faint: #9aa0a8;       /* tertiary / metadata text */
   --wc-stone: #d7d8d2;       /* cool greige (borders / dividers) */
 
   /* surfaces */
@@ -153,6 +155,45 @@ body {
   --wc-terracotta: var(--wc-clay);
   --wc-cream: var(--wc-canvas);
 }
+
+/* ===== Theme: Dusk (dark) ===== */
+[data-theme="dusk"] {
+  --wc-slate: #7f99af;
+  --wc-sage: #9cb6a4;
+  --wc-plum: #9c92ad;
+  --wc-clay: #d09479;
+  --wc-ochre: #d8c48f;
+  --wc-ink: #e9eae7;
+  --wc-muted: #a3a9b2;
+  --wc-faint: #767c86;
+  --wc-stone: #3a3f47;
+  --wc-canvas: #1b1e23;
+  --wc-surface: #23272e;
+  --wc-paper: #2a2f37;
+  --wc-border: rgba(255,255,255,0.09);
+  --wc-border-strong: rgba(255,255,255,0.18);
+  --wc-shadow-sm: 0 1px 2px rgba(0,0,0,0.45);
+  --wc-shadow-md: 0 12px 30px rgba(0,0,0,0.5);
+}
+
+/* ===== Theme: Clay (warm earth) ===== */
+[data-theme="clay"] {
+  --wc-slate: #5d7384;
+  --wc-sage: #8aa791;
+  --wc-plum: #8a7a96;
+  --wc-clay: #c07a63;
+  --wc-ochre: #cdab6b;
+  --wc-ink: #33303a;
+  --wc-muted: #6f675f;
+  --wc-faint: #a89e92;
+  --wc-stone: #e0d8c9;
+  --wc-canvas: #f2eee6;
+  --wc-surface: #faf7f0;
+  --wc-paper: #f5efe4;
+  --wc-border: rgba(51,48,58,0.08);
+  --wc-border-strong: rgba(51,48,58,0.14);
+}
+
 .wc-cream { background: var(--wc-canvas); }
 .wc-paper { background: var(--wc-paper); }
 .wc-canvas { background: var(--wc-canvas); }
@@ -234,12 +275,13 @@ body {
   88%  { opacity: 0.2; }
   100% { transform: translateY(116vh) rotate(var(--wc-cube-rot, 30deg)); opacity: 0; }
 }
+/* Static mode: freeze the cubes where they sit (a still scatter). */
+[data-motion="static"] .wc-cube {
+  animation-play-state: paused;
+}
 @media (prefers-reduced-motion: reduce) {
   .wc-cube {
-    animation: none;
-    top: auto;
-    bottom: 50%;
-    opacity: 0.12;
+    animation-play-state: paused;
   }
 }
 

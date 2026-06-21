@@ -23,7 +23,7 @@ export function ImportButton() {
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
           <div className="absolute right-0 z-30 mt-2 w-80 rounded-[var(--wc-r-lg)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-4 shadow-[var(--wc-shadow-md)]">
             <div className="font-serif text-base text-[var(--wc-ink)]">Import a manuscript</div>
-            <p className="mt-1 mb-3 text-xs text-zinc-500">
+            <p className="mt-1 mb-3 text-xs text-[var(--wc-muted)]">
               Upload a <b>.docx</b>, <b>.md</b>, or <b>.txt</b>. Headings become chapters;{" "}
               <span className="font-mono">* * *</span> or <span className="font-mono">#</span> split
               scenes. It lands in a new project.

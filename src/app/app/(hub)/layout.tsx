@@ -1,12 +1,18 @@
 import Link from "next/link";
-import { signOut } from "@/server/scenes";
 import { CubeMark } from "@/components/cube-mark";
+import { AccountMenu } from "@/components/account-menu";
+import { createClient } from "@/lib/supabase/server";
 
-export default function HubLayout({
+export default async function HubLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <div className="flex flex-col flex-1 min-h-screen">
       <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--wc-border)] bg-[var(--wc-surface)]">
@@ -15,17 +21,13 @@ export default function HubLayout({
           Writer&apos;s Cube
         </Link>
         <nav className="flex items-center gap-4 text-sm">
-          <Link href="/app" className="text-zinc-600 hover:text-zinc-900">
+          <Link href="/app" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
             Dashboard
           </Link>
-          <Link href="/app/prompts" className="text-zinc-600 hover:text-zinc-900">
+          <Link href="/app/prompts" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
             Prompts
           </Link>
-          <form action={signOut}>
-            <button type="submit" className="text-zinc-500 hover:text-zinc-900">
-              Sign out
-            </button>
-          </form>
+          <AccountMenu email={user?.email ?? null} />
         </nav>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>

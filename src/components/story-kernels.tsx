@@ -47,7 +47,7 @@ export function StoryKernels({
             <span className="wc-facet" aria-hidden />
             Story kernels
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[var(--wc-faint)]">
             Half-formed ideas, parked here until they&apos;re ready to grow.
           </p>
         </div>
@@ -78,7 +78,7 @@ export function StoryKernels({
       )}
 
       {kernels.length === 0 ? (
-        <p className="text-sm text-zinc-500 rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-6">
+        <p className="text-sm text-[var(--wc-muted)] rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-6">
           No kernels yet. Jot down a spark — a what-if, an image, a first line —
           before it slips away.
         </p>
@@ -149,7 +149,7 @@ function KernelCard({
             schedule({ title: e.target.value });
           }}
           placeholder="Working title…"
-          className="flex-1 bg-transparent font-serif text-base text-[var(--wc-ink)] outline-none placeholder:text-zinc-300"
+          className="flex-1 bg-transparent font-serif text-base text-[var(--wc-ink)] outline-none placeholder:text-[var(--wc-faint)]"
         />
         <button
           onClick={remove}
@@ -167,9 +167,9 @@ function KernelCard({
         }}
         placeholder="The spark… a what-if, an image, a line of dialogue."
         rows={4}
-        className="mt-1 flex-1 resize-none bg-transparent text-sm text-zinc-700 leading-relaxed outline-none placeholder:text-zinc-300"
+        className="mt-1 flex-1 resize-none bg-transparent text-sm text-[var(--wc-muted)] leading-relaxed outline-none placeholder:text-[var(--wc-faint)]"
       />
-      <div className="h-3 text-[10px] text-zinc-400">{saving ? "Saving…" : ""}</div>
+      <div className="h-3 text-[10px] text-[var(--wc-faint)]">{saving ? "Saving…" : ""}</div>
     </div>
   );
 }

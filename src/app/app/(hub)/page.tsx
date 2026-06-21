@@ -62,7 +62,7 @@ export default async function Dashboard() {
             <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-2">
               Welcome back.
             </h1>
-            <p className="text-sm text-zinc-600 mt-1">
+            <p className="text-sm text-[var(--wc-muted)] mt-1">
               Pick up a project, capture a kernel, or roll a prompt to warm up.
             </p>
           </div>
@@ -88,7 +88,7 @@ export default async function Dashboard() {
                   View all
                 </Link>
               )}
-              <Link href="/app/archive" className="text-xs text-zinc-500 hover:text-zinc-800 hover:underline">
+              <Link href="/app/archive" className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:underline">
                 🗄 Archive
               </Link>
             </div>
@@ -106,7 +106,7 @@ export default async function Dashboard() {
                     <div className="font-serif text-lg text-[var(--wc-ink)]">
                       {p.title}
                     </div>
-                    <div className="text-xs text-zinc-500 mt-1">
+                    <div className="text-xs text-[var(--wc-faint)] mt-1">
                       {p.word_count.toLocaleString()} words · {p.chapter_count}{" "}
                       chapter{p.chapter_count === 1 ? "" : "s"}
                       {active?.id === p.id && " · open"}
@@ -187,7 +187,7 @@ export default async function Dashboard() {
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-sm text-zinc-500 rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-5">
+    <p className="text-sm text-[var(--wc-muted)] rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-5">
       {children}
     </p>
   );
