@@ -77,7 +77,7 @@ export default async function Dashboard() {
             </h2>
             {projects.length > PROJECTS_PREVIEW && (
               <Link href="/app/projects" className="text-xs text-[var(--wc-slate)] hover:underline">
-                View all →
+                View all
               </Link>
             )}
           </div>
@@ -135,7 +135,7 @@ export default async function Dashboard() {
               Practice library
             </h2>
             <Link href="/app/exercises" className="text-xs text-[var(--wc-slate)] hover:underline">
-              View all →
+              View all
             </Link>
           </div>
           {practice.length === 0 ? (

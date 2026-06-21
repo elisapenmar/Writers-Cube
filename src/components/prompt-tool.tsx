@@ -195,7 +195,7 @@ export function PromptTool({
               href="/app/why-this-works"
               className="text-xs text-[var(--wc-slate)] hover:underline"
             >
-              Why this works →
+              Why this works
             </Link>
           </div>
         </header>

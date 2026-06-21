@@ -34,6 +34,7 @@ import {
 import { EditableTitle } from "@/components/editable-title";
 import { createLooseScene } from "@/server/loose";
 import { useOrganize } from "@/store/organize-store";
+import { SidebarToggle, CubeMark } from "@/components/icons";
 
 export type UncategorizedItem = {
   id: string;
@@ -118,10 +119,10 @@ export function SideNav({
       <aside className="w-12 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-screen items-center py-3 gap-3">
         <button
           onClick={toggleNavCollapsed}
-          className="w-8 h-8 rounded-md text-zinc-500 hover:bg-zinc-100 grid place-items-center"
+          className="w-8 h-8 rounded-lg text-zinc-500 hover:bg-zinc-100 grid place-items-center"
           title="Expand side nav"
         >
-          »
+          <SidebarToggle collapsed />
         </button>
         <div className="text-[10px] text-zinc-400 [writing-mode:vertical-rl] rotate-180 font-serif tracking-wider">
           {project.title}
@@ -139,17 +140,17 @@ export function SideNav({
         <div className="flex items-center justify-between">
           <Link
             href="/app"
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 rounded-md px-1.5 py-1 hover:bg-zinc-100"
+            className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 rounded-lg px-1.5 py-1 hover:bg-zinc-100"
             title="Back to dashboard"
           >
-            <span aria-hidden>⌂</span> Dashboard
+            <CubeMark className="text-[var(--wc-slate)]" /> Dashboard
           </Link>
           <button
             onClick={toggleNavCollapsed}
-            className="w-7 h-7 rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 grid place-items-center text-xs"
+            className="w-7 h-7 rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 grid place-items-center"
             title="Collapse side nav"
           >
-            «
+            <SidebarToggle />
           </button>
         </div>
         <div className="mt-2 px-1">

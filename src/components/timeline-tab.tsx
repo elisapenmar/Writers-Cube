@@ -8,6 +8,7 @@ import {
   type TimelineLane,
   type TimelineEvent,
 } from "@/server/timeline";
+import { SquareArrow } from "@/components/icons";
 
 const LANE_COLORS = ["#8a7a96", "#5d7384", "#8aa791", "#c07a63", "#cdab6b", "#7f8aa6"];
 
@@ -206,16 +207,18 @@ export function TimelineTab() {
                           <button
                             onClick={() => moveEvent(lane.id, ev.id, -1)}
                             disabled={i === 0}
-                            className="text-xs text-zinc-400 hover:text-zinc-900 disabled:opacity-30"
+                            className="text-zinc-400 hover:text-zinc-900 disabled:opacity-30"
+                            title="Move earlier"
                           >
-                            ←
+                            <SquareArrow dir="left" />
                           </button>
                           <button
                             onClick={() => moveEvent(lane.id, ev.id, 1)}
                             disabled={i === lane.events.length - 1}
-                            className="text-xs text-zinc-400 hover:text-zinc-900 disabled:opacity-30"
+                            className="text-zinc-400 hover:text-zinc-900 disabled:opacity-30"
+                            title="Move later"
                           >
-                            →
+                            <SquareArrow dir="right" />
                           </button>
                         </div>
                         <button

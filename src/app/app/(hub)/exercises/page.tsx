@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SquareArrow } from "@/components/icons";
 import { listExercises, type ExerciseSummary } from "@/server/prompts";
 import { listProjects } from "@/server/projects";
 import { ExerciseCard } from "@/components/exercise-card";
@@ -32,7 +33,7 @@ export default async function ExercisesPage({
         <div className="flex items-center justify-between mb-6">
           <div>
             <Link href="/app" className="text-xs text-[var(--wc-slate)] hover:underline">
-              ← Dashboard
+              <SquareArrow dir="left" className="inline-block align-[-3px] mr-1" /> Dashboard
             </Link>
             <h1 className="font-serif text-2xl text-[var(--wc-ink)] mt-1">
               {projectFilter

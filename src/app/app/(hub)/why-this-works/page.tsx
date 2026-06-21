@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SquareArrow } from "@/components/icons";
 
 type Evidence = {
   n: number;
@@ -74,7 +75,7 @@ export default function WhyThisWorks() {
     <div className="flex-1 overflow-y-auto wc-cream">
       <div className="max-w-2xl mx-auto px-6 py-10">
         <Link href="/app/prompts" className="text-xs text-[var(--wc-slate)] hover:underline">
-          ← Back to the prompts
+          <SquareArrow dir="left" className="inline-block align-[-3px] mr-1" /> Back to the prompts
         </Link>
         <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-2">
           Why warm-up prompts actually work

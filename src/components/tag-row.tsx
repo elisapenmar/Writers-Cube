@@ -105,7 +105,7 @@ export function TagRow({
             className="text-zinc-500 hover:text-zinc-900"
             onClick={(e) => e.stopPropagation()}
           >
-            {chapterTitle} › {sceneTitle}
+            {chapterTitle} · {sceneTitle}
           </Link>
         </div>
       </div>

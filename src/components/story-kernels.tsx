@@ -51,7 +51,7 @@ export function StoryKernels({
         <div className="flex items-center gap-3">
           {hasMore && (
             <Link href="/app/kernels" className="text-xs text-[var(--wc-slate)] hover:underline">
-              View all →
+              View all
             </Link>
           )}
           <button

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SquareArrow } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { getExercise } from "@/server/prompts";
 import { listProjects } from "@/server/projects";
@@ -35,7 +36,7 @@ export default async function ExerciseView({
       <div className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between">
           <Link href={backHref} className="text-xs text-[var(--wc-slate)] hover:underline">
-            ← {ex.project_id ? "Prompted exercises" : "Practice library"}
+            <SquareArrow dir="left" className="inline-block align-[-3px] mr-1" />{ex.project_id ? "Prompted exercises" : "Practice library"}
           </Link>
           <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
             <span>{ex.format === "seed" ? "Scenario seed" : "Craft exercise"}</span>

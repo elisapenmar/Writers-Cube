@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SquareArrow } from "@/components/icons";
 import { listKernels, type StoryKernel } from "@/server/kernels";
 import { StoryKernels } from "@/components/story-kernels";
 
@@ -18,7 +19,7 @@ export default async function KernelsPage() {
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
         <div>
           <Link href="/app" className="text-xs text-zinc-500 hover:underline">
-            ← Dashboard
+            <SquareArrow dir="left" className="inline-block align-[-3px] mr-1" /> Dashboard
           </Link>
           <h1 className="font-serif text-2xl text-[var(--wc-ink)] mt-1">
             All story kernels
