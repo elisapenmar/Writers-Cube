@@ -53,22 +53,21 @@ export default async function Dashboard() {
       <CubeField />
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-10 space-y-10">
         {/* Hero */}
-        <section className="wc-raised rounded-[var(--wc-r-xl)] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[var(--wc-slate)]">
-              <CubeMark size={18} />
-              Writer&apos;s Cube
+        <section className="wc-raised rounded-[var(--wc-r-lg)] px-5 py-3.5 sm:px-6 sm:py-4 flex flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <CubeMark size={26} className="shrink-0" />
+            <div className="min-w-0">
+              <h1 className="font-serif text-xl sm:text-2xl text-[var(--wc-ink)] leading-tight">
+                Welcome back.
+              </h1>
+              <p className="text-xs sm:text-sm text-[var(--wc-muted)] truncate">
+                Pick up a project, capture a kernel, or roll a prompt.
+              </p>
             </div>
-            <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-2">
-              Welcome back.
-            </h1>
-            <p className="text-sm text-[var(--wc-muted)] mt-1">
-              Pick up a project, capture a kernel, or roll a prompt to warm up.
-            </p>
           </div>
           <Link
             href="/app/prompts"
-            className="shrink-0 rounded-[var(--wc-r-lg)] px-6 py-3 text-white font-medium text-center shadow-[var(--wc-shadow-md)] transition hover:brightness-105"
+            className="shrink-0 rounded-[var(--wc-r-md)] px-4 py-2.5 text-sm text-[var(--wc-on-accent)] font-medium text-center shadow-[var(--wc-shadow-sm)] transition hover:brightness-105"
             style={{ background: "var(--wc-clay)" }}
           >
             🎲 Roll a prompt
@@ -78,7 +77,7 @@ export default async function Dashboard() {
         {/* Projects */}
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="flex items-center gap-2 font-serif text-xl text-[var(--wc-ink)]">
+            <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
               <span className="wc-facet" aria-hidden />
               Your projects
             </h2>
@@ -133,7 +132,7 @@ export default async function Dashboard() {
               />
               <button
                 type="submit"
-                className="rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-white transition hover:brightness-105"
+                className="rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105"
                 style={{ background: "var(--wc-slate)" }}
               >
                 Create
@@ -156,7 +155,7 @@ export default async function Dashboard() {
         {/* Practice library */}
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="flex items-center gap-2 font-serif text-xl text-[var(--wc-ink)]">
+            <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
               <span className="wc-facet" aria-hidden />
               Practice library
             </h2>

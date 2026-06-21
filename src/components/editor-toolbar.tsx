@@ -33,6 +33,9 @@ export function EditorToolbar({
     <div
       className={`flex flex-wrap items-center gap-0.5 ${className}`}
     >
+      <Btn label="↶" title="Undo (⌘Z)" active={false} disabled={!editor.can().undo()} onClick={() => chain().undo().run()} />
+      <Btn label="↷" title="Redo (⌘⇧Z)" active={false} disabled={!editor.can().redo()} onClick={() => chain().redo().run()} />
+      <Divider />
       <Btn label="B" title="Bold (⌘B)" active={editor.isActive("bold")} bold onClick={() => chain().toggleBold().run()} />
       <Btn label="I" title="Italic (⌘I)" active={editor.isActive("italic")} italic onClick={() => chain().toggleItalic().run()} />
       <Btn label="U" title="Underline (⌘U)" active={editor.isActive("underline")} underline onClick={() => chain().toggleUnderline().run()} />
@@ -57,6 +60,7 @@ function Btn({
   italic,
   underline,
   strike,
+  disabled,
   onClick,
 }: {
   label: string;
@@ -66,16 +70,18 @@ function Btn({
   italic?: boolean;
   underline?: boolean;
   strike?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
-      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center ${
-        active ? "bg-[var(--wc-slate)] text-white" : "text-[var(--wc-muted)] hover:bg-[var(--wc-paper)]"
+      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center disabled:opacity-30 ${
+        active ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]" : "text-[var(--wc-muted)] hover:bg-[var(--wc-paper)]"
       }`}
       style={{
         fontWeight: bold ? 700 : 500,

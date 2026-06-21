@@ -286,7 +286,7 @@ export function OrganizePanel() {
                   i === GROUP_TABS[panelGroup].length - 1 ? "rounded-r-md" : ""
                 } ${
                   format === tab
-                    ? "bg-[var(--wc-slate)] text-white border-[var(--wc-slate)]"
+                    ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
                     : "bg-[var(--wc-surface)] border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
                 }`}
               >
@@ -298,14 +298,14 @@ export function OrganizePanel() {
             <button
               onClick={generate}
               disabled={organizing}
-              className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
+              className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
               title={
                 hasCurrent
                   ? "Have the AI add new ideas from the conversation to your notes"
                   : "Have the AI distill the conversation into notes"
               }
             >
-              <AiDiamond className="text-white" />
+              <AiDiamond className="text-[var(--wc-on-accent)]" />
               {organizing ? "…" : hasCurrent ? "Add from chat" : "Generate"}
             </button>
           )}
@@ -314,10 +314,10 @@ export function OrganizePanel() {
               <button
                 onClick={() => setMapGenOpen((o) => !o)}
                 disabled={organizing}
-                className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
+                className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
                 title="Generate a thought map"
               >
-                <AiDiamond className="text-white" />
+                <AiDiamond className="text-[var(--wc-on-accent)]" />
                 {organizing ? "…" : "Generate"}
               </button>
               {mapGenOpen && !organizing && (

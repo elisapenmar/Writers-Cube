@@ -102,7 +102,7 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
             onAddChild(id);
           }}
           title="Add child node"
-          className="w-7 h-7 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-slate)] hover:text-white shadow text-sm leading-none flex items-center justify-center"
+          className="w-7 h-7 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-slate)] hover:text-[var(--wc-on-accent)] shadow text-sm leading-none flex items-center justify-center"
         >
           +
         </button>
@@ -113,7 +113,7 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
               onDelete(id);
             }}
             title="Delete node + its children"
-            className="w-7 h-7 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-faint)] hover:bg-red-600 hover:text-white shadow text-sm leading-none flex items-center justify-center"
+            className="w-7 h-7 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-faint)] hover:bg-red-600 hover:text-[var(--wc-on-accent)] shadow text-sm leading-none flex items-center justify-center"
           >
             ×
           </button>

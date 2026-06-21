@@ -116,7 +116,7 @@ export function CharactersTab() {
           <button
             onClick={addCharacter}
             disabled={pending || pulling}
-            className="rounded-md bg-[var(--wc-slate)] px-2 py-1 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
+            className="rounded-md bg-[var(--wc-slate)] px-2 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
           >
             + Add
           </button>

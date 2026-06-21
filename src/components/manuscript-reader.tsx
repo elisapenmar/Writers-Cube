@@ -4,10 +4,17 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
-import { updateSceneContent } from "@/server/scenes";
+import {
+  updateSceneContent,
+  splitSceneAt,
+  createScene,
+  createChapter,
+} from "@/server/scenes";
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
+import { SceneHistory } from "@/components/scene-history";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { TypewriterMode } from "@/components/typewriter-mode";
@@ -32,6 +39,8 @@ export type ManuscriptScene = {
   content: unknown;
   /** undefined = chapter scene; "loose"/"exercise" = uncategorized item. */
   kind?: "loose" | "exercise";
+  /** The owning chapter id (for chapter scenes only). */
+  chapterId?: string;
 };
 export type ManuscriptChapter = {
   id: string;
@@ -40,26 +49,36 @@ export type ManuscriptChapter = {
 };
 
 export function ManuscriptReader({
+  projectId,
   projectTitle,
   chapters,
   looseScenes = [],
 }: {
+  projectId: string;
   projectTitle: string;
   chapters: ManuscriptChapter[];
   looseScenes?: ManuscriptScene[];
 }) {
+  const router = useRouter();
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
+  const [activeScene, setActiveScene] = useState<ManuscriptScene | null>(null);
   const [focusScene, setFocusScene] = useState<ManuscriptScene | null>(null);
+  const [historyScene, setHistoryScene] = useState<ManuscriptScene | null>(null);
   // Per-scene content override + version, so a block remounts with the text it
-  // ended up with after a focus session.
+  // ended up with after a focus session or a split.
   const [override, setOverride] = useState<Record<string, unknown>>({});
   const [version, setVersion] = useState<Record<string, number>>({});
 
   function bumpStatus(s: SaveStatus, t?: string) {
     setStatus(s);
     if (t) setSavedAt(t);
+  }
+
+  function remount(sceneId: string, content: unknown) {
+    setOverride((o) => ({ ...o, [sceneId]: content }));
+    setVersion((v) => ({ ...v, [sceneId]: (v[sceneId] ?? 0) + 1 }));
   }
 
   function persistFor(scene: ManuscriptScene) {
@@ -74,10 +93,18 @@ export function ManuscriptReader({
     <SceneBlock
       key={`${scene.id}:${version[scene.id] ?? 0}`}
       scene={scene}
+      projectId={projectId}
       contentOverride={override[scene.id]}
       onStatus={bumpStatus}
-      onFocus={setActiveEditor}
-      onRequestFocus={() => setFocusScene(scene)}
+      onActivate={(editor) => {
+        setActiveEditor(editor);
+        setActiveScene(scene);
+      }}
+      onSplitResult={(firstContent) => {
+        remount(scene.id, firstContent);
+        router.refresh();
+      }}
+      onStructureChange={() => router.refresh()}
     />
   );
 
@@ -87,13 +114,26 @@ export function ManuscriptReader({
   return (
     <div className="flex-1 flex flex-col h-screen bg-[var(--wc-page)]">
       {/* Sticky toolbar — operates on whichever block is focused */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
-        <span className="font-serif text-sm text-[var(--wc-muted)] shrink-0">
-          {projectTitle}
-        </span>
+      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
         <div className="flex-1 min-w-0 overflow-x-auto">
           <EditorToolbar editor={activeEditor} />
         </div>
+        <button
+          onClick={() => activeScene && setHistoryScene(activeScene)}
+          disabled={!activeScene}
+          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+          title="Version history of the focused scene"
+        >
+          History
+        </button>
+        <button
+          onClick={() => setFocusScene(activeScene)}
+          disabled={!activeScene}
+          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+          title="Write the focused scene in distraction-free focus mode"
+        >
+          ✶ Focus
+        </button>
         <span className="shrink-0 text-xs text-[var(--wc-faint)]">
           <SaveLabel status={status} savedAt={savedAt} />
         </span>
@@ -141,12 +181,18 @@ export function ManuscriptReader({
           persist={persistFor(focusScene)}
           onExit={(finalDoc) => {
             const id = focusScene.id;
-            if (finalDoc) {
-              setOverride((o) => ({ ...o, [id]: finalDoc }));
-              setVersion((v) => ({ ...v, [id]: (v[id] ?? 0) + 1 }));
-            }
+            if (finalDoc) remount(id, finalDoc);
             setFocusScene(null);
           }}
+        />
+      )}
+
+      {historyScene && (
+        <SceneHistory
+          sceneId={historyScene.id}
+          sceneTitle={historyScene.title}
+          onClose={() => setHistoryScene(null)}
+          onRestore={(content) => remount(historyScene.id, content)}
         />
       )}
     </div>
@@ -155,18 +201,24 @@ export function ManuscriptReader({
 
 function SceneBlock({
   scene,
+  projectId,
   contentOverride,
   onStatus,
-  onFocus,
-  onRequestFocus,
+  onActivate,
+  onSplitResult,
+  onStructureChange,
 }: {
   scene: ManuscriptScene;
+  projectId: string;
   contentOverride?: unknown;
   onStatus: (status: SaveStatus, savedAt?: string) => void;
-  onFocus: (editor: Editor) => void;
-  onRequestFocus: () => void;
+  onActivate: (editor: Editor) => void;
+  onSplitResult: (firstContent: unknown) => void;
+  onStructureChange: () => void;
 }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
+  const isScene = !scene.kind;
 
   const editor = useEditor(
     {
@@ -183,7 +235,7 @@ function SceneBlock({
             "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed",
         },
       },
-      onFocus: ({ editor }) => onFocus(editor),
+      onFocus: ({ editor }) => onActivate(editor),
       onUpdate: ({ editor }) => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         onStatus("saving");
@@ -235,24 +287,113 @@ function SceneBlock({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
+  function onContextMenu(e: React.MouseEvent) {
+    if (!editor) return;
+    const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+    if (!coords) return;
+    e.preventDefault();
+    const blockIndex = editor.state.doc.resolve(coords.pos).index(0);
+    onActivate(editor);
+    setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex });
+  }
+
+  async function splitHere(into: "scenes" | "chapters") {
+    if (!ctxMenu || !editor || !isScene) return;
+    const blockIndex = ctxMenu.blockIndex;
+    setCtxMenu(null);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    await save(editor.getJSON());
+    try {
+      const { firstContent } = await splitSceneAt(scene.id, blockIndex, into);
+      onSplitResult(firstContent);
+    } catch {
+      onStatus("error");
+    }
+  }
+
+  function insertSceneBreak() {
+    setCtxMenu(null);
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContent({ type: "paragraph", content: [{ type: "text", text: "* * *" }] })
+      .run();
+  }
+
+  async function newScene() {
+    setCtxMenu(null);
+    if (!scene.chapterId) return;
+    await createScene(scene.chapterId);
+    onStructureChange();
+  }
+
+  async function newChapter() {
+    setCtxMenu(null);
+    await createChapter(projectId);
+    onStructureChange();
+  }
+
   return (
-    <div className="wc-scene-block mb-6 group">
-      <div className="flex items-center justify-between mb-1">
-        <div className="text-[11px] uppercase tracking-wider text-[var(--wc-faint)]">
-          {scene.title}
-        </div>
-        <button
-          onClick={onRequestFocus}
-          className="text-[11px] text-[var(--wc-faint)] opacity-0 group-hover:opacity-100 hover:text-[var(--wc-muted)] transition"
-          title="Write this scene in focus mode"
-        >
-          ✶ Focus
-        </button>
+    <div className="wc-scene-block mb-6 group" onContextMenu={onContextMenu}>
+      <div className="text-[11px] uppercase tracking-wider text-[var(--wc-faint)] mb-1">
+        {scene.title}
       </div>
       {editor && <TagBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />
+
+      {ctxMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setCtxMenu(null)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setCtxMenu(null);
+            }}
+          />
+          <div
+            className="fixed z-50 w-56 rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
+            style={{
+              left: Math.min(ctxMenu.x, window.innerWidth - 240),
+              top: Math.min(ctxMenu.y, window.innerHeight - 220),
+            }}
+          >
+            {isScene && (
+              <>
+                <CtxItem onClick={() => splitHere("scenes")}>✂ Split into a new scene here</CtxItem>
+                <CtxItem onClick={() => splitHere("chapters")}>✂ Split into a new chapter here</CtxItem>
+                <CtxDivider />
+              </>
+            )}
+            <CtxItem onClick={insertSceneBreak}>⁂ Insert scene break</CtxItem>
+            {isScene && (
+              <>
+                <CtxDivider />
+                <CtxItem onClick={newScene}>＋ New scene in this chapter</CtxItem>
+                <CtxItem onClick={newChapter}>＋ New chapter</CtxItem>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
+}
+
+function CtxItem({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+    >
+      {children}
+    </button>
+  );
+}
+
+function CtxDivider() {
+  return <div className="my-1 border-t border-[var(--wc-border)]" />;
 }
 
 function SaveLabel({

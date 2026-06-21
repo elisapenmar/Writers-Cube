@@ -70,7 +70,7 @@ export function PublishStudio({
             <button
               onClick={save}
               disabled={saving || !dirty}
-              className="rounded-xl px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-xl px-4 py-2 text-sm text-[var(--wc-on-accent)] disabled:opacity-50"
               style={{ background: "var(--wc-slate)" }}
             >
               {saving ? "Saving…" : "Save settings"}

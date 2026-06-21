@@ -43,11 +43,13 @@ export default async function ManuscriptPage() {
       id: s.id,
       title: s.title,
       content: s.content,
+      chapterId: c.id,
     })),
   }));
   const looseScenes = await uncategorizedScenes(project.id);
   return (
     <ManuscriptReader
+      projectId={project.id}
       projectTitle={project.title}
       chapters={chapters}
       looseScenes={looseScenes}

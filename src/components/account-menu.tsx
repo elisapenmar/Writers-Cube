@@ -31,7 +31,7 @@ export function AccountMenu({ email }: { email: string | null }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Account and appearance"
-        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white shadow-[var(--wc-shadow-sm)] transition hover:brightness-105"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-[var(--wc-on-accent)] shadow-[var(--wc-shadow-sm)] transition hover:brightness-105"
         style={{ background: "var(--wc-slate)" }}
       >
         {initials(email)}
@@ -44,7 +44,7 @@ export function AccountMenu({ email }: { email: string | null }) {
             {/* Account */}
             <div className="flex items-center gap-3 px-1 pb-3">
               <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-[var(--wc-on-accent)]"
                 style={{ background: "var(--wc-slate)" }}
               >
                 {initials(email)}

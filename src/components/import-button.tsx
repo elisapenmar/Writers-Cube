@@ -38,7 +38,7 @@ export function ImportButton() {
               />
               <button
                 type="submit"
-                className="self-start rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-white transition hover:brightness-105"
+                className="self-start rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105"
                 style={{ background: "var(--wc-slate)" }}
               >
                 Import to a new project

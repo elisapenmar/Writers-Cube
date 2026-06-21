@@ -144,7 +144,7 @@ export function TagRow({
               commit(true);
             }}
             disabled={pending}
-            className="rounded-md bg-zinc-900 px-3 py-1 text-xs text-white hover:bg-zinc-800 disabled:opacity-50"
+            className="rounded-md bg-zinc-900 px-3 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-zinc-800 disabled:opacity-50"
             title="Save edits, keep this passage tagged"
           >
             Save

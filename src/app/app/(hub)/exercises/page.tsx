@@ -48,7 +48,7 @@ export default async function ExercisesPage({
           </div>
           <Link
             href="/app/prompts"
-            className="shrink-0 rounded-xl px-4 py-2 text-white text-sm"
+            className="shrink-0 rounded-xl px-4 py-2 text-[var(--wc-on-accent)] text-sm"
             style={{ background: "var(--wc-terracotta)" }}
           >
             🎲 New prompt

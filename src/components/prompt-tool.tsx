@@ -18,6 +18,13 @@ type Mode = "new" | "existing";
 type WritingMode = "free" | "typewriter";
 type GoalType = "words" | "minutes";
 
+// Carved-wood die faces. Add the rest (plot, dialogue, sensory) the same way.
+const FOCUS_IMAGE: Partial<Record<PromptFocus, string>> = {
+  character: "/focus/character.png",
+  setting: "/focus/setting.png",
+  voice: "/focus/voice.png",
+};
+
 const FOCUS_ORDER: PromptFocus[] = [
   "character",
   "setting",
@@ -248,6 +255,7 @@ export function PromptTool({
                 key={f}
                 label={FOCUS_META[f].label}
                 pips={FOCUS_META[f].pips}
+                image={FOCUS_IMAGE[f]}
                 selected={focuses.has(f)}
                 onClick={() => toggleFocus(f)}
               />
@@ -334,7 +342,7 @@ export function PromptTool({
               <button
                 onClick={rollAndWrite}
                 disabled={generating}
-                className="rounded-2xl px-7 py-3 text-white font-medium shadow-lg disabled:opacity-50"
+                className="rounded-2xl px-7 py-3 text-[var(--wc-on-accent)] font-medium shadow-lg disabled:opacity-50"
                 style={{ background: "var(--wc-terracotta)" }}
               >
                 {generating ? "Rolling…" : "🎲 Roll & write"}
@@ -367,7 +375,7 @@ export function PromptTool({
                 {writingMode === "typewriter" && (
                   <button
                     onClick={() => setTypewriterOpen(true)}
-                    className="rounded-xl px-4 py-2 text-sm text-white"
+                    className="rounded-xl px-4 py-2 text-sm text-[var(--wc-on-accent)]"
                     style={{ background: "var(--wc-slate)" }}
                   >
                     Reopen typewriter
@@ -565,7 +573,7 @@ function FreeWrite({
       <div className="mt-2 flex items-center gap-2">
         <button
           onClick={() => editor && onSave(editor.getJSON())}
-          className="rounded-xl px-4 py-2 text-sm text-white"
+          className="rounded-xl px-4 py-2 text-sm text-[var(--wc-on-accent)]"
           style={{ background: "var(--wc-sage)" }}
         >
           Save exercise
@@ -616,7 +624,7 @@ function Section({
   return (
     <section className="mb-6">
       <div className="flex items-baseline gap-2 mb-3">
-        <span className="text-xs font-semibold text-white grid place-items-center w-5 h-5 rounded-md" style={{ background: "var(--wc-slate)" }}>
+        <span className="text-xs font-semibold text-[var(--wc-on-accent)] grid place-items-center w-5 h-5 rounded-md" style={{ background: "var(--wc-slate)" }}>
           {n}
         </span>
         <h2 className="font-serif text-lg text-[var(--wc-ink)]">{title}</h2>
@@ -659,13 +667,43 @@ function DieFace({
   seed,
   selected,
   onClick,
+  image,
 }: {
   label: string;
   pips?: number;
   seed?: boolean;
   selected: boolean;
   onClick: () => void;
+  image?: string;
 }) {
+  // Carved-wood image face: the image is the die; label sits underneath.
+  if (image) {
+    return (
+      <button
+        onClick={onClick}
+        aria-pressed={selected}
+        className="group flex flex-col items-center gap-1 rounded-[var(--wc-r-md)] p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wc-slate)]"
+      >
+        <span
+          className={`relative aspect-square w-full overflow-hidden rounded-[var(--wc-r-md)] transition ${
+            selected
+              ? "ring-2 ring-[var(--wc-slate)] ring-offset-2 ring-offset-[var(--wc-surface)]"
+              : "ring-1 ring-[var(--wc-border)] group-hover:ring-[var(--wc-border-strong)]"
+          }`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            className="h-full w-full object-cover transition group-hover:scale-[1.03]"
+          />
+        </span>
+        <span className="text-[11px] font-medium leading-tight text-center text-[var(--wc-ink)]">
+          {label}
+        </span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={onClick}
@@ -677,7 +715,7 @@ function DieFace({
         <PipPattern n={seed ? 0 : pips ?? 0} selected={selected} seed={seed} />
         <span
           className={`text-[11px] font-medium leading-tight text-center ${
-            selected ? "text-white" : "text-[var(--wc-ink)]"
+            selected ? "text-[var(--wc-on-accent)]" : "text-[var(--wc-ink)]"
           }`}
         >
           {label}
@@ -730,7 +768,7 @@ function Pill({
       onClick={onClick}
       className={`rounded-full px-3.5 py-1.5 text-sm border transition ${
         active
-          ? "bg-[var(--wc-slate)] text-white border-[var(--wc-slate)]"
+          ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
           : "bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50"
       }`}
     >

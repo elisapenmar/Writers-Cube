@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { snapshotScene } from "@/server/versions";
 import type { ProjectTree, Chapter, Scene } from "@/lib/types";
 
 const ACTIVE_PROJECT_COOKIE = "wc_active_project";
@@ -568,6 +569,8 @@ export async function updateSceneContent(sceneId: string, content: unknown) {
     .update({ content, word_count, updated_at: new Date().toISOString() })
     .eq("id", sceneId);
   if (error) throw new Error(error.message);
+  // Throttled version snapshot for the history timeline (best-effort).
+  await snapshotScene(sceneId, content);
   return { word_count, savedAt: new Date().toISOString() };
 }
 

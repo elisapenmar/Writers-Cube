@@ -301,7 +301,7 @@ export function SideNav({
         <button
           onClick={addChapter}
           disabled={pending}
-          className="w-full rounded-md bg-[var(--wc-slate)] px-3 py-2 text-sm text-white hover:bg-[var(--wc-slate)] disabled:opacity-50"
+          className="w-full rounded-md bg-[var(--wc-slate)] px-3 py-2 text-sm text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-50"
         >
           + New chapter
         </button>
@@ -337,7 +337,7 @@ function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
         href={scenesHref}
         className={`px-2 py-0.5 ${
           !scrollActive
-            ? "bg-[var(--wc-slate)] text-white"
+            ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
             : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
         }`}
         title="Edit one scene at a time"
@@ -348,7 +348,7 @@ function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
         href="/app/manuscript"
         className={`px-2 py-0.5 border-l border-[var(--wc-border)] ${
           scrollActive
-            ? "bg-[var(--wc-slate)] text-white"
+            ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
             : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
         }`}
         title="Scroll the whole manuscript"

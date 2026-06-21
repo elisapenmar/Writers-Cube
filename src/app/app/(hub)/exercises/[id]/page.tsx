@@ -71,7 +71,7 @@ export default async function ExerciseView({
         <div className="mt-4 flex items-center gap-3">
           <Link
             href="/app/prompts"
-            className="rounded-xl px-4 py-2 text-sm text-white"
+            className="rounded-xl px-4 py-2 text-sm text-[var(--wc-on-accent)]"
             style={{ background: "var(--wc-terracotta)" }}
           >
             Roll a new prompt

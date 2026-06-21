@@ -136,15 +136,16 @@ body {
 /* ---------- Writer's Cube brand (cool, calm, subtle cubism) ---------- */
 :root {
   /* muted, desaturated, cool palette — serene gallery feel */
-  --wc-slate: #5e7488;       /* dusty slate-blue (primary action) */
-  --wc-sage: #87a08f;        /* muted sage (success / secondary accent) */
-  --wc-plum: #847c93;        /* cool mauve (seed / kernel accent) */
-  --wc-clay: #bd8268;        /* single muted warm accent (sparingly, CTAs) */
+  --wc-slate: #566b7e;       /* dusty slate-blue (primary action) */
+  --wc-sage: #5f7a68;        /* muted sage (success / secondary accent) */
+  --wc-plum: #665f77;        /* cool mauve (seed / kernel accent) */
+  --wc-clay: #9c5b40;        /* single muted warm accent (sparingly, CTAs) */
   --wc-ochre: #c9b487;       /* soft, desaturated gold (the die) */
   --wc-ink: #2e323b;         /* cool charcoal (not pure black) — primary text */
-  --wc-muted: #6f7680;       /* secondary text */
-  --wc-faint: #9aa0a8;       /* tertiary / metadata text */
+  --wc-muted: #5b616a;       /* secondary text (WCAG AA on light surfaces) */
+  --wc-faint: #636a73;       /* tertiary / metadata text (WCAG AA) */
   --wc-stone: #d7d8d2;       /* cool greige (borders / dividers) */
+  --wc-on-accent: #ffffff;   /* foreground on accent fills (flips per theme) */
 
   /* surfaces */
   --wc-canvas: #edeeeb;      /* cool stone page background */
@@ -180,8 +181,9 @@ body {
   --wc-ochre: #d8c48f;
   --wc-ink: #e9eae7;
   --wc-muted: #a3a9b2;
-  --wc-faint: #767c86;
+  --wc-faint: #9aa0aa;
   --wc-stone: #3a3f47;
+  --wc-on-accent: #14171c;
   --wc-canvas: #1b1e23;
   --wc-surface: #23272e;
   --wc-paper: #2a2f37;
@@ -194,15 +196,16 @@ body {
 
 /* ===== Theme: Clay (warm earth) ===== */
 [data-theme="clay"] {
-  --wc-slate: #5d7384;
-  --wc-sage: #8aa791;
-  --wc-plum: #8a7a96;
-  --wc-clay: #c07a63;
+  --wc-slate: #54697b;
+  --wc-sage: #5f7a68;
+  --wc-plum: #665f77;
+  --wc-clay: #9c5b40;
   --wc-ochre: #cdab6b;
   --wc-ink: #33303a;
-  --wc-muted: #6f675f;
-  --wc-faint: #a89e92;
+  --wc-muted: #615951;
+  --wc-faint: #6f675c;
   --wc-stone: #e0d8c9;
+  --wc-on-accent: #ffffff;
   --wc-canvas: #f2eee6;
   --wc-surface: #faf7f0;
   --wc-paper: #f5efe4;
@@ -247,8 +250,8 @@ body {
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
-  background: color-mix(in srgb, var(--wc-tint, var(--wc-slate)) 13%, transparent);
-  color: color-mix(in srgb, var(--wc-tint, var(--wc-slate)) 72%, var(--wc-ink));
+  background: color-mix(in srgb, var(--wc-tint, var(--wc-slate)) 16%, transparent);
+  color: color-mix(in srgb, var(--wc-tint, var(--wc-slate)) 40%, var(--wc-ink));
 }
 
 /* Faceted-square accent glyph — a quiet section marker / motif echo. */

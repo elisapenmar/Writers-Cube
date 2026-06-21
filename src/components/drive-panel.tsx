@@ -153,7 +153,7 @@ export function DrivePanel({
             </p>
             <button
               onClick={connect}
-              className="rounded-2xl px-6 py-3 text-sm text-white shadow"
+              className="rounded-2xl px-6 py-3 text-sm text-[var(--wc-on-accent)] shadow"
               style={{ background: "var(--wc-slate)" }}
             >
               {status.email ? "Reconnect Google Drive" : "Connect Google Drive"}

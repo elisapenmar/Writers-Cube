@@ -43,7 +43,7 @@ export function StoryKernels({
     <section>
       <div className="flex items-baseline justify-between mb-3">
         <div>
-          <h2 className="flex items-center gap-2 font-serif text-xl text-[var(--wc-ink)]">
+          <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
             <span className="wc-facet" aria-hidden />
             Story kernels
           </h2>
@@ -60,7 +60,7 @@ export function StoryKernels({
           <button
             onClick={add}
             disabled={pending}
-            className="shrink-0 rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-white transition hover:brightness-105 disabled:opacity-50"
+            className="shrink-0 rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
             style={{ background: "var(--wc-plum)" }}
           >
             + New kernel

@@ -211,7 +211,7 @@ export function CanvasTab() {
       <div className="flex items-center gap-2 border-b border-[var(--wc-border)] px-3 py-2 text-xs">
         <button
           onClick={addTextBox}
-          className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-white hover:bg-[var(--wc-slate)]"
+          className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)]"
         >
           + Text
         </button>
@@ -250,7 +250,7 @@ export function CanvasTab() {
                 </button>
                 <button
                   onClick={() => addWebpage(urlDraft)}
-                  className="rounded bg-[var(--wc-slate)] px-2.5 py-1 text-[11px] text-white hover:bg-[var(--wc-slate)]"
+                  className="rounded bg-[var(--wc-slate)] px-2.5 py-1 text-[11px] text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)]"
                 >
                   Add
                 </button>
@@ -503,7 +503,7 @@ function CropOverlay({
           </button>
           <button
             onClick={apply}
-            className="rounded-lg bg-[var(--wc-slate)] px-4 py-1.5 text-sm text-white hover:bg-[var(--wc-slate)]"
+            className="rounded-lg bg-[var(--wc-slate)] px-4 py-1.5 text-sm text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)]"
           >
             Apply crop
           </button>
@@ -655,7 +655,7 @@ function CanvasItemView({
               }}
               onPointerDown={(e) => e.stopPropagation()}
               title="Crop image"
-              className="absolute -top-3 -left-3 h-6 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] px-2 text-[11px] text-[var(--wc-muted)] hover:bg-[var(--wc-slate)] hover:text-white shadow leading-none flex items-center justify-center"
+              className="absolute -top-3 -left-3 h-6 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] px-2 text-[11px] text-[var(--wc-muted)] hover:bg-[var(--wc-slate)] hover:text-[var(--wc-on-accent)] shadow leading-none flex items-center justify-center"
             >
               Crop
             </button>
@@ -666,7 +666,7 @@ function CanvasItemView({
               onDelete();
             }}
             title="Delete"
-            className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-faint)] hover:bg-red-600 hover:text-white shadow text-xs leading-none flex items-center justify-center"
+            className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-[var(--wc-surface)] border border-[var(--wc-border-strong)] text-[var(--wc-faint)] hover:bg-red-600 hover:text-[var(--wc-on-accent)] shadow text-xs leading-none flex items-center justify-center"
           >
             ×
           </button>

@@ -11,6 +11,7 @@ import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
+import { SceneHistory } from "@/components/scene-history";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -19,6 +20,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [savedAt, setSavedAt] = useState<string | null>(scene.updated_at);
   const [wordCount, setWordCount] = useState<number>(scene.word_count);
   const [typewriterOpen, setTypewriterOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitting, setSplitting] = useState(false);
   const [splitMsg, setSplitMsg] = useState<string | null>(null);
@@ -188,6 +190,13 @@ export function Editor({ scene }: { scene: Scene }) {
             )}
           </div>
           <button
+            onClick={() => setHistoryOpen(true)}
+            className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
+            title="Version history"
+          >
+            History
+          </button>
+          <button
             onClick={() => setTypewriterOpen(true)}
             className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
             title="Enter focused, distraction-free writing"
@@ -256,6 +265,22 @@ export function Editor({ scene }: { scene: Scene }) {
             </button>
           </div>
         </>
+      )}
+
+      {historyOpen && (
+        <SceneHistory
+          sceneId={scene.id}
+          sceneTitle={scene.title}
+          onClose={() => setHistoryOpen(false)}
+          onRestore={(content) => {
+            if (editor) {
+              editor.commands.setContent(content as object, { emitUpdate: false });
+              setWordCount(countWords(content));
+              setSavedAt(new Date().toISOString());
+              setStatus("saved");
+            }
+          }}
+        />
       )}
     </div>
   );

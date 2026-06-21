@@ -29,7 +29,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
       editor={editor}
       options={{ placement: "top" }}
       shouldShow={({ editor, from, to }) => from !== to && editor.isEditable}
-      className="flex items-center gap-1 rounded-md bg-zinc-900 text-white px-1.5 py-1 shadow-lg text-xs"
+      className="flex items-center gap-1 rounded-md bg-zinc-900 text-[var(--wc-on-accent)] px-1.5 py-1 shadow-lg text-xs"
     >
       {adding ? (
         <div className="flex items-center gap-1">
@@ -47,7 +47,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
               }
             }}
             placeholder="New tag…"
-            className="bg-zinc-800 rounded px-1.5 py-0.5 text-white outline-none w-24 placeholder:text-zinc-500"
+            className="bg-zinc-800 rounded px-1.5 py-0.5 text-[var(--wc-on-accent)] outline-none w-24 placeholder:text-zinc-500"
           />
           <button
             onMouseDown={(e) => e.preventDefault()}

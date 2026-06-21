@@ -151,7 +151,7 @@ export function TimelineTab() {
           </button>
           <button
             onClick={addLane}
-            className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-white hover:bg-[var(--wc-slate)]"
+            className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)]"
           >
             + Timeline
           </button>

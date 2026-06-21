@@ -75,7 +75,7 @@ export function ArchiveList({ projects }: { projects: ArchivedProject[] }) {
                 <button
                   onClick={() => deleteForever(p.id)}
                   disabled={pending}
-                  className="rounded-lg bg-red-600 px-2.5 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                  className="rounded-lg bg-red-600 px-2.5 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-red-700 disabled:opacity-50"
                 >
                   {workingId === p.id ? "Deleting…" : "Yes, delete"}
                 </button>

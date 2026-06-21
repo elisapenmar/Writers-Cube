@@ -62,7 +62,7 @@ export default async function ProjectsPage() {
             />
             <button
               type="submit"
-              className="rounded-lg px-3 py-1.5 text-sm text-white"
+              className="rounded-lg px-3 py-1.5 text-sm text-[var(--wc-on-accent)]"
               style={{ background: "var(--wc-slate)" }}
             >
               Create

@@ -305,7 +305,7 @@ export function BrainstormPanel() {
             disabled={!speechSupported}
             className={`shrink-0 w-9 h-9 rounded-full grid place-items-center ${
               recording
-                ? "bg-red-600 text-white animate-pulse"
+                ? "bg-red-600 text-[var(--wc-on-accent)] animate-pulse"
                 : "bg-[var(--wc-paper)] hover:bg-[var(--wc-stone)] text-[var(--wc-muted)]"
             } disabled:opacity-40`}
             title={
@@ -333,7 +333,7 @@ export function BrainstormPanel() {
           <button
             onClick={send}
             disabled={!input.trim() || pending}
-            className="shrink-0 rounded-md bg-[var(--wc-slate)] px-3 py-1.5 text-xs text-white hover:bg-[var(--wc-slate)] disabled:opacity-40"
+            className="shrink-0 rounded-md bg-[var(--wc-slate)] px-3 py-1.5 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
           >
             Send
           </button>
@@ -423,7 +423,7 @@ function HistoryButton({
             <div className="p-2 border-b border-[var(--wc-border)]">
               <button
                 onClick={onNew}
-                className="w-full rounded-md bg-[var(--wc-slate)] text-white px-3 py-1.5 text-xs hover:bg-[var(--wc-slate)]"
+                className="w-full rounded-md bg-[var(--wc-slate)] text-[var(--wc-on-accent)] px-3 py-1.5 text-xs hover:bg-[var(--wc-slate)]"
               >
                 + New brainstorm
               </button>
@@ -514,7 +514,7 @@ function ModeToggle({
           onClick={() => setMode(m)}
           className={`px-2 py-0.5 ${
             mode === m
-              ? "bg-[var(--wc-slate)] text-white"
+              ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
               : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
           }`}
           title={BRAINSTORM_MODES[m].description}

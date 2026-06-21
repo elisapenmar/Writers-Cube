@@ -94,7 +94,7 @@ export default function WhyThisWorks() {
             >
               <div className="flex items-baseline gap-2 mb-2">
                 <span
-                  className="text-xs font-semibold text-white grid place-items-center w-5 h-5 rounded-md shrink-0"
+                  className="text-xs font-semibold text-[var(--wc-on-accent)] grid place-items-center w-5 h-5 rounded-md shrink-0"
                   style={{ background: "var(--wc-slate)" }}
                 >
                   {e.n}
