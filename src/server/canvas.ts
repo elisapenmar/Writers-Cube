@@ -6,13 +6,15 @@ import { createClient } from "@/lib/supabase/server";
 
 export type CanvasItem = {
   id: string;
-  type: "text" | "image";
+  type: "text" | "image" | "webpage";
   x: number;
   y: number;
   width: number;
   height: number;
-  /** Text content for text items; data URL for image items. */
+  /** Text for text items; data URL for image items; the page URL for webpage items. */
   content: string;
+  /** For webpage items: the link the screenshot points to. */
+  url?: string;
 };
 
 export type CanvasState = { items: CanvasItem[] };

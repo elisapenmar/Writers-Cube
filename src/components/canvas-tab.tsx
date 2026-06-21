@@ -17,6 +17,8 @@ export function CanvasTab() {
   const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [urlPrompt, setUrlPrompt] = useState(false);
+  const [urlDraft, setUrlDraft] = useState("");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +77,28 @@ export function CanvasTab() {
 
   function triggerImagePick() {
     fileInputRef.current?.click();
+  }
+
+  function addWebpage(rawUrl: string) {
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return;
+    const url = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const scrollLeft = containerRef.current?.scrollLeft ?? 0;
+    const scrollTop = containerRef.current?.scrollTop ?? 0;
+    const newItem: CanvasItem = {
+      id: `w-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+      type: "webpage",
+      x: scrollLeft + 120,
+      y: scrollTop + 120,
+      width: 320,
+      height: 240,
+      content: url,
+      url,
+    };
+    update([...items, newItem]);
+    setSelectedId(newItem.id);
+    setUrlDraft("");
+    setUrlPrompt(false);
   }
 
   async function handleImageFile(file: File) {
@@ -183,6 +207,43 @@ export function CanvasTab() {
         >
           + Image
         </button>
+        <div className="relative">
+          <button
+            onClick={() => setUrlPrompt((o) => !o)}
+            className="rounded-md border border-zinc-300 px-2.5 py-1 text-zinc-700 hover:bg-zinc-50"
+          >
+            + Webpage
+          </button>
+          {urlPrompt && (
+            <div className="absolute left-0 z-30 mt-1 w-72 rounded-lg border border-zinc-200 bg-white p-2 shadow-xl">
+              <input
+                autoFocus
+                value={urlDraft}
+                onChange={(e) => setUrlDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addWebpage(urlDraft);
+                  if (e.key === "Escape") setUrlPrompt(false);
+                }}
+                placeholder="Paste a link… e.g. example.com/article"
+                className="w-full rounded-md border border-zinc-300 px-2 py-1 text-xs focus:border-zinc-500 focus:outline-none"
+              />
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  onClick={() => setUrlPrompt(false)}
+                  className="rounded px-2 py-1 text-[11px] text-zinc-500 hover:bg-zinc-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => addWebpage(urlDraft)}
+                  className="rounded bg-zinc-900 px-2.5 py-1 text-[11px] text-white hover:bg-zinc-800"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -241,6 +302,51 @@ export function CanvasTab() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function WebpageCard({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+  let host = url;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    /* keep raw */
+  }
+  // A live screenshot of the page, rendered like a thumbnail of the site itself.
+  const shot = `https://image.thum.io/get/width/800/${url}`;
+
+  return (
+    <div className="w-full h-full rounded shadow border border-zinc-200 bg-white overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-zinc-50 grid place-items-center overflow-hidden">
+        {failed ? (
+          <div className="text-center px-3">
+            <div className="text-2xl">🔗</div>
+            <div className="mt-1 text-[11px] text-zinc-500 break-all">{host}</div>
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={shot}
+            alt={host}
+            onError={() => setFailed(true)}
+            className="w-full h-full object-cover object-top pointer-events-none"
+            draggable={false}
+          />
+        )}
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        title={url}
+        className="shrink-0 truncate border-t border-zinc-200 bg-white px-2 py-1 text-[11px] text-zinc-600 hover:text-[var(--wc-slate)] hover:underline"
+      >
+        🔗 {host}
+      </a>
     </div>
   );
 }
@@ -363,7 +469,7 @@ function CanvasItemView({
             )}
           </div>
         )
-      ) : (
+      ) : item.type === "image" ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={item.content}
@@ -371,6 +477,8 @@ function CanvasItemView({
           className="w-full h-full object-cover rounded shadow border border-zinc-200 pointer-events-none"
           draggable={false}
         />
+      ) : (
+        <WebpageCard url={item.url ?? item.content} />
       )}
 
       {selected && (
