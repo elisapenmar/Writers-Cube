@@ -265,14 +265,13 @@ export function SideNav({
           + New chapter
         </button>
         <div className="flex items-center justify-between text-xs">
-          <a
-            href="/app/export"
-            download
+          <Link
+            href="/app/publish"
             className="rounded-md px-2 py-1 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-            title="Download manuscript as Markdown"
+            title="Prepare & export your book for publication"
           >
-            ↓ Export .md
-          </a>
+            ✦ Publish
+          </Link>
           <form action={signOut}>
             <button
               type="submit"

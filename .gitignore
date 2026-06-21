@@ -43,8 +43,5 @@ next-env.d.ts
 # conductor workspace scratch (gitignored per workspace convention)
 /.context/
 
-# auto-continue watcher (local-only tooling, not part of the app)
-/auto-continue.sh
-
 # pdf-build artifacts (kept locally for now)
 context/pdf-build/node_modules

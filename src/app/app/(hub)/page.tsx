@@ -9,7 +9,8 @@ import { listExercises, type ExerciseSummary } from "@/server/prompts";
 import { listKernels, type StoryKernel } from "@/server/kernels";
 import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
-import { ImportExport } from "@/components/import-export";
+import { ImportButton } from "@/components/import-button";
+import { ProjectExportMenu } from "@/components/project-export-menu";
 
 const PROJECTS_PREVIEW = 3;
 const KERNELS_PREVIEW = 3;
@@ -84,50 +85,54 @@ export default async function Dashboard() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {recentProjects.map((p) => (
-              <form key={p.id} action={openProject}>
-                <input type="hidden" name="projectId" value={p.id} />
-                <button
-                  type="submit"
-                  className={`w-full text-left rounded-2xl p-4 border bg-white hover:border-zinc-300 transition ${
-                    active?.id === p.id
-                      ? "border-[var(--wc-slate)]"
-                      : "border-zinc-200"
-                  }`}
-                >
-                  <div className="font-serif text-lg text-[var(--wc-ink)]">
-                    {p.title}
-                  </div>
-                  <div className="text-xs text-zinc-500 mt-1">
-                    {p.word_count.toLocaleString()} words · {p.chapter_count}{" "}
-                    chapter{p.chapter_count === 1 ? "" : "s"}
-                    {active?.id === p.id && " · open"}
-                  </div>
-                </button>
-              </form>
+              <div
+                key={p.id}
+                className={`relative rounded-2xl p-4 border bg-white transition ${
+                  active?.id === p.id ? "border-[var(--wc-slate)]" : "border-zinc-200"
+                }`}
+              >
+                <form action={openProject}>
+                  <input type="hidden" name="projectId" value={p.id} />
+                  <button type="submit" className="block w-full text-left pr-16">
+                    <div className="font-serif text-lg text-[var(--wc-ink)]">
+                      {p.title}
+                    </div>
+                    <div className="text-xs text-zinc-500 mt-1">
+                      {p.word_count.toLocaleString()} words · {p.chapter_count}{" "}
+                      chapter{p.chapter_count === 1 ? "" : "s"}
+                      {active?.id === p.id && " · open"}
+                    </div>
+                  </button>
+                </form>
+                <div className="absolute top-3 right-3">
+                  <ProjectExportMenu projectId={p.id} />
+                </div>
+              </div>
             ))}
+          </div>
 
+          {/* Compact: start a new project, or import one */}
+          <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <form
               action={createProjectAndOpen}
-              className="rounded-2xl p-4 border border-dashed border-zinc-300 bg-transparent flex items-center gap-2"
+              className="flex-1 rounded-2xl p-2 border border-dashed border-zinc-300 bg-transparent flex items-center gap-2"
             >
               <input
                 name="title"
                 placeholder="New project title…"
-                className="flex-1 bg-white rounded-lg border border-zinc-200 px-3 py-1.5 text-sm focus:outline-none"
+                className="flex-1 bg-white rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:outline-none"
               />
               <button
                 type="submit"
-                className="rounded-lg px-3 py-1.5 text-sm text-white"
+                className="rounded-xl px-4 py-2 text-sm text-white"
                 style={{ background: "var(--wc-slate)" }}
               >
                 Create
               </button>
             </form>
+            <ImportButton />
           </div>
         </section>
-
-        {/* Import & export */}
-        <ImportExport />
 
         {/* Story kernels */}
         <StoryKernels initial={kernels} limit={KERNELS_PREVIEW} />

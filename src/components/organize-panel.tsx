@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { extractDocumentText } from "@/server/import";
 
 const LEGACY_STORAGE_KEY = "wc-organize";
 
@@ -386,7 +387,10 @@ function NotesEditor({
 }) {
   return (
     <div className="flex-1 flex flex-col">
-      <div className="flex items-center justify-end px-4 py-1 text-xs text-zinc-400 border-b border-zinc-100">
+      <div className="flex items-center justify-between px-4 py-1 text-xs text-zinc-400 border-b border-zinc-100">
+        <ImportDocButton
+          onImported={(text) => onChange(value ? `${value}\n\n${text}` : text)}
+        />
         <SaveLabel saving={saving} savedAt={savedAt} />
       </div>
       <textarea
@@ -397,6 +401,52 @@ function NotesEditor({
 
 Run a brainstorm session, then click 'Generate' (or 'Add from chat' once notes exist) to have the AI distill the conversation into notes here."
         className="flex-1 resize-none p-5 bg-white text-sm text-zinc-800 leading-relaxed font-serif focus:outline-none whitespace-pre-wrap"
+      />
+    </div>
+  );
+}
+
+function ImportDocButton({ onImported }: { onImported: (text: string) => void }) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setErr(null);
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const text = await extractDocumentText(fd);
+      if (text) onImported(text);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        className="rounded-md px-1.5 py-0.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 disabled:opacity-50"
+        title="Import a .docx, .md, or .txt into your notes"
+      >
+        {busy ? "Importing…" : "↑ Import doc"}
+      </button>
+      {err && <span className="text-red-500">{err}</span>}
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".docx,.md,.markdown,.txt"
+        onChange={onFile}
+        className="hidden"
       />
     </div>
   );

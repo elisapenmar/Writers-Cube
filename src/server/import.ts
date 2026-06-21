@@ -115,6 +115,25 @@ function wordCount(paragraphs: string[]): number {
   return paragraphs.join(" ").trim().split(/\s+/).filter(Boolean).length;
 }
 
+/** Extract plain text from an uploaded document, for importing into Notes. */
+export async function extractDocumentText(formData: FormData): Promise<string> {
+  await requireUser();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Choose a file to import.");
+  }
+  const name = file.name.toLowerCase();
+  const buf = Buffer.from(await file.arrayBuffer());
+  if (name.endsWith(".docx")) {
+    const { value } = await mammoth.extractRawText({ buffer: buf });
+    return value.trim();
+  }
+  if (name.endsWith(".md") || name.endsWith(".markdown") || name.endsWith(".txt")) {
+    return buf.toString("utf-8").trim();
+  }
+  throw new Error("Unsupported file. Use .docx, .md, or .txt.");
+}
+
 export async function importManuscript(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   const file = formData.get("file");
