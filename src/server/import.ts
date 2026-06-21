@@ -99,10 +99,12 @@ function htmlToMarkdownish(html: string): string {
   if (bodyMatch) s = bodyMatch[1];
 
   return s
-    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n# $1\n")
-    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n## $1\n")
-    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n## $1\n")
-    .replace(/<\/(p|div|li|tr)>/gi, "\n")
+    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n\n# $1\n\n")
+    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n\n## $1\n\n")
+    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n\n## $1\n\n")
+    // Paragraphs/divs end a block → blank line so the parser keeps them apart.
+    .replace(/<\/(p|div)>/gi, "\n\n")
+    .replace(/<\/(li|tr)>/gi, "\n")
     .replace(/<li[^>]*>/gi, "• ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, "")

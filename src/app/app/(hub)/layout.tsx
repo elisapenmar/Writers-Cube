@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "@/server/scenes";
+import { CubeMark } from "@/components/cube-mark";
 
 export default function HubLayout({
   children,
@@ -8,8 +9,9 @@ export default function HubLayout({
 }) {
   return (
     <div className="flex flex-col flex-1 min-h-screen">
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[rgba(33,31,41,0.08)] bg-[var(--wc-paper)]">
-        <Link href="/app" className="font-serif text-lg text-[var(--wc-ink)]">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--wc-border)] bg-[var(--wc-surface)]">
+        <Link href="/app" className="flex items-center gap-2 font-serif text-lg text-[var(--wc-ink)]">
+          <CubeMark size={20} />
           Writer&apos;s Cube
         </Link>
         <nav className="flex items-center gap-4 text-sm">

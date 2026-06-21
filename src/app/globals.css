@@ -119,29 +119,102 @@ body {
   color: color-mix(in srgb, var(--wc-custom) 72%, #2e2b33);
 }
 
-/* ---------- Writer's Cube brand (soft cube / muted, calming) ---------- */
+/* ---------- Writer's Cube brand (cool, calm, subtle cubism) ---------- */
 :root {
-  /* muted, desaturated palette — calm gallery feel */
-  --wc-terracotta: #c07a63;  /* soft clay (primary action) */
-  --wc-slate: #5d7384;       /* muted blue-grey (selection) */
-  --wc-ochre: #cdab6b;       /* soft gold (the die) */
-  --wc-sage: #8aa791;        /* muted sage (success) */
-  --wc-plum: #8a7a96;        /* muted mauve (seed accent) */
-  --wc-cream: #f2eee6;       /* soft warm canvas */
-  --wc-paper: #faf7f0;       /* soft paper */
-  --wc-ink: #33303a;         /* warm charcoal (not pure black) */
+  /* muted, desaturated, cool palette — serene gallery feel */
+  --wc-slate: #5e7488;       /* dusty slate-blue (primary action) */
+  --wc-sage: #87a08f;        /* muted sage (success / secondary accent) */
+  --wc-plum: #847c93;        /* cool mauve (seed / kernel accent) */
+  --wc-clay: #bd8268;        /* single muted warm accent (sparingly, CTAs) */
+  --wc-ochre: #c9b487;       /* soft, desaturated gold (the die) */
+  --wc-ink: #2e323b;         /* cool charcoal (not pure black) */
+  --wc-stone: #d7d8d2;       /* cool greige (borders / dividers) */
+
+  /* surfaces */
+  --wc-canvas: #edeeeb;      /* cool stone page background */
+  --wc-surface: #f8f8f6;     /* near-white cool card surface */
+  --wc-paper: #f3f4f1;       /* raised panel */
+
+  /* borders */
+  --wc-border: rgba(46,50,59,0.08);        /* hairline */
+  --wc-border-strong: rgba(46,50,59,0.14); /* outlined controls */
+
+  /* radius scale — soft edges, one calm rhythm */
+  --wc-r-sm: 8px;
+  --wc-r-md: 14px;
+  --wc-r-lg: 20px;
+  --wc-r-xl: 28px;
+
+  /* shadows — soft, low-contrast */
+  --wc-shadow-sm: 0 1px 2px rgba(46,50,59,0.05);
+  --wc-shadow-md: 0 8px 28px rgba(46,50,59,0.06);
+
+  /* legacy aliases so existing usages keep working & shift tone */
+  --wc-terracotta: var(--wc-clay);
+  --wc-cream: var(--wc-canvas);
 }
-.wc-cream { background: var(--wc-cream); }
+.wc-cream { background: var(--wc-canvas); }
 .wc-paper { background: var(--wc-paper); }
+.wc-canvas { background: var(--wc-canvas); }
+.wc-surface { background: var(--wc-surface); }
+
+/* Reusable surfaces ----------------------------------------------------- */
+.wc-raised {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  box-shadow: var(--wc-shadow-sm);
+}
+/* Canonical dashboard card: soft corners + gentle hover lift. */
+.wc-card {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-border);
+  border-radius: var(--wc-r-lg);
+  box-shadow: var(--wc-shadow-sm);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+.wc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--wc-shadow-md);
+}
+.wc-card[data-active="true"] {
+  border-color: var(--wc-slate);
+}
+
+/* Square-cornered badge — the small "square" against soft cards. */
+.wc-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--wc-r-sm);
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: color-mix(in srgb, var(--wc-tint, var(--wc-slate)) 13%, transparent);
+  color: color-mix(in srgb, var(--wc-tint, var(--wc-slate)) 72%, var(--wc-ink));
+}
+
+/* Faceted-square accent glyph — a quiet section marker / motif echo. */
+.wc-facet {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--wc-slate) 78%, white) 0 50%,
+      var(--wc-slate) 50% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+}
 
 /* Subtle isometric-cube texture for large calm surfaces. */
 .wc-cube-bg {
-  background-color: var(--wc-cream);
+  background-color: var(--wc-canvas);
   background-image:
-    linear-gradient(135deg, rgba(51,48,58,0.022) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(51,48,58,0.022) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(51,48,58,0.022) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(51,48,58,0.022) 25%, transparent 25%);
+    linear-gradient(135deg, rgba(46,50,59,0.018) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(46,50,59,0.018) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(46,50,59,0.018) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(46,50,59,0.018) 25%, transparent 25%);
   background-position: 24px 0, 24px 0, 0 0, 0 0;
   background-size: 48px 48px;
   background-repeat: repeat;

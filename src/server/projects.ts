@@ -15,6 +15,7 @@ export type ProjectSummary = {
   chapter_count: number;
   updated_at: string;
   created_at: string;
+  archived_at: string | null;
 };
 
 async function requireUser() {
@@ -42,13 +43,16 @@ export async function setActiveProject(projectId: string): Promise<void> {
   revalidatePath("/app", "layout");
 }
 
-export async function listProjects(): Promise<ProjectSummary[]> {
+async function fetchProjects(archived: boolean): Promise<ProjectSummary[]> {
   const { supabase, user } = await requireUser();
-  const { data: projects, error } = await supabase
+  let query = supabase
     .from("projects")
-    .select("id, title, author_name, created_at, updated_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+    .select("id, title, author_name, created_at, updated_at, archived_at")
+    .eq("user_id", user.id);
+  query = archived
+    ? query.not("archived_at", "is", null)
+    : query.is("archived_at", null);
+  const { data: projects, error } = await query.order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
 
   const ids = (projects ?? []).map((p) => p.id);
@@ -91,7 +95,68 @@ export async function listProjects(): Promise<ProjectSummary[]> {
     chapter_count: counts.get(p.id as string)?.chapters ?? 0,
     created_at: p.created_at as string,
     updated_at: p.updated_at as string,
+    archived_at: (p.archived_at as string | null) ?? null,
   }));
+}
+
+/** Active (non-archived) projects. */
+export async function listProjects(): Promise<ProjectSummary[]> {
+  return fetchProjects(false);
+}
+
+/** Archived projects. */
+export async function listArchivedProjects(): Promise<ProjectSummary[]> {
+  return fetchProjects(true);
+}
+
+export async function archiveProject(id: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("projects")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+}
+
+export async function unarchiveProject(id: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("projects")
+    .update({ archived_at: null })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+}
+
+/** Permanently delete a project and everything under it. Irreversible. */
+export async function deleteProjectForever(id: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  // Confirm ownership before destroying anything.
+  const { data: owned } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!owned) throw new Error("Project not found");
+
+  const { data: chapters } = await supabase
+    .from("chapters")
+    .select("id")
+    .eq("project_id", id);
+  const chapterIds = (chapters ?? []).map((c) => c.id);
+  if (chapterIds.length > 0) {
+    await supabase.from("scenes").delete().in("chapter_id", chapterIds);
+  }
+  await supabase.from("chapters").delete().eq("project_id", id);
+  await supabase.from("loose_scenes").delete().eq("project_id", id);
+  await supabase.from("prompt_exercises").delete().eq("project_id", id);
+  const { error } = await supabase.from("projects").delete().eq("id", id).eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
 }
 
 export async function createProject(title?: string): Promise<{ id: string }> {

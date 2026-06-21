@@ -20,24 +20,18 @@ export function ExerciseCard({ exercise }: { exercise: ExerciseSummary }) {
   return (
     <Link
       href={`/app/exercises/${exercise.id}`}
-      className="block rounded-2xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 transition"
+      className="wc-card block p-4"
     >
       <div className="flex items-center gap-1.5 mb-2 text-[11px]">
-        <span
-          className="px-1.5 py-0.5 rounded font-medium"
-          style={{ color: "var(--wc-slate)", background: "rgba(62,92,118,0.1)" }}
-        >
+        <span className="wc-badge" style={{ "--wc-tint": "var(--wc-slate)" } as React.CSSProperties}>
           {FOCUS_LABEL[exercise.focus] ?? exercise.focus}
         </span>
         <span
-          className="px-1.5 py-0.5 rounded font-medium"
+          className="wc-badge"
           style={{
-            color: exercise.format === "seed" ? "var(--wc-plum)" : "var(--wc-terracotta)",
-            background:
-              exercise.format === "seed"
-                ? "rgba(106,85,127,0.1)"
-                : "rgba(217,105,76,0.1)",
-          }}
+            "--wc-tint":
+              exercise.format === "seed" ? "var(--wc-plum)" : "var(--wc-clay)",
+          } as React.CSSProperties}
         >
           {exercise.format === "seed" ? "Seed" : "Exercise"}
         </span>

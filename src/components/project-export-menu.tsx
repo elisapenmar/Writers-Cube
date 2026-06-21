@@ -1,12 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EXPORT_FORMATS } from "@/lib/manuscript-export";
+import { archiveProject } from "@/server/projects";
 
-/** A small export dropdown for a project card on the dashboard. */
+/** A small export/manage dropdown for a project card on the dashboard. */
 export function ProjectExportMenu({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const [pending, start] = useTransition();
+
+  function archive() {
+    setOpen(false);
+    start(async () => {
+      await archiveProject(projectId);
+      router.refresh();
+    });
+  }
 
   return (
     <div className="relative">
@@ -16,10 +28,11 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
-        title="Export this project"
+        disabled={pending}
+        className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50"
+        title="Export or manage this project"
       >
-        Export ▾
+        {pending ? "…" : "⋯"}
       </button>
 
       {open && (
@@ -46,6 +59,12 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
             >
               ✦ Prepare for publication →
             </Link>
+            <button
+              onClick={archive}
+              className="mt-1 block w-full rounded-lg border-t border-zinc-100 px-2.5 py-1.5 text-left text-xs text-zinc-600 hover:bg-zinc-50"
+            >
+              🗄 Archive project
+            </button>
           </div>
         </>
       )}

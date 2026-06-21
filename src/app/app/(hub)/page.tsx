@@ -11,6 +11,7 @@ import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
 import { ImportButton } from "@/components/import-button";
 import { ProjectExportMenu } from "@/components/project-export-menu";
+import { CubeMark } from "@/components/cube-mark";
 
 const PROJECTS_PREVIEW = 3;
 const KERNELS_PREVIEW = 3;
@@ -50,12 +51,13 @@ export default async function Dashboard() {
     <div className="flex-1 overflow-y-auto wc-cube-bg">
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
         {/* Hero */}
-        <section className="rounded-3xl p-6 sm:p-8 wc-paper border border-[rgba(51,48,58,0.07)] shadow-[0_10px_34px_rgba(51,48,58,0.05)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <section className="wc-raised rounded-[var(--wc-r-xl)] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[var(--wc-slate)]">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[var(--wc-slate)]">
+              <CubeMark size={18} />
               Writer&apos;s Cube
             </div>
-            <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-1">
+            <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-2">
               Welcome back.
             </h1>
             <p className="text-sm text-zinc-600 mt-1">
@@ -64,8 +66,8 @@ export default async function Dashboard() {
           </div>
           <Link
             href="/app/prompts"
-            className="shrink-0 rounded-2xl px-6 py-3 text-white font-medium shadow-lg text-center"
-            style={{ background: "var(--wc-terracotta)" }}
+            className="shrink-0 rounded-[var(--wc-r-lg)] px-6 py-3 text-white font-medium text-center shadow-[var(--wc-shadow-md)] transition hover:brightness-105"
+            style={{ background: "var(--wc-clay)" }}
           >
             🎲 Roll a prompt
           </Link>
@@ -74,22 +76,27 @@ export default async function Dashboard() {
         {/* Projects */}
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="font-serif text-xl text-[var(--wc-ink)]">
+            <h2 className="flex items-center gap-2 font-serif text-xl text-[var(--wc-ink)]">
+              <span className="wc-facet" aria-hidden />
               Your projects
             </h2>
-            {projects.length > PROJECTS_PREVIEW && (
-              <Link href="/app/projects" className="text-xs text-[var(--wc-slate)] hover:underline">
-                View all
+            <div className="flex items-center gap-3">
+              {projects.length > PROJECTS_PREVIEW && (
+                <Link href="/app/projects" className="text-xs text-[var(--wc-slate)] hover:underline">
+                  View all
+                </Link>
+              )}
+              <Link href="/app/archive" className="text-xs text-zinc-500 hover:text-zinc-800 hover:underline">
+                🗄 Archive
               </Link>
-            )}
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {recentProjects.map((p) => (
               <div
                 key={p.id}
-                className={`relative rounded-2xl p-4 border bg-white transition ${
-                  active?.id === p.id ? "border-[var(--wc-slate)]" : "border-zinc-200"
-                }`}
+                data-active={active?.id === p.id}
+                className="wc-card relative p-4"
               >
                 <form action={openProject}>
                   <input type="hidden" name="projectId" value={p.id} />
@@ -115,16 +122,16 @@ export default async function Dashboard() {
           <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <form
               action={createProjectAndOpen}
-              className="flex-1 rounded-2xl p-2 border border-dashed border-zinc-300 bg-transparent flex items-center gap-2"
+              className="flex-1 rounded-[var(--wc-r-lg)] p-2 border border-dashed border-[var(--wc-border-strong)] bg-transparent flex items-center gap-2"
             >
               <input
                 name="title"
                 placeholder="New project title…"
-                className="flex-1 bg-white rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:outline-none"
+                className="flex-1 bg-[var(--wc-surface)] rounded-[var(--wc-r-md)] border border-[var(--wc-border)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--wc-slate)]"
               />
               <button
                 type="submit"
-                className="rounded-xl px-4 py-2 text-sm text-white"
+                className="rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-white transition hover:brightness-105"
                 style={{ background: "var(--wc-slate)" }}
               >
                 Create
@@ -133,7 +140,7 @@ export default async function Dashboard() {
             <ImportButton />
             <Link
               href="/app/drive"
-              className="rounded-2xl border border-zinc-300 bg-white px-4 py-2.5 text-center text-sm text-[var(--wc-ink)] hover:border-zinc-400"
+              className="rounded-[var(--wc-r-lg)] border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-4 py-2.5 text-center text-sm text-[var(--wc-ink)] transition hover:border-[var(--wc-slate)]"
               title="Connect Google Drive — import Docs and export to Drive"
             >
               ☁ Drive
@@ -147,7 +154,8 @@ export default async function Dashboard() {
         {/* Practice library */}
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="font-serif text-xl text-[var(--wc-ink)]">
+            <h2 className="flex items-center gap-2 font-serif text-xl text-[var(--wc-ink)]">
+              <span className="wc-facet" aria-hidden />
               Practice library
             </h2>
             <Link href="/app/exercises" className="text-xs text-[var(--wc-slate)] hover:underline">
@@ -177,7 +185,7 @@ export default async function Dashboard() {
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-sm text-zinc-500 rounded-2xl border border-dashed border-zinc-300 px-4 py-5">
+    <p className="text-sm text-zinc-500 rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-5">
       {children}
     </p>
   );
