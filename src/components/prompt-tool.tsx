@@ -3,12 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 import { generatePrompt, saveExercise } from "@/server/prompts";
 import { setActiveProject } from "@/server/projects";
 import { FOCUS_META, type PromptFocus, type PromptDepth } from "@/lib/prompt-library";
 import type { RenderedPrompt, Segment, EntityBag } from "@/lib/prompt-fill";
 import { TypewriterMode } from "@/components/typewriter-mode";
+import { EditorToolbar } from "@/components/editor-toolbar";
+import { ALL_TAG_MARKS, TAG_MARK_NAMES } from "@/lib/tag-mark";
+import { TAG_KINDS, TAG_LABELS, TAG_COLORS, type TagKind } from "@/lib/tags";
 
 type Mode = "new" | "existing";
 type WritingMode = "free" | "typewriter";
@@ -527,7 +532,7 @@ function FreeWrite({
   saved: boolean;
 }) {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, Underline, ...ALL_TAG_MARKS],
     content: { type: "doc", content: [{ type: "paragraph" }] },
     immediatelyRender: false,
     editorProps: {
@@ -540,7 +545,34 @@ function FreeWrite({
 
   return (
     <div className="mt-5">
+      <div className="border-b border-zinc-200 pb-1.5 mb-2">
+        <EditorToolbar editor={editor} />
+      </div>
       <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            options={{ placement: "top" }}
+            shouldShow={({ editor, from, to }) => from !== to && editor.isEditable}
+            className="flex items-center gap-1 rounded-md bg-zinc-900 text-white px-1.5 py-1 shadow-lg text-xs"
+          >
+            {TAG_KINDS.map((kind: TagKind) => {
+              const markName = TAG_MARK_NAMES[kind];
+              const active = editor.isActive(markName);
+              return (
+                <button
+                  key={kind}
+                  onClick={() => editor.chain().focus().toggleMark(markName).run()}
+                  className={`px-2 py-1 rounded hover:bg-zinc-700 ${active ? "bg-zinc-700" : ""}`}
+                  style={{ borderBottom: `2px solid ${TAG_COLORS[kind].underline}` }}
+                  title={TAG_LABELS[kind]}
+                >
+                  {TAG_LABELS[kind]}
+                </button>
+              );
+            })}
+          </BubbleMenu>
+        )}
         <EditorContent editor={editor} />
       </div>
       <div className="mt-2 flex items-center gap-2">
