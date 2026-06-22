@@ -184,8 +184,9 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
     const mammoth = (await import("mammoth")).default;
     const { value } = await mammoth.convertToHtml({ buffer: buf });
     text = await htmlToText(value);
-  } catch {
-    /* fall through */
+    console.log(`[wc-import] docx bytes=${buf.length} html=${value.length} text=${text.length} body=${bodyDense(text)}`);
+  } catch (e) {
+    console.log(`[wc-import] docx export failed: ${e instanceof Error ? e.message : e}`);
   }
 
   // 2) Plain text — one line per paragraph.
@@ -194,9 +195,11 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
       const txtRes = await driveFetch(
         `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/plain")}`,
       );
-      text = plainToMarkdownish(await txtRes.text());
-    } catch {
-      /* fall through */
+      const raw = await txtRes.text();
+      text = plainToMarkdownish(raw);
+      console.log(`[wc-import] plain raw=${raw.length} text=${text.length} body=${bodyDense(text)} head="${raw.slice(0, 80).replace(/\s+/g, " ")}"`);
+    } catch (e) {
+      console.log(`[wc-import] plain export failed: ${e instanceof Error ? e.message : e}`);
     }
   }
 
@@ -206,12 +209,15 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
       const htmlRes = await driveFetch(
         `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,
       );
-      text = await htmlToText(await htmlRes.text());
-    } catch {
-      /* ignore */
+      const raw = await htmlRes.text();
+      text = await htmlToText(raw);
+      console.log(`[wc-import] html raw=${raw.length} text=${text.length} body=${bodyDense(text)}`);
+    } catch (e) {
+      console.log(`[wc-import] html export failed: ${e instanceof Error ? e.message : e}`);
     }
   }
 
+  console.log(`[wc-import] FINAL title="${title}" body=${bodyDense(text)} text="${text.slice(0, 120).replace(/\s+/g, " ")}"`);
   if (bodyDense(text) < 2) {
     throw emptyImportError(title, text);
   }
