@@ -13,6 +13,7 @@ import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
+import { AiDiamond } from "@/components/icons";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -191,9 +192,10 @@ export function Editor({ scene }: { scene: Scene }) {
             <button
               onClick={() => setSplitOpen((o) => !o)}
               disabled={splitting}
-              className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)] disabled:opacity-50"
+              className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-ink)] disabled:opacity-50"
               title="Split this scene's text into multiple scenes or chapters"
             >
+              <AiDiamond className="text-[var(--wc-slate)]" />
               {splitting ? "Splitting…" : "Split"}
             </button>
             {splitOpen && (
