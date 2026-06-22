@@ -11,6 +11,7 @@ import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
 import { ImportButton } from "@/components/import-button";
 import { ProjectExportMenu } from "@/components/project-export-menu";
+import { WelcomeModal } from "@/components/welcome-modal";
 import { CubeMark } from "@/components/cube-mark";
 import { CubeField } from "@/components/cube-field";
 
@@ -63,6 +64,9 @@ export default async function Dashboard() {
               <p className="text-xs sm:text-sm text-[var(--wc-muted)] truncate">
                 Pick up a project, capture a kernel, or roll a prompt.
               </p>
+              <div className="mt-0.5">
+                <WelcomeModal hasProjects={projects.length > 0} />
+              </div>
             </div>
           </div>
           <Link
