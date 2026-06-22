@@ -11,6 +11,7 @@ import {
   splitSceneAt,
   createScene,
   createChapter,
+  mergeScene,
 } from "@/server/scenes";
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
@@ -316,10 +317,12 @@ function SceneBlock({
 
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
-    const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
-    if (!coords) return;
     e.preventDefault();
-    const blockIndex = editor.state.doc.resolve(coords.pos).index(0);
+    // posAtCoords is null when clicking past the end of a line — fall back to
+    // the caret so the menu always opens.
+    const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+    const pos = coords?.pos ?? editor.state.selection.from;
+    const blockIndex = editor.state.doc.resolve(pos).index(0);
     onActivate(editor);
     setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex });
   }
@@ -361,6 +364,19 @@ function SceneBlock({
     onStructureChange();
   }
 
+  async function merge(direction: "previous" | "next") {
+    setCtxMenu(null);
+    if (!isScene) return;
+    try {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (editor) await save(editor.getJSON());
+      await mergeScene(scene.id, direction);
+      onStructureChange();
+    } catch {
+      onStatus("error");
+    }
+  }
+
   return (
     <div className="wc-scene-block mb-6 group" onContextMenu={onContextMenu}>
       <div className="text-[11px] uppercase tracking-wider text-[var(--wc-faint)] mb-1">
@@ -396,6 +412,9 @@ function SceneBlock({
             <CtxItem onClick={insertSceneBreak}>⁂ Insert scene break</CtxItem>
             {isScene && (
               <>
+                <CtxDivider />
+                <CtxItem onClick={() => merge("previous")}>⇡ Merge with previous scene</CtxItem>
+                <CtxItem onClick={() => merge("next")}>⇣ Merge with next scene</CtxItem>
                 <CtxDivider />
                 <CtxItem onClick={newScene}>＋ New scene in this chapter</CtxItem>
                 <CtxItem onClick={newChapter}>＋ New chapter</CtxItem>

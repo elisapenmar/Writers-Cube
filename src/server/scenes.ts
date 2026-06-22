@@ -561,6 +561,70 @@ export async function splitSceneAt(
   return { firstContent: docOf(head) };
 }
 
+/** Merge a scene with its previous or next sibling in the same chapter. */
+export async function mergeScene(
+  sceneId: string,
+  direction: "previous" | "next",
+): Promise<{ sceneId: string }> {
+  const { supabase } = await requireUser();
+  const { data: scene } = await supabase
+    .from("scenes")
+    .select("id, chapter_id, position, content")
+    .eq("id", sceneId)
+    .maybeSingle();
+  if (!scene) throw new Error("Scene not found");
+
+  const otherPos = (scene.position as number) + (direction === "previous" ? -1 : 1);
+  const { data: other } = await supabase
+    .from("scenes")
+    .select("id, position, content")
+    .eq("chapter_id", scene.chapter_id)
+    .eq("position", otherPos)
+    .maybeSingle();
+  if (!other) {
+    throw new Error(
+      direction === "previous"
+        ? "This is the first scene in the chapter — nothing to merge into."
+        : "This is the last scene in the chapter — nothing to merge with.",
+    );
+  }
+
+  // The earlier scene keeps the combined content; the later one is removed.
+  const earlier = direction === "previous" ? other : scene;
+  const later = direction === "previous" ? scene : other;
+  const earlierBlocks = ((earlier.content as { content?: Block[] } | null)?.content ?? []) as Block[];
+  const laterBlocks = ((later.content as { content?: Block[] } | null)?.content ?? []) as Block[];
+  const merged = docOf([...earlierBlocks, ...laterBlocks]);
+
+  await supabase
+    .from("scenes")
+    .update({
+      content: merged,
+      word_count: countWordsInDoc(merged),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", earlier.id);
+
+  await supabase.from("scenes").delete().eq("id", later.id);
+
+  // Close the gap left by the removed scene.
+  const { data: after } = await supabase
+    .from("scenes")
+    .select("id, position")
+    .eq("chapter_id", scene.chapter_id)
+    .gt("position", later.position as number)
+    .order("position", { ascending: true });
+  for (const s of after ?? []) {
+    await supabase
+      .from("scenes")
+      .update({ position: (s.position as number) - 1 })
+      .eq("id", s.id);
+  }
+
+  revalidatePath("/app", "layout");
+  return { sceneId: earlier.id as string };
+}
+
 export async function updateSceneContent(sceneId: string, content: unknown) {
   const { supabase } = await requireUser();
   const word_count = countWordsInDoc(content);

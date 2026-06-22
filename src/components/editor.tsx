@@ -6,7 +6,7 @@ import Underline from "@tiptap/extension-underline";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Scene } from "@/lib/types";
-import { updateSceneContent, splitScene, splitSceneAt } from "@/server/scenes";
+import { updateSceneContent, splitScene, splitSceneAt, mergeScene } from "@/server/scenes";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
@@ -92,11 +92,27 @@ export function Editor({ scene }: { scene: Scene }) {
 
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
-    const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
-    if (!coords) return;
     e.preventDefault();
-    const index = editor.state.doc.resolve(coords.pos).index(0);
+    // posAtCoords is null when clicking past the end of a line — fall back to
+    // the caret position so the menu always opens.
+    const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+    const pos = coords?.pos ?? editor.state.selection.from;
+    const index = editor.state.doc.resolve(pos).index(0);
     setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex: index });
+  }
+
+  async function doMerge(direction: "previous" | "next") {
+    setCtxMenu(null);
+    setSplitMsg(null);
+    try {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (editor) await save(editor.getJSON());
+      const { sceneId } = await mergeScene(scene.id, direction);
+      router.push(`/app/scene/${sceneId}`);
+      router.refresh();
+    } catch (err) {
+      setSplitMsg(err instanceof Error ? err.message : "Merge failed");
+    }
   }
 
   async function doSplitAt(into: "scenes" | "chapters") {
@@ -286,6 +302,19 @@ export function Editor({ scene }: { scene: Scene }) {
               className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
             >
               ✂ Split into a new chapter here
+            </button>
+            <div className="my-1 border-t border-[var(--wc-border)]" />
+            <button
+              onClick={() => doMerge("previous")}
+              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+            >
+              ⇡ Merge with previous scene
+            </button>
+            <button
+              onClick={() => doMerge("next")}
+              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+            >
+              ⇣ Merge with next scene
             </button>
           </div>
         </>
