@@ -56,23 +56,23 @@ export function SidebarToggle({
   );
 }
 
-/** A small diamond that marks any AI-powered action. */
-export function AiDiamond({ className = "", size = 12 }: { className?: string; size?: number }) {
+/** A four-point sparkle that marks any AI-powered action. */
+export function AiDiamond({ className = "", size = 14 }: { className?: string; size?: number }) {
+  // Concave 4-point star ("sparkle") centred at cx,cy with arm length r.
+  const star = (cx: number, cy: number, r: number) =>
+    `M${cx} ${cy - r}Q${cx} ${cy} ${cx + r} ${cy}Q${cx} ${cy} ${cx} ${cy + r}` +
+    `Q${cx} ${cy} ${cx - r} ${cy}Q${cx} ${cy} ${cx} ${cy - r}Z`;
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 12 12"
-      fill="none"
+      viewBox="0 0 24 24"
+      fill="currentColor"
       className={`inline-block shrink-0 ${className}`}
       aria-hidden
     >
-      <path
-        d="M6 0.6 L11.4 6 L6 11.4 L0.6 6 Z"
-        fill="currentColor"
-        opacity="0.92"
-      />
-      <path d="M6 3.2 L8.8 6 L6 8.8 L3.2 6 Z" fill="#fff" opacity="0.35" />
+      <path d={star(9, 13, 8)} />
+      <path d={star(18, 6, 4)} />
     </svg>
   );
 }

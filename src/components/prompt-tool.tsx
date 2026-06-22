@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
+import { Indent } from "@/lib/indent";
 import { generatePrompt, saveExercise } from "@/server/prompts";
 import { setActiveProject } from "@/server/projects";
 import { FOCUS_META, type PromptFocus, type PromptDepth } from "@/lib/prompt-library";
@@ -550,7 +551,7 @@ function FreeWrite({
   saved: boolean;
 }) {
   const editor = useEditor({
-    extensions: [StarterKit, Underline, ...ALL_TAG_MARKS],
+    extensions: [StarterKit, Underline, Indent, ...ALL_TAG_MARKS],
     content: { type: "doc", content: [{ type: "paragraph" }] },
     immediatelyRender: false,
     editorProps: {

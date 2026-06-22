@@ -13,8 +13,10 @@ import {
   chooseTemplate,
   saveOutline,
   fillOutlineFromNotes,
+  fillOutlineFromBrainstorm,
+  fillOutlineFromManuscript,
 } from "@/server/outline";
-import { AiDiamond } from "@/components/icons";
+import { AiSourceMenu } from "@/components/ai-source-menu";
 
 type Loaded = { tree: OutlineNode; template: OutlineTemplateKey } | null;
 
@@ -80,16 +82,22 @@ export function OutlineTab() {
     });
   }
 
-  async function onFillFromNotes() {
+  async function onFill(source: string) {
     if (!loaded) return;
     setError(null);
     setFilling(true);
     try {
-      const updated = await fillOutlineFromNotes(loaded.tree);
+      const fn =
+        source === "brainstorm"
+          ? fillOutlineFromBrainstorm
+          : source === "manuscript"
+          ? fillOutlineFromManuscript
+          : fillOutlineFromNotes;
+      const updated = await fn(loaded.tree);
       setLoaded({ ...loaded, tree: updated });
       setSavedAt(new Date().toISOString());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Fill from notes failed");
+      setError(e instanceof Error ? e.message : "Fill failed");
     } finally {
       setFilling(false);
     }
@@ -137,15 +145,16 @@ export function OutlineTab() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={onFillFromNotes}
-            disabled={filling || pending}
-            className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-            title="Use your brainstorm notes to suggest content for empty sections"
-          >
-            <AiDiamond className="text-[var(--wc-slate)]" />
-            {filling ? "Filling…" : "Fill from notes"}
-          </button>
+          <AiSourceMenu
+            label="Fill"
+            busy={filling || pending}
+            options={[
+              { key: "notes", label: "From notes", hint: "Your working notes" },
+              { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat" },
+              { key: "manuscript", label: "From manuscript", hint: "Your actual prose" },
+            ]}
+            onSelect={onFill}
+          />
           <button
             onClick={onChangeTemplate}
             disabled={filling || pending}

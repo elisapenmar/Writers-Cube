@@ -30,20 +30,22 @@ export function EditorToolbar({
   // not be touched — editor.can()/isActive() throw on a torn-down view.
   if (!editor || editor.isDestroyed) return null;
   const chain = () => editor.chain().focus();
-  const can = (fn: "undo" | "redo") => {
+  const can = (fn: "undo" | "redo" | "indent" | "outdent") => {
     try {
-      return editor.can()[fn]();
+      const c = editor.can() as unknown as Record<string, (() => boolean) | undefined>;
+      return typeof c[fn] === "function" ? (c[fn] as () => boolean)() : false;
     } catch {
       return false;
     }
   };
+  const hasIndent = typeof (editor.commands as Record<string, unknown>).indent === "function";
 
   return (
     <div
       className={`flex flex-wrap items-center gap-0.5 ${className}`}
     >
-      <Btn label="↶" title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
-      <Btn label="↷" title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
+      <Btn label={<UndoIcon />} title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
+      <Btn label={<RedoIcon />} title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
       <Divider />
       <Btn label="B" title="Bold (⌘B)" active={editor.isActive("bold")} bold onClick={() => chain().toggleBold().run()} />
       <Btn label="I" title="Italic (⌘I)" active={editor.isActive("italic")} italic onClick={() => chain().toggleItalic().run()} />
@@ -57,7 +59,51 @@ export function EditorToolbar({
       <Btn label="•" title="Bullet list" active={editor.isActive("bulletList")} onClick={() => chain().toggleBulletList().run()} />
       <Btn label="1." title="Numbered list" active={editor.isActive("orderedList")} onClick={() => chain().toggleOrderedList().run()} />
       <Btn label="❝" title="Blockquote" active={editor.isActive("blockquote")} onClick={() => chain().toggleBlockquote().run()} />
+      {hasIndent && (
+        <>
+          <Divider />
+          <Btn label={<OutdentIcon />} title="Decrease indent (⇧Tab)" active={false} disabled={!can("outdent")} onClick={() => chain().outdent().run()} />
+          <Btn label={<IndentIcon />} title="Increase indent (Tab)" active={false} onClick={() => chain().indent().run()} />
+        </>
+      )}
     </div>
+  );
+}
+
+function UndoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-1" />
+    </svg>
+  );
+}
+function RedoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M15 14l5-5-5-5" />
+      <path d="M20 9H9a5 5 0 0 0 0 10h1" />
+    </svg>
+  );
+}
+function IndentIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1="21" y1="6" x2="9" y2="6" />
+      <line x1="21" y1="12" x2="13" y2="12" />
+      <line x1="21" y1="18" x2="9" y2="18" />
+      <path d="M3 8l4 4-4 4" />
+    </svg>
+  );
+}
+function OutdentIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1="21" y1="6" x2="9" y2="6" />
+      <line x1="21" y1="12" x2="13" y2="12" />
+      <line x1="21" y1="18" x2="9" y2="18" />
+      <path d="M7 8l-4 4 4 4" />
+    </svg>
   );
 }
 
@@ -72,7 +118,7 @@ function Btn({
   disabled,
   onClick,
 }: {
-  label: string;
+  label: React.ReactNode;
   title: string;
   active: boolean;
   bold?: boolean;

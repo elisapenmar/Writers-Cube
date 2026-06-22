@@ -179,7 +179,7 @@ Rules:
 - Each character entry should have:
   - name: the most specific name the writer used (full name if given)
   - role: a brief role descriptor in the writer's terms (e.g. "protagonist", "modern-day woman", "1870s archaeologist", "best friend") — keep it short. If unclear, omit.
-  - description: 2–4 sentences in the writer's own words wherever possible, weaving together what's been established. Don't editorialize.
+  - description: 3–6 short bullet points (NOT prose), one fact/trait/relationship/arc-beat per line, each line starting with "• ". Use the writer's own words wherever possible. Don't editorialize.
 - Skip any character with less than a sentence of substance.
 - Don't include the thought partner or the writer herself.
 
@@ -423,7 +423,7 @@ Rules:
 - Only include people who actually appear in the text. Don't invent characters.
 - name: the most specific name used in the text.
 - role: a short descriptor inferred from the text (e.g. "protagonist", "her brother"). Omit if unclear.
-- description: 2–4 sentences grounded in what the text actually shows about them — traits, relationships, what they do. Use the writer's own details.
+- description: 3–6 short bullet points (NOT prose), one fact/trait/relationship/arc-beat per line, each starting with "• ". Ground every bullet in what the text actually shows. Use the writer's own details.
 - Skip walk-on names with no substance.
 
 Call list_characters. No prose.`,

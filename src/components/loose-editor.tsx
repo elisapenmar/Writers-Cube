@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
+import { Indent } from "@/lib/indent";
 import { useEffect, useRef, useState } from "react";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import {
@@ -28,7 +29,7 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
 
   const editor = useEditor(
     {
-      extensions: [StarterKit, Underline, ...ALL_TAG_MARKS],
+      extensions: [StarterKit, Underline, Indent, ...ALL_TAG_MARKS],
       content: (scene.content as object | null) ?? {
         type: "doc",
         content: [{ type: "paragraph" }],

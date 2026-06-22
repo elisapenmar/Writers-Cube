@@ -10,7 +10,22 @@ import {
   pullCharactersFromProject,
   type Character,
 } from "@/server/characters";
-import { AiDiamond } from "@/components/icons";
+import { AiSourceMenu } from "@/components/ai-source-menu";
+
+/** Split a description into clean bullet strings (leading •/-/* removed). */
+function bulletLines(text: string): string[] {
+  return (text ?? "")
+    .split("\n")
+    .map((l) => l.replace(/^\s*[•\-*]\s*/, "").trim())
+    .filter(Boolean);
+}
+
+/** Re-emit a description as one "• "-prefixed line per bullet. */
+function normalizeBullets(text: string): string {
+  return bulletLines(text)
+    .map((l) => `• ${l}`)
+    .join("\n");
+}
 
 export function CharactersTab() {
   const [characters, setCharacters] = useState<Character[] | null>(null);
@@ -95,24 +110,15 @@ export function CharactersTab() {
           {(characters?.length ?? 0) === 1 ? "" : "s"}
         </div>
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => onPull("brainstorm")}
-            disabled={pulling || pending}
-            className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-            title="Extract characters from your brainstorm conversation + notes. New names added; manual edits kept."
-          >
-            <AiDiamond className="text-[var(--wc-slate)]" />
-            {pulling ? "…" : "Pull · brainstorm"}
-          </button>
-          <button
-            onClick={() => onPull("project")}
-            disabled={pulling || pending}
-            className="flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2 py-1 hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-            title="Extract characters from your actual manuscript prose. New names added; manual edits kept."
-          >
-            <AiDiamond className="text-[var(--wc-slate)]" />
-            {pulling ? "…" : "Pull · manuscript"}
-          </button>
+          <AiSourceMenu
+            label="Pull characters"
+            busy={pulling || pending}
+            options={[
+              { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat + notes" },
+              { key: "project", label: "From manuscript", hint: "Your actual prose" },
+            ]}
+            onSelect={(k) => onPull(k as "brainstorm" | "project")}
+          />
           <button
             onClick={addCharacter}
             disabled={pending || pulling}
@@ -254,9 +260,9 @@ function CharacterCard({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           onBlur={() => {
-            if (description !== character.description) {
-              schedule({ description });
-            }
+            const cleaned = normalizeBullets(description);
+            if (cleaned !== character.description) schedule({ description: cleaned });
+            setDescription(cleaned);
             setEditingDescription(false);
           }}
           onKeyDown={(e) => {
@@ -264,18 +270,40 @@ function CharacterCard({
               setDescription(character.description);
               setEditingDescription(false);
             }
+            // Enter starts a new bullet (Shift+Enter for a soft line).
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              const ta = e.currentTarget;
+              const pos = ta.selectionStart;
+              const next = description.slice(0, pos) + "\n• " + description.slice(ta.selectionEnd);
+              setDescription(next);
+              requestAnimationFrame(() => {
+                ta.selectionStart = ta.selectionEnd = pos + 3;
+              });
+            }
           }}
-          rows={Math.max(2, Math.ceil(description.length / 50))}
+          rows={Math.max(3, description.split("\n").length + 1)}
           className="w-full mt-2 bg-[var(--wc-canvas)] border border-[var(--wc-border)] rounded px-2 py-1.5 text-sm font-serif leading-relaxed outline-none focus:border-[var(--wc-border-strong)]"
-          placeholder="Description, traits, arc, voice…"
+          placeholder="• A trait, fact, or arc beat per line…"
         />
       ) : (
         <div
-          onClick={() => setEditingDescription(true)}
-          className="mt-1 cursor-text text-sm text-[var(--wc-muted)] font-serif leading-relaxed whitespace-pre-wrap min-h-[1.2em] hover:bg-[var(--wc-canvas)] rounded px-1 -mx-1"
+          onClick={() => {
+            setEditingDescription(true);
+            if (!description.trim()) setDescription("• ");
+          }}
+          className="mt-1 cursor-text text-sm text-[var(--wc-muted)] font-serif leading-relaxed min-h-[1.2em] hover:bg-[var(--wc-canvas)] rounded px-1 -mx-1"
         >
-          {description || (
-            <span className="italic text-[var(--wc-faint)]">Description, traits, arc, voice…</span>
+          {bulletLines(description).length > 0 ? (
+            <ul className="list-disc pl-5 space-y-0.5">
+              {bulletLines(description).map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <span className="italic text-[var(--wc-faint)]">
+              Traits, arc, voice — one bullet per line…
+            </span>
           )}
         </div>
       )}
