@@ -35,12 +35,12 @@ export function MoveExerciseControl({
 
   return (
     <div className="flex items-center gap-2">
-      <label className="text-xs text-zinc-500">Belongs to:</label>
+      <label className="text-xs text-[var(--wc-faint)]">Belongs to:</label>
       <select
         value={currentProjectId ?? ""}
         disabled={pending}
         onChange={(e) => move(e.target.value === "" ? null : e.target.value)}
-        className="rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5 text-sm focus:outline-none disabled:opacity-50"
+        className="rounded-lg border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-2.5 py-1.5 text-sm focus:outline-none disabled:opacity-50"
       >
         <option value="">Practice library (no project)</option>
         {projects.map((p) => (
@@ -49,7 +49,7 @@ export function MoveExerciseControl({
           </option>
         ))}
       </select>
-      {pending && <span className="text-xs text-zinc-400">Moving…</span>}
+      {pending && <span className="text-xs text-[var(--wc-faint)]">Moving…</span>}
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );

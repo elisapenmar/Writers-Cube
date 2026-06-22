@@ -14,7 +14,7 @@ export default async function ArchivePage() {
               Archive
             </div>
             <h1 className="font-serif text-3xl text-[var(--wc-ink)]">Archived projects</h1>
-            <p className="mt-1 text-sm text-zinc-600">
+            <p className="mt-1 text-sm text-[var(--wc-muted)]">
               Restore a project to bring it back, or delete it permanently.
             </p>
           </div>
@@ -24,7 +24,7 @@ export default async function ArchivePage() {
         </header>
 
         {archived.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-zinc-300 px-4 py-8 text-center text-sm text-zinc-500">
+          <p className="rounded-2xl border border-dashed border-[var(--wc-border-strong)] px-4 py-8 text-center text-sm text-[var(--wc-faint)]">
             Nothing archived. Archive a project from the ⋯ menu on its card.
           </p>
         ) : (

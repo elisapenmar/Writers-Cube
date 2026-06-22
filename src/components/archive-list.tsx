@@ -57,12 +57,12 @@ export function ArchiveList({ projects }: { projects: ArchivedProject[] }) {
           {error}
         </div>
       )}
-      <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-200 bg-white">
+      <div className="divide-y divide-[var(--wc-border)] rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)]">
         {projects.map((p) => (
           <div key={p.id} className="flex items-center gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <div className="truncate font-serif text-base text-[var(--wc-ink)]">{p.title}</div>
-              <div className="text-[11px] text-zinc-400">
+              <div className="text-[11px] text-[var(--wc-faint)]">
                 {p.words.toLocaleString()} words · {p.chapters} chapter
                 {p.chapters === 1 ? "" : "s"}
                 {p.archivedAt && ` · archived ${new Date(p.archivedAt).toLocaleDateString()}`}
@@ -81,7 +81,7 @@ export function ArchiveList({ projects }: { projects: ArchivedProject[] }) {
                 </button>
                 <button
                   onClick={() => setConfirmId(null)}
-                  className="rounded-lg px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100"
+                  className="rounded-lg px-2 py-1 text-xs text-[var(--wc-faint)] hover:bg-[var(--wc-paper)]"
                 >
                   Cancel
                 </button>
@@ -91,7 +91,7 @@ export function ArchiveList({ projects }: { projects: ArchivedProject[] }) {
                 <button
                   onClick={() => restore(p.id)}
                   disabled={pending}
-                  className="rounded-lg border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                  className="rounded-lg border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-50"
                 >
                   {workingId === p.id ? "…" : "Restore"}
                 </button>

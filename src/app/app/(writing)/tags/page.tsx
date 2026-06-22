@@ -68,13 +68,13 @@ export default async function TagsPage() {
     <div className="flex-1 overflow-y-auto px-8 py-10">
       <header className="mb-8">
         <h1 className="font-serif text-2xl">Tags</h1>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-[var(--wc-faint)]">
           {rows.length} passage{rows.length === 1 ? "" : "s"} tagged across the project
         </p>
       </header>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-zinc-500 max-w-prose">
+        <p className="text-sm text-[var(--wc-faint)] max-w-prose">
           No tags yet. Select text in any scene and click one of the tag buttons in
           the floating menu (Look up, Revise, Weak, Fact check, Placeholder) to mark
           it for later attention.
@@ -95,7 +95,7 @@ export default async function TagsPage() {
                     style={{ background: TAG_COLORS[kind].swatch }}
                   />
                   {TAG_LABELS[kind]}
-                  <span className="text-xs text-zinc-400 font-sans">({list.length})</span>
+                  <span className="text-xs text-[var(--wc-faint)] font-sans">({list.length})</span>
                 </h2>
                 <ul className="space-y-2">
                   {list.map((r, i) => (

@@ -128,7 +128,7 @@ export function DrivePanel({
             Google Drive
           </div>
           <h1 className="font-serif text-3xl text-[var(--wc-ink)]">Connect your Drive</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <p className="mt-1 text-sm text-[var(--wc-muted)]">
             Browse your Drive, import documents as projects, and save manuscripts back to Drive.
           </p>
         </header>
@@ -145,8 +145,8 @@ export function DrivePanel({
         )}
 
         {!status.connected ? (
-          <section className="rounded-2xl border border-zinc-200 bg-white p-6 text-center">
-            <p className="mb-4 text-sm text-zinc-600">
+          <section className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-6 text-center">
+            <p className="mb-4 text-sm text-[var(--wc-muted)]">
               {status.email
                 ? "Your Drive connection needs to be refreshed."
                 : "Authorize Writer’s Cube to read your Google Docs and save files to your Drive."}
@@ -161,8 +161,8 @@ export function DrivePanel({
           </section>
         ) : (
           <>
-            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-3">
-              <div className="text-sm text-zinc-700">
+            <div className="flex items-center justify-between rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] px-4 py-3">
+              <div className="text-sm text-[var(--wc-muted)]">
                 Connected{status.email ? ` as ${status.email}` : ""}.
               </div>
               <div className="flex items-center gap-3">
@@ -172,7 +172,7 @@ export function DrivePanel({
                 <button
                   onClick={disconnect}
                   disabled={busy}
-                  className="text-xs text-zinc-500 hover:text-zinc-900 disabled:opacity-50"
+                  className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-50"
                 >
                   Disconnect
                 </button>
@@ -190,19 +190,19 @@ export function DrivePanel({
             <section>
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="font-serif text-xl text-[var(--wc-ink)]">Your Drive</h2>
-                {loadingFolder && <span className="text-xs text-zinc-400">Loading…</span>}
+                {loadingFolder && <span className="text-xs text-[var(--wc-faint)]">Loading…</span>}
               </div>
 
               {/* Breadcrumb */}
-              <div className="mb-2 flex flex-wrap items-center gap-1 text-xs text-zinc-500">
+              <div className="mb-2 flex flex-wrap items-center gap-1 text-xs text-[var(--wc-faint)]">
                 {path.map((c, i) => (
                   <span key={`${c.id}-${i}`} className="flex items-center gap-1">
-                    {i > 0 && <span className="text-zinc-300">/</span>}
+                    {i > 0 && <span className="text-[var(--wc-faint)]">/</span>}
                     <button
                       onClick={() => navigateCrumb(i)}
                       className={
                         i === path.length - 1
-                          ? "font-medium text-zinc-700"
+                          ? "font-medium text-[var(--wc-muted)]"
                           : "text-[var(--wc-slate)] hover:underline"
                       }
                     >
@@ -212,9 +212,9 @@ export function DrivePanel({
                 ))}
               </div>
 
-              <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-200 bg-white">
+              <div className="divide-y divide-[var(--wc-border)] rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)]">
                 {items.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-sm text-zinc-400">
+                  <div className="px-4 py-6 text-center text-sm text-[var(--wc-faint)]">
                     This folder is empty.
                   </div>
                 ) : (
@@ -224,20 +224,20 @@ export function DrivePanel({
                         key={f.id}
                         onClick={() => openFolder(f)}
                         disabled={loadingFolder}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-zinc-50 disabled:opacity-50"
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-[var(--wc-canvas)] disabled:opacity-50"
                       >
                         <span>📁</span>
-                        <span className="flex-1 truncate text-sm text-zinc-800">{f.name}</span>
-                        <span className="text-zinc-300">›</span>
+                        <span className="flex-1 truncate text-sm text-[var(--wc-ink)]">{f.name}</span>
+                        <span className="text-[var(--wc-faint)]">›</span>
                       </button>
                     ))}
                     {files.map((f) => (
                       <div key={f.id} className="flex items-center gap-2 px-4 py-2.5">
                         <span>{iconFor(f.mimeType)}</span>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm text-zinc-800">{f.name}</div>
+                          <div className="truncate text-sm text-[var(--wc-ink)]">{f.name}</div>
                           {f.modifiedTime && (
-                            <div className="text-[11px] text-zinc-400">
+                            <div className="text-[11px] text-[var(--wc-faint)]">
                               Modified {new Date(f.modifiedTime).toLocaleDateString()}
                             </div>
                           )}
@@ -246,19 +246,19 @@ export function DrivePanel({
                           <button
                             onClick={() => importEntry(f)}
                             disabled={busy}
-                            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                            className="shrink-0 rounded-lg border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-50"
                           >
                             {workingId === f.id ? "Importing…" : "Import"}
                           </button>
                         ) : (
-                          <span className="shrink-0 text-[11px] text-zinc-300">—</span>
+                          <span className="shrink-0 text-[11px] text-[var(--wc-faint)]">—</span>
                         )}
                       </div>
                     ))}
                   </>
                 )}
               </div>
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-[var(--wc-faint)]">
                 Importable: Google Docs, Word (.docx), and text files. Headings become chapters.
               </p>
             </section>
@@ -268,20 +268,20 @@ export function DrivePanel({
               <h2 className="mb-2 font-serif text-xl text-[var(--wc-ink)]">
                 Save a project to Drive
               </h2>
-              <p className="mb-3 text-xs text-zinc-500">
+              <p className="mb-3 text-xs text-[var(--wc-faint)]">
                 Exports a formatted Google Doc using your publication settings.
               </p>
               {projects.length === 0 ? (
                 <EmptyHint>You don’t have any projects yet.</EmptyHint>
               ) : (
-                <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-200 bg-white">
+                <div className="divide-y divide-[var(--wc-border)] rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)]">
                   {projects.map((p) => (
                     <div key={p.id} className="flex items-center justify-between px-4 py-2.5">
-                      <div className="truncate text-sm text-zinc-800">{p.title}</div>
+                      <div className="truncate text-sm text-[var(--wc-ink)]">{p.title}</div>
                       <button
                         onClick={() => exportProject(p)}
                         disabled={busy}
-                        className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                        className="shrink-0 rounded-lg border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-50"
                       >
                         {workingId === p.id ? "Saving…" : "Save to Drive"}
                       </button>
@@ -309,7 +309,7 @@ function iconFor(mime: string): string {
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-2xl border border-dashed border-zinc-300 px-4 py-5 text-sm text-zinc-500">
+    <p className="rounded-2xl border border-dashed border-[var(--wc-border-strong)] px-4 py-5 text-sm text-[var(--wc-faint)]">
       {children}
     </p>
   );

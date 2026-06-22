@@ -29,7 +29,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
       editor={editor}
       options={{ placement: "top" }}
       shouldShow={({ editor, from, to }) => from !== to && editor.isEditable}
-      className="flex items-center gap-1 rounded-md bg-zinc-900 text-[var(--wc-on-accent)] px-1.5 py-1 shadow-lg text-xs"
+      className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] text-[var(--wc-on-accent)] px-1.5 py-1 shadow-lg text-xs"
     >
       {adding ? (
         <div className="flex items-center gap-1">
@@ -47,12 +47,12 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
               }
             }}
             placeholder="New tag…"
-            className="bg-zinc-800 rounded px-1.5 py-0.5 text-[var(--wc-on-accent)] outline-none w-24 placeholder:text-zinc-500"
+            className="bg-[var(--wc-slate)] rounded px-1.5 py-0.5 text-[var(--wc-on-accent)] outline-none w-24 placeholder:text-[var(--wc-on-accent)]/60"
           />
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={commitNew}
-            className="px-1.5 py-0.5 rounded bg-zinc-700 hover:bg-zinc-600"
+            className="px-1.5 py-0.5 rounded bg-black/20 hover:bg-black/30"
           >
             Add
           </button>
@@ -66,7 +66,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
               <button
                 key={kind}
                 onClick={() => editor.chain().focus().toggleMark(markName).run()}
-                className={`px-2 py-1 rounded hover:bg-zinc-700 ${active ? "bg-zinc-700" : ""}`}
+                className={`px-2 py-1 rounded hover:bg-black/20 ${active ? "bg-black/25" : ""}`}
                 style={{ borderBottom: `2px solid ${TAG_COLORS[kind].underline}` }}
                 title={TAG_LABELS[kind]}
               >
@@ -81,7 +81,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
               <button
                 key={t.id}
                 onClick={() => applyCustom(t.label, t.color)}
-                className={`px-2 py-1 rounded hover:bg-zinc-700 ${active ? "bg-zinc-700" : ""}`}
+                className={`px-2 py-1 rounded hover:bg-black/20 ${active ? "bg-black/25" : ""}`}
                 style={{ borderBottom: `2px solid ${t.color}` }}
                 title={`Custom tag: ${t.label}`}
               >
@@ -93,7 +93,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
           {editor.isActive("customTag") && (
             <button
               onClick={() => editor.chain().focus().unsetCustomTag().run()}
-              className="px-1.5 py-1 rounded hover:bg-zinc-700 text-zinc-400"
+              className="px-1.5 py-1 rounded hover:bg-black/20 text-[var(--wc-on-accent)]"
               title="Remove custom tag"
             >
               ✕
@@ -102,7 +102,7 @@ export function TagBubbleMenu({ editor }: { editor: Editor }) {
 
           <button
             onClick={() => setAdding(true)}
-            className="ml-0.5 w-6 h-6 grid place-items-center rounded hover:bg-zinc-700 text-zinc-300"
+            className="ml-0.5 w-6 h-6 grid place-items-center rounded hover:bg-black/20 text-[var(--wc-on-accent)]"
             title="Add a custom tag"
           >
             +

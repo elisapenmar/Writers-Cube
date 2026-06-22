@@ -106,29 +106,29 @@ export function ExerciseEditor({
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Untitled exercise"
-        className="w-full bg-transparent font-serif text-2xl text-[var(--wc-ink)] outline-none placeholder:text-zinc-300 mb-1"
+        className="w-full bg-transparent font-serif text-2xl text-[var(--wc-ink)] outline-none placeholder:text-[var(--wc-faint)] mb-1"
       />
-      <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
+      <div className="flex items-center gap-2 text-xs text-[var(--wc-faint)] mb-4">
         <span className="tabular-nums">{words} words</span>
-        <span className="text-zinc-300">·</span>
+        <span className="text-[var(--wc-faint)]">·</span>
         <SaveLabel state={save} />
       </div>
 
       {/* Prompt reference */}
       <div className="rounded-2xl wc-paper border border-[rgba(33,31,41,0.08)] p-4 mb-5">
-        <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">
+        <div className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)] mb-1">
           The prompt
         </div>
-        <p className="font-serif text-base text-zinc-700 leading-relaxed">
+        <p className="font-serif text-base text-[var(--wc-muted)] leading-relaxed">
           {promptText}
         </p>
       </div>
 
       {/* Editable continuation */}
-      <div className="sticky top-0 z-10 bg-[var(--wc-cream)] py-1.5 border-b border-zinc-200 mb-3">
+      <div className="sticky top-0 z-10 bg-[var(--wc-cream)] py-1.5 border-b border-[var(--wc-border)] mb-3">
         <EditorToolbar editor={editor} />
       </div>
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+      <div className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-6">
         {editor && <TagBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>

@@ -203,7 +203,7 @@ export function WelcomeModal({ hasProjects }: { hasProjects: boolean }) {
                     <button
                       onClick={createFirstProject}
                       disabled={creating}
-                      className="rounded-[var(--wc-r-md)] px-4 py-1.5 text-sm text-white disabled:opacity-50"
+                      className="rounded-[var(--wc-r-md)] px-4 py-1.5 text-sm text-[var(--wc-on-accent)] disabled:opacity-50"
                       style={{ background: "var(--wc-clay)" }}
                     >
                       {creating ? "Creating…" : "Create my first project"}

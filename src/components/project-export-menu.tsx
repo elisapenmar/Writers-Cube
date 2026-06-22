@@ -61,7 +61,7 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
           open ? close() : openMenu();
         }}
         disabled={pending}
-        className="rounded-[var(--wc-r-sm)] border border-[var(--wc-border)] bg-[var(--wc-surface)] px-2.5 py-1 text-xs text-zinc-600 hover:border-[var(--wc-slate)] hover:text-zinc-900 disabled:opacity-50"
+        className="rounded-[var(--wc-r-sm)] border border-[var(--wc-border)] bg-[var(--wc-surface)] px-2.5 py-1 text-xs text-[var(--wc-muted)] hover:border-[var(--wc-slate)] hover:text-[var(--wc-ink)] disabled:opacity-50"
         title="Export or manage this project"
       >
         {pending ? "…" : "⋯"}
@@ -80,13 +80,13 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
                 <Link
                   href="/app/publish"
                   onClick={close}
-                  className="block rounded-lg px-2.5 py-1.5 text-sm text-zinc-800 hover:bg-zinc-50"
+                  className="block rounded-lg px-2.5 py-1.5 text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
                 >
                   ✦ Prepare for publication
                 </Link>
                 <button
                   onClick={archive}
-                  className="mt-1 block w-full rounded-lg border-t border-zinc-100 px-2.5 py-1.5 text-left text-sm text-zinc-600 hover:bg-zinc-50"
+                  className="mt-1 block w-full rounded-lg border-t border-[var(--wc-border)] px-2.5 py-1.5 text-left text-sm text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
                 >
                   🗄 Archive project
                 </button>
@@ -95,11 +95,11 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
               <>
                 <button
                   onClick={() => setView("root")}
-                  className="mb-1 flex w-full items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-zinc-500 hover:bg-zinc-50"
+                  className="mb-1 flex w-full items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-[var(--wc-faint)] hover:bg-[var(--wc-canvas)]"
                 >
                   ‹ Back
                 </button>
-                <div className="px-2.5 pb-1 text-[10px] uppercase tracking-wide text-zinc-400">
+                <div className="px-2.5 pb-1 text-[10px] uppercase tracking-wide text-[var(--wc-faint)]">
                   Export · default formatting
                 </div>
                 {EXPORT_FORMATS.map((f) => (
@@ -109,16 +109,16 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
                     download={f.id !== "pdf"}
                     target={f.id === "pdf" ? "_blank" : undefined}
                     onClick={close}
-                    className="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-zinc-50"
+                    className="flex items-center justify-between rounded-lg px-2.5 py-1.5 hover:bg-[var(--wc-canvas)]"
                   >
-                    <span className="text-sm text-zinc-800">{f.label}</span>
-                    <span className="ml-2 text-[10px] text-zinc-400">{f.note}</span>
+                    <span className="text-sm text-[var(--wc-ink)]">{f.label}</span>
+                    <span className="ml-2 text-[10px] text-[var(--wc-faint)]">{f.note}</span>
                   </Link>
                 ))}
                 <Link
                   href="/app/publish"
                   onClick={close}
-                  className="mt-1 block rounded-lg border-t border-zinc-100 px-2.5 py-1.5 text-xs text-[var(--wc-slate)] hover:bg-zinc-50"
+                  className="mt-1 block rounded-lg border-t border-[var(--wc-border)] px-2.5 py-1.5 text-xs text-[var(--wc-slate)] hover:bg-[var(--wc-canvas)]"
                 >
                   ✦ Customize formatting in Prepare for publication →
                 </Link>
@@ -141,10 +141,10 @@ function MenuButton({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm text-zinc-800 hover:bg-zinc-50"
+      className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
     >
       <span>{children}</span>
-      <span className="text-zinc-300">›</span>
+      <span className="text-[var(--wc-faint)]">›</span>
     </button>
   );
 }

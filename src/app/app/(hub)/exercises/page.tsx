@@ -40,7 +40,7 @@ export default async function ExercisesPage({
                 ? `Prompted exercises · ${projectTitle}`
                 : "Practice library"}
             </h1>
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-[var(--wc-muted)]">
               {projectFilter
                 ? "Grounded prompts written for this story."
                 : "Your standalone warm-ups, not tied to any project."}
@@ -56,7 +56,7 @@ export default async function ExercisesPage({
         </div>
 
         {exercises.length === 0 ? (
-          <p className="text-sm text-zinc-500 rounded-2xl border border-dashed border-zinc-300 px-4 py-8 text-center">
+          <p className="text-sm text-[var(--wc-faint)] rounded-2xl border border-dashed border-[var(--wc-border-strong)] px-4 py-8 text-center">
             Nothing here yet. Roll a prompt in{" "}
             <Link href="/app/prompts" className="text-[var(--wc-slate)] hover:underline">
               Writer&apos;s Cube

@@ -38,7 +38,7 @@ export default async function ExerciseView({
           <Link href={backHref} className="text-xs text-[var(--wc-slate)] hover:underline">
             <SquareArrow dir="left" className="inline-block align-[-3px] mr-1" />{ex.project_id ? "Prompted exercises" : "Practice library"}
           </Link>
-          <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-[var(--wc-faint)]">
             <span>{ex.format === "seed" ? "Scenario seed" : "Craft exercise"}</span>
             <span>·</span>
             <span>{ex.focus}</span>
@@ -56,13 +56,13 @@ export default async function ExerciseView({
           />
         </div>
 
-        <div className="mt-5 rounded-2xl border border-zinc-200 bg-white p-3">
+        <div className="mt-5 rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-3">
           <MoveExerciseControl
             exerciseId={ex.id}
             currentProjectId={ex.project_id}
             projects={projects.map((p) => ({ id: p.id, title: p.title }))}
           />
-          <p className="mt-1.5 text-[11px] text-zinc-400">
+          <p className="mt-1.5 text-[11px] text-[var(--wc-faint)]">
             Moving it into a project files it under that project&apos;s{" "}
             <b>Unorganized</b> scenes in the sidebar.
           </p>

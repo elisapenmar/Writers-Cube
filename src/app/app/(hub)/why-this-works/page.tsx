@@ -80,7 +80,7 @@ export default function WhyThisWorks() {
         <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-2">
           Why warm-up prompts actually work
         </h1>
-        <p className="text-zinc-600 mt-2 leading-relaxed">
+        <p className="text-[var(--wc-muted)] mt-2 leading-relaxed">
           The short version: constraints spark ideas, timed low-stakes writing
           lowers the fear, and repeated practice builds fluency. Here&apos;s the
           evidence.
@@ -101,11 +101,11 @@ export default function WhyThisWorks() {
                 </span>
                 <h2 className="font-serif text-lg text-[var(--wc-ink)]">{e.title}</h2>
               </div>
-              <p className="text-sm text-zinc-700 leading-relaxed">{e.finding}</p>
-              <p className="text-sm text-zinc-600 leading-relaxed mt-2">
+              <p className="text-sm text-[var(--wc-muted)] leading-relaxed">{e.finding}</p>
+              <p className="text-sm text-[var(--wc-muted)] leading-relaxed mt-2">
                 <b>How we use it:</b> {e.use}
               </p>
-              <p className="text-[11px] text-zinc-400 mt-2">{e.sources}</p>
+              <p className="text-[11px] text-[var(--wc-faint)] mt-2">{e.sources}</p>
             </section>
           ))}
         </div>
@@ -114,7 +114,7 @@ export default function WhyThisWorks() {
           <div className="font-serif text-base text-[var(--wc-ink)] mb-1">
             An honest caveat
           </div>
-          <p className="text-sm text-zinc-700 leading-relaxed">
+          <p className="text-sm text-[var(--wc-muted)] leading-relaxed">
             Most of this evidence comes from composition studies, education
             research, and creativity psychology — not from controlled trials on
             novelists revising long manuscripts. The &ldquo;help me deepen my
@@ -128,7 +128,7 @@ export default function WhyThisWorks() {
           <h3 className="font-serif text-lg text-[var(--wc-ink)] mb-2">
             Academic &amp; primary sources
           </h3>
-          <ol className="list-decimal pl-5 space-y-1.5 text-sm text-zinc-600">
+          <ol className="list-decimal pl-5 space-y-1.5 text-sm text-[var(--wc-muted)]">
             {SOURCES.map((s, i) => (
               <li key={i}>{s.label}</li>
             ))}

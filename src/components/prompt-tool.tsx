@@ -207,7 +207,7 @@ export function PromptTool({
               <h1 className="font-serif text-3xl text-[var(--wc-ink)] mt-0.5">
                 Writing prompts
               </h1>
-              <p className="text-sm text-zinc-600 mt-1">
+              <p className="text-sm text-[var(--wc-muted)] mt-1">
                 Roll your way out of the block.
               </p>
             </div>
@@ -243,7 +243,7 @@ export function PromptTool({
             />
           </div>
           {mode === "existing" && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-zinc-600">
+            <div className="mt-3 flex items-center gap-2 text-xs text-[var(--wc-muted)]">
               <span>
                 Grounding in <b>{activeProjectTitle}</b>.
               </span>
@@ -300,7 +300,7 @@ export function PromptTool({
         <Section n={3} title="Depth & writing mode">
           <div className="flex flex-wrap gap-6">
             <div>
-              <div className="text-xs text-zinc-500 mb-1.5 uppercase tracking-wide">Depth</div>
+              <div className="text-xs text-[var(--wc-faint)] mb-1.5 uppercase tracking-wide">Depth</div>
               <div className="flex gap-2">
                 <Pill active={depth === "warmup"} onClick={() => setDepth("warmup")}>
                   Warm-up · ~5 min
@@ -311,7 +311,7 @@ export function PromptTool({
               </div>
             </div>
             <div>
-              <div className="text-xs text-zinc-500 mb-1.5 uppercase tracking-wide">Writing mode</div>
+              <div className="text-xs text-[var(--wc-faint)] mb-1.5 uppercase tracking-wide">Writing mode</div>
               <div className="flex gap-2 items-center">
                 <Pill active={writingMode === "free"} onClick={() => setWritingMode("free")}>
                   Free write
@@ -326,12 +326,12 @@ export function PromptTool({
                       min={1}
                       value={goalValue}
                       onChange={(e) => setGoalValue(Math.max(1, parseInt(e.target.value || "0", 10)))}
-                      className="w-16 rounded-md border border-zinc-300 px-2 py-1 bg-white"
+                      className="w-16 rounded-md border border-[var(--wc-border-strong)] px-2 py-1 bg-[var(--wc-surface)]"
                     />
                     <select
                       value={goalType}
                       onChange={(e) => setGoalType(e.target.value as GoalType)}
-                      className="rounded-md border border-zinc-300 px-1.5 py-1 bg-white"
+                      className="rounded-md border border-[var(--wc-border-strong)] px-1.5 py-1 bg-[var(--wc-surface)]"
                     >
                       <option value="words">words</option>
                       <option value="minutes">minutes</option>
@@ -347,7 +347,7 @@ export function PromptTool({
         <div className="mt-8 wc-paper rounded-3xl border border-[rgba(33,31,41,0.08)] shadow-[0_8px_30px_rgba(33,31,41,0.08)] p-6">
           {!hasRolled ? (
             <div className="text-center py-8">
-              <p className="text-sm text-zinc-500 mb-5">
+              <p className="text-sm text-[var(--wc-faint)] mb-5">
                 {mode === "existing"
                   ? "Grounded in your draft. Roll to begin."
                   : "Set your filters (or just roll). Rolling opens the prompt and your writing surface together."}
@@ -375,13 +375,13 @@ export function PromptTool({
                 <button
                   onClick={rollAndWrite}
                   disabled={generating}
-                  className="rounded-xl px-4 py-2 text-sm border border-zinc-300 hover:bg-zinc-50 disabled:opacity-50"
+                  className="rounded-xl px-4 py-2 text-sm border border-[var(--wc-border-strong)] hover:bg-[var(--wc-canvas)] disabled:opacity-50"
                 >
                   {generating ? "Rolling…" : "↻ Not for me — reroll"}
                 </button>
                 <button
                   onClick={() => setShowDeeper((v) => !v)}
-                  className="rounded-xl px-4 py-2 text-sm border border-zinc-300 hover:bg-zinc-50"
+                  className="rounded-xl px-4 py-2 text-sm border border-[var(--wc-border-strong)] hover:bg-[var(--wc-canvas)]"
                 >
                   {showDeeper ? "Hide deeper" : "Go deeper"}
                 </button>
@@ -425,10 +425,10 @@ export function PromptTool({
       {/* Project picker modal */}
       {pickerOpen && (
         <div className="fixed inset-0 z-40 bg-black/40 grid place-items-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5">
+          <div className="bg-[var(--wc-surface)] rounded-2xl shadow-2xl w-full max-w-md p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-serif text-lg">Which story?</h3>
-              <button onClick={() => setPickerOpen(false)} className="text-zinc-400 hover:text-zinc-900 text-lg">×</button>
+              <button onClick={() => setPickerOpen(false)} className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] text-lg">×</button>
             </div>
             <ul className="space-y-1.5 max-h-72 overflow-y-auto">
               {projects.map((p) => (
@@ -443,8 +443,8 @@ export function PromptTool({
                       setPickerOpen(false);
                       void setActiveProject(p.id);
                     }}
-                    className={`w-full text-left rounded-xl border px-4 py-2.5 hover:bg-zinc-50 ${
-                      p.id === projectId ? "border-[var(--wc-slate)] bg-zinc-50" : "border-zinc-200"
+                    className={`w-full text-left rounded-xl border px-4 py-2.5 hover:bg-[var(--wc-canvas)] ${
+                      p.id === projectId ? "border-[var(--wc-slate)] bg-[var(--wc-canvas)]" : "border-[var(--wc-border)]"
                     }`}
                   >
                     <span className="font-serif">{p.title}</span>
@@ -454,7 +454,7 @@ export function PromptTool({
             </ul>
             <button
               onClick={() => setPickerOpen(false)}
-              className="mt-3 text-xs text-zinc-500 hover:text-zinc-900"
+              className="mt-3 text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
             >
               Cancel — keep it a standalone exercise
             </button>
@@ -491,7 +491,7 @@ export function PromptTool({
                 </>
               )}
               {rendered.constraint && (
-                <div className="mt-1 not-italic text-zinc-500 text-sm">
+                <div className="mt-1 not-italic text-[var(--wc-faint)] text-sm">
                   Constraint: {rendered.constraint}
                 </div>
               )}
@@ -529,7 +529,7 @@ function PromptCard({
         <Segments segs={rendered.textSegments} />
       </p>
       {rendered.questionSegments && (
-        <p className="font-serif text-lg leading-relaxed text-zinc-700 mt-2 italic">
+        <p className="font-serif text-lg leading-relaxed text-[var(--wc-muted)] mt-2 italic">
           <Segments segs={rendered.questionSegments} />
         </p>
       )}
@@ -539,14 +539,14 @@ function PromptCard({
         </p>
       )}
       {rendered.source && (
-        <p className="mt-2 text-xs text-zinc-400">— {rendered.source}</p>
+        <p className="mt-2 text-xs text-[var(--wc-faint)]">— {rendered.source}</p>
       )}
       {showDeeper && (
         <div className="mt-4 rounded-xl bg-[rgba(106,85,127,0.07)] border border-[rgba(106,85,127,0.2)] p-3">
           <div className="text-xs uppercase tracking-wide text-[var(--wc-plum)] mb-1">
             Go deeper
           </div>
-          <p className="font-serif text-base text-zinc-700">
+          <p className="font-serif text-base text-[var(--wc-muted)]">
             <Segments segs={rendered.deeperSegments} />
           </p>
         </div>
@@ -576,10 +576,10 @@ function FreeWrite({
 
   return (
     <div className="mt-5">
-      <div className="border-b border-zinc-200 pb-1.5 mb-2">
+      <div className="border-b border-[var(--wc-border)] pb-1.5 mb-2">
         <EditorToolbar editor={editor} />
       </div>
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+      <div className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-5">
         {editor && <TagBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>
@@ -591,7 +591,7 @@ function FreeWrite({
         >
           Save exercise
         </button>
-        {saved && <span className="text-xs text-zinc-500">Saved.</span>}
+        {saved && <span className="text-xs text-[var(--wc-faint)]">Saved.</span>}
       </div>
     </div>
   );
@@ -614,8 +614,8 @@ function EntityPanel({ entities }: { entities: EntityBag }) {
       <div className="space-y-1.5">
         {nonEmpty.map(([label, vals]) => (
           <div key={label} className="flex flex-wrap items-baseline gap-1.5 text-xs">
-            <span className="text-zinc-500 w-16 shrink-0">{label}</span>
-            <span className="text-zinc-700">{vals.slice(0, 8).join(" · ")}</span>
+            <span className="text-[var(--wc-faint)] w-16 shrink-0">{label}</span>
+            <span className="text-[var(--wc-muted)]">{vals.slice(0, 8).join(" · ")}</span>
           </div>
         ))}
       </div>
@@ -641,7 +641,7 @@ function Section({
           {n}
         </span>
         <h2 className="font-serif text-lg text-[var(--wc-ink)]">{title}</h2>
-        {hint && <span className="text-xs text-zinc-400">{hint}</span>}
+        {hint && <span className="text-xs text-[var(--wc-faint)]">{hint}</span>}
       </div>
       {children}
     </section>
@@ -665,11 +665,11 @@ function ModeCard({
       className={`text-left rounded-2xl p-4 border transition ${
         active
           ? "border-[var(--wc-slate)] bg-[rgba(62,92,118,0.06)]"
-          : "border-zinc-200 bg-white hover:border-zinc-300"
+          : "border-[var(--wc-border)] bg-[var(--wc-surface)] hover:border-[var(--wc-border-strong)]"
       }`}
     >
       <div className="font-serif text-base text-[var(--wc-ink)]">{title}</div>
-      <div className="text-xs text-zinc-600 mt-1 leading-relaxed">{blurb}</div>
+      <div className="text-xs text-[var(--wc-muted)] mt-1 leading-relaxed">{blurb}</div>
     </button>
   );
 }
@@ -785,7 +785,7 @@ function Pill({
       className={`rounded-full px-3.5 py-1.5 text-sm border transition ${
         active
           ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
-          : "bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50"
+          : "bg-[var(--wc-surface)] text-[var(--wc-muted)] border-[var(--wc-border-strong)] hover:bg-[var(--wc-canvas)]"
       }`}
     >
       {children}

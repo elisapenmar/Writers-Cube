@@ -117,7 +117,7 @@ export function FindReplace({
           title="Match case"
           className={`rounded-md px-2 py-1 text-xs ${
             caseSensitive
-              ? "bg-[var(--wc-slate)] text-white"
+              ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
               : "text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
           }`}
         >
@@ -156,7 +156,7 @@ export function FindReplace({
           <button
             onClick={replaceAll}
             disabled={matches.length === 0}
-            className="rounded-md bg-[var(--wc-slate)] px-2 py-1 text-xs text-white disabled:opacity-40"
+            className="rounded-md bg-[var(--wc-slate)] px-2 py-1 text-xs text-[var(--wc-on-accent)] disabled:opacity-40"
           >
             All
           </button>

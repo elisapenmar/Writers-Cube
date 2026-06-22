@@ -262,7 +262,7 @@ export function SceneHistory({
           <button
             onClick={restore}
             disabled={!selected || busy}
-            className="rounded-md bg-[var(--wc-slate)] px-4 py-2 text-sm text-white disabled:opacity-40"
+            className="rounded-md bg-[var(--wc-slate)] px-4 py-2 text-sm text-[var(--wc-on-accent)] disabled:opacity-40"
           >
             {busy ? "Restoring…" : "Restore this version"}
           </button>

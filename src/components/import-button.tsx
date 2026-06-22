@@ -77,7 +77,7 @@ export function ImportButton() {
                   name="file"
                   accept=".docx,.md,.markdown,.txt"
                   required
-                  className="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-zinc-700 hover:file:bg-zinc-200"
+                  className="text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--wc-paper)] file:px-3 file:py-1.5 file:text-[var(--wc-muted)] hover:file:bg-[var(--wc-stone)]"
                 />
                 <button
                   type="submit"

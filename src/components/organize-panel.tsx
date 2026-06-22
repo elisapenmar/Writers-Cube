@@ -275,7 +275,7 @@ export function OrganizePanel() {
         title="Drag to resize"
       />
       <header className="flex items-center justify-between border-b border-[var(--wc-border)] px-4 py-3 gap-2">
-        <h2 className="font-serif text-base shrink-0">{GROUP_LABEL[panelGroup]}</h2>
+        <h2 className="font-serif text-base shrink-0 text-[var(--wc-ink)]">{GROUP_LABEL[panelGroup]}</h2>
         <div className="flex items-center gap-1 flex-1 justify-end">
           <div className="flex flex-wrap">
             {GROUP_TABS[panelGroup].map((tab, i) => (

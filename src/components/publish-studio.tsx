@@ -60,13 +60,13 @@ export function PublishStudio({
               Prepare for publication
             </div>
             <h1 className="font-serif text-3xl text-[var(--wc-ink)]">{projectTitle}</h1>
-            <p className="mt-1 text-sm text-zinc-600">
+            <p className="mt-1 text-sm text-[var(--wc-muted)]">
               Set your book&apos;s metadata and formatting, then export to ebook, print, or Word.
             </p>
           </div>
           <div className="flex items-center gap-2">
             {dirty && <span className="text-xs text-amber-600">Unsaved changes</span>}
-            {!dirty && savedAt && <span className="text-xs text-zinc-400">Saved {savedAt}</span>}
+            {!dirty && savedAt && <span className="text-xs text-[var(--wc-faint)]">Saved {savedAt}</span>}
             <button
               onClick={save}
               disabled={saving || !dirty}
@@ -179,7 +179,7 @@ export function PublishStudio({
           <div className="space-y-4 lg:sticky lg:top-6 self-start">
             <Preview s={s} sample={sample} />
 
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+            <div className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-4">
               <div className="mb-1 font-serif text-base text-[var(--wc-ink)]">Export</div>
               {dirty && (
                 <p className="mb-2 text-[11px] text-amber-600">
@@ -211,10 +211,10 @@ function Preview({ s, sample }: { s: PublishSettings; sample: PublishSample }) {
   const heading = chapterHeading(s.chapterHeadingStyle, 0, sample.chapterTitle);
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-      <div className="mb-2 text-[11px] uppercase tracking-wider text-zinc-400">Preview</div>
+    <div className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-5">
+      <div className="mb-2 text-[11px] uppercase tracking-wider text-[var(--wc-faint)]">Preview</div>
       <div
-        className="rounded-lg border border-zinc-100 bg-[#fcfbf8] px-6 py-7 text-[#1a1a1a] shadow-inner"
+        className="rounded-lg border border-[var(--wc-border)] bg-[#fcfbf8] px-6 py-7 text-[#1a1a1a] shadow-inner"
         style={{ fontFamily: style.font, lineHeight: style.line, textAlign: s.justify ? "justify" : "left" }}
       >
         <div style={{ textAlign: "center", fontSize: "1.4em", margin: "0.2em 0 1.6em" }}>{heading}</div>
@@ -248,9 +248,9 @@ function Preview({ s, sample }: { s: PublishSettings; sample: PublishSample }) {
 
 function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-5">
+    <section className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-5">
       <h2 className="font-serif text-lg text-[var(--wc-ink)]">{title}</h2>
-      {hint && <p className="mt-0.5 mb-3 text-xs text-zinc-500">{hint}</p>}
+      {hint && <p className="mt-0.5 mb-3 text-xs text-[var(--wc-faint)]">{hint}</p>}
       {!hint && <div className="mb-3" />}
       <div className="space-y-3">{children}</div>
     </section>
@@ -274,12 +274,12 @@ function Text({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-zinc-600">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-[var(--wc-muted)]">{label}</span>
       <input
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm focus:border-zinc-400 focus:outline-none"
+        className="w-full rounded-lg border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-3 py-1.5 text-sm focus:border-[var(--wc-border-strong)] focus:outline-none"
       />
     </label>
   );
@@ -298,13 +298,13 @@ function Area({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-zinc-600">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-[var(--wc-muted)]">{label}</span>
       <textarea
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         rows={2}
-        className="w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm focus:border-zinc-400 focus:outline-none"
+        className="w-full resize-y rounded-lg border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-3 py-1.5 text-sm focus:border-[var(--wc-border-strong)] focus:outline-none"
       />
     </label>
   );
@@ -325,14 +325,14 @@ function NumberField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-zinc-600">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-[var(--wc-muted)]">{label}</span>
       <input
         type="number"
         value={value}
         min={min}
         max={max}
         onChange={(e) => onChange(Number(e.target.value) || value)}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm focus:border-zinc-400 focus:outline-none"
+        className="w-full rounded-lg border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-3 py-1.5 text-sm focus:border-[var(--wc-border-strong)] focus:outline-none"
       />
     </label>
   );
@@ -351,11 +351,11 @@ function Select({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-zinc-600">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-[var(--wc-muted)]">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm focus:border-zinc-400 focus:outline-none"
+        className="w-full rounded-lg border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-3 py-1.5 text-sm focus:border-[var(--wc-border-strong)] focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -377,12 +377,12 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
+    <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--wc-muted)]">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-zinc-300"
+        className="h-4 w-4 rounded border-[var(--wc-border-strong)]"
       />
       {label}
     </label>
@@ -408,10 +408,10 @@ function ExportRow({
       download={download}
       target={newTab ? "_blank" : undefined}
       rel={newTab ? "noopener" : undefined}
-      className="flex items-center justify-between rounded-xl border border-zinc-200 px-3 py-2 hover:border-zinc-300 hover:bg-zinc-50"
+      className="flex items-center justify-between rounded-xl border border-[var(--wc-border)] px-3 py-2 hover:border-[var(--wc-border-strong)] hover:bg-[var(--wc-canvas)]"
     >
-      <span className="text-sm text-zinc-800">{label}</span>
-      <span className="text-[11px] text-zinc-400">{note}</span>
+      <span className="text-sm text-[var(--wc-ink)]">{label}</span>
+      <span className="text-[11px] text-[var(--wc-faint)]">{note}</span>
     </a>
   );
 }

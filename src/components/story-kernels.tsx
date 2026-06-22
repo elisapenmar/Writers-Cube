@@ -150,7 +150,7 @@ function KernelCard({
         />
         <button
           onClick={remove}
-          className="text-zinc-300 hover:text-red-700 opacity-0 group-hover:opacity-100 shrink-0"
+          className="text-[var(--wc-faint)] hover:text-red-700 opacity-0 group-hover:opacity-100 shrink-0"
           title="Delete"
         >
           ×

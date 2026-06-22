@@ -133,6 +133,24 @@ export async function disconnectDrive(): Promise<void> {
 
 const dense = (t: string) => t.replace(/\s+/g, "").length;
 
+/** Non-whitespace chars in *body* lines (ignoring heading-only "# " lines). */
+function bodyDense(t: string): number {
+  return t
+    .split("\n")
+    .filter((l) => l.trim() && !/^#{1,6}\s/.test(l.trim()))
+    .join("")
+    .replace(/\s+/g, "").length;
+}
+
+function emptyImportError(title: string, fetched: string): Error {
+  const snippet = fetched.replace(/\s+/g, " ").trim().slice(0, 180);
+  return new Error(
+    `“${title}” imported with no body text. Google returned only: “${snippet || "(nothing)"}”. ` +
+      `If the doc has content, it may be in a Google Docs tab, a table, or a text box that doesn't export — ` +
+      `try File → Download → .docx in Google Docs, then import that file from your computer.`,
+  );
+}
+
 /** Plain-text export → markdown-ish: one line per paragraph, chapter-ish lines
  *  promoted to "## " so the parser splits chapters. */
 function plainToMarkdownish(plain: string): string {
@@ -178,10 +196,8 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
     }
   }
 
-  if (dense(text) < 2) {
-    throw new Error(
-      `“${title}” looks empty — Google didn't return any text for it. Open it in Google Docs to confirm it has content, then try again.`,
-    );
+  if (bodyDense(text) < 2) {
+    throw emptyImportError(title, text);
   }
 
   const { projectId } = await importTextAsProject(text, title);
@@ -256,6 +272,10 @@ export async function importDriveFile(
     text = await htmlToText(value);
   } else {
     text = await dl.text();
+  }
+
+  if (bodyDense(text) < 2) {
+    throw emptyImportError(title, text);
   }
 
   const { projectId } = await importTextAsProject(text, title);

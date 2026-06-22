@@ -55,7 +55,7 @@ export function EditableTitle({
             setEditing(false);
           }
         }}
-        className={`bg-white border border-zinc-300 rounded px-1 outline-none ${inputClassName}`}
+        className={`bg-[var(--wc-surface)] text-[var(--wc-ink)] border border-[var(--wc-border-strong)] rounded px-1 outline-none focus:border-[var(--wc-slate)] ${inputClassName}`}
       />
     );
   }

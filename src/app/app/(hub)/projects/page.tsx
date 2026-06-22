@@ -18,7 +18,7 @@ export default async function ProjectsPage() {
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
         <div className="flex items-baseline justify-between">
           <div>
-            <Link href="/app" className="text-xs text-zinc-500 hover:underline">
+            <Link href="/app" className="text-xs text-[var(--wc-faint)] hover:underline">
               <SquareArrow dir="left" className="inline-block align-[-3px] mr-1" /> Dashboard
             </Link>
             <h1 className="font-serif text-2xl text-[var(--wc-ink)] mt-1">
@@ -33,16 +33,16 @@ export default async function ProjectsPage() {
               <input type="hidden" name="projectId" value={p.id} />
               <button
                 type="submit"
-                className={`w-full text-left rounded-2xl p-4 border bg-white hover:border-zinc-300 transition ${
+                className={`w-full text-left rounded-2xl p-4 border bg-[var(--wc-surface)] hover:border-[var(--wc-border-strong)] transition ${
                   p.id === activeProjectId
                     ? "border-[var(--wc-slate)]"
-                    : "border-zinc-200"
+                    : "border-[var(--wc-border)]"
                 }`}
               >
                 <div className="font-serif text-lg text-[var(--wc-ink)]">
                   {p.title}
                 </div>
-                <div className="text-xs text-zinc-500 mt-1">
+                <div className="text-xs text-[var(--wc-faint)] mt-1">
                   {p.word_count.toLocaleString()} words · {p.chapter_count}{" "}
                   chapter{p.chapter_count === 1 ? "" : "s"}
                   {p.id === activeProjectId && " · open"}
@@ -53,12 +53,12 @@ export default async function ProjectsPage() {
 
           <form
             action={createProjectAndOpen}
-            className="rounded-2xl p-4 border border-dashed border-zinc-300 bg-transparent flex items-center gap-2"
+            className="rounded-2xl p-4 border border-dashed border-[var(--wc-border-strong)] bg-transparent flex items-center gap-2"
           >
             <input
               name="title"
               placeholder="New project title…"
-              className="flex-1 bg-white rounded-lg border border-zinc-200 px-3 py-1.5 text-sm focus:outline-none"
+              className="flex-1 bg-[var(--wc-surface)] rounded-lg border border-[var(--wc-border)] px-3 py-1.5 text-sm focus:outline-none"
             />
             <button
               type="submit"
