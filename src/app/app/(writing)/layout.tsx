@@ -1,5 +1,6 @@
 import { SideNav, type UncategorizedItem } from "@/components/side-nav";
 import { AppShell } from "@/components/app-shell";
+import { StudioTour } from "@/components/studio-tour";
 import { getOrCreateProject } from "@/server/scenes";
 import { listExercises } from "@/server/prompts";
 import { listLooseScenes } from "@/server/loose";
@@ -39,6 +40,7 @@ export default async function WritingLayout({
     <div className="flex flex-1 min-h-screen">
       <SideNav project={project} uncategorized={uncategorized} />
       <AppShell>{children}</AppShell>
+      <StudioTour />
     </div>
   );
 }

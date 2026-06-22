@@ -308,19 +308,30 @@ export function SideNav({
         <div className="flex items-center justify-between text-xs">
           <Link
             href="/app/publish"
+            data-tour="publish"
             className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
             title="Prepare & export your book for publication"
           >
             ✦ Publish
           </Link>
-          <form action={signOut}>
+          <div className="flex items-center gap-1">
             <button
-              type="submit"
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("wc:start-tour"))}
               className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+              title="Replay the studio tour"
             >
-              Sign out
+              Tour
             </button>
-          </form>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </aside>
@@ -332,7 +343,7 @@ function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
   const scrollActive = pathname === "/app/manuscript";
   const scenesHref = firstSceneId ? `/app/scene/${firstSceneId}` : "/app/write";
   return (
-    <div className="flex items-center rounded-md border border-[var(--wc-border)] overflow-hidden text-[11px]">
+    <div data-tour="view-toggle" className="flex items-center rounded-md border border-[var(--wc-border)] overflow-hidden text-[11px]">
       <Link
         href={scenesHref}
         className={`px-2 py-0.5 ${
@@ -448,6 +459,7 @@ function ToolsRow() {
     <div className="grid grid-cols-3 gap-1.5">
       <button
         type="button"
+        data-tour="brainstorm"
         onClick={() => setBsOpen(true)}
         className={btn}
         title="Open the Brainstorm panel"
@@ -457,6 +469,7 @@ function ToolsRow() {
       </button>
       <button
         type="button"
+        data-tour="bible"
         onClick={() => openGroup("bible")}
         className={btn}
         title="Map · outline · characters"
@@ -466,6 +479,7 @@ function ToolsRow() {
       </button>
       <button
         type="button"
+        data-tour="organize"
         onClick={() => openGroup("organize")}
         className={btn}
         title="Notes · canvas"
@@ -477,7 +491,7 @@ function ToolsRow() {
         <span aria-hidden className="text-base leading-none">🏷️</span>
         Tags
       </Link>
-      <Link href="/app/prompts" className={btn} title="Writing prompts for this project">
+      <Link href="/app/prompts" data-tour="prompts" className={btn} title="Writing prompts for this project">
         <span aria-hidden className="text-base leading-none">🎲</span>
         Prompts
       </Link>
