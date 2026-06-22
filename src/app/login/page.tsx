@@ -21,9 +21,9 @@ export default function LoginPage() {
     <main className="flex-1 grid place-items-center p-8">
       <div className="max-w-md w-full space-y-8 text-center">
         <div>
-          <h1 className="text-3xl font-serif">The Quill</h1>
+          <h1 className="text-3xl font-serif">Writer&apos;s Cube</h1>
           <p className="mt-2 text-sm text-zinc-500">
-            Writer&apos;s Cube — V0.5
+            Your quiet place to write.
           </p>
         </div>
         <button

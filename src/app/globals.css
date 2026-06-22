@@ -260,6 +260,12 @@ body {
   --wc-border: rgba(120,78,48,0.34);        /* warm earthen hairline */
   --wc-border-strong: rgba(120,78,48,0.55); /* outlined controls */
 }
+/* Blocky slab headings for the solid, earthy feel. */
+[data-theme="clay"] .font-serif {
+  font-family: "Patua One", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.002em;
+}
 [data-theme="clay"] .wc-card,
 [data-theme="clay"] .wc-raised {
   border-color: rgba(120,78,48,0.42);
