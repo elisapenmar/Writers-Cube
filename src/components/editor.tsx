@@ -12,6 +12,7 @@ import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { SceneHistory } from "@/components/scene-history";
+import { FindReplace } from "@/components/find-replace";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -21,6 +22,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [wordCount, setWordCount] = useState<number>(scene.word_count);
   const [typewriterOpen, setTypewriterOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitting, setSplitting] = useState(false);
   const [splitMsg, setSplitMsg] = useState<string | null>(null);
@@ -133,6 +135,18 @@ export function Editor({ scene }: { scene: Scene }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.id]);
 
+  // ⌘F / Ctrl-F opens find & replace.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "f" || e.key === "F")) {
+        e.preventDefault();
+        setFindOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Flush before navigating away or closing the tab.
   useEffect(() => {
     const handler = () => {
@@ -147,7 +161,10 @@ export function Editor({ scene }: { scene: Scene }) {
   }, [editor]);
 
   return (
-    <div className="flex flex-col flex-1 h-screen">
+    <div className="relative flex flex-col flex-1 h-screen">
+      {findOpen && editor && (
+        <FindReplace editor={editor} onClose={() => setFindOpen(false)} />
+      )}
       <header className="flex items-center justify-between border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-3">
         <h2 className="font-serif text-lg truncate">{scene.title}</h2>
         <div className="flex items-center gap-3 text-xs text-[var(--wc-faint)] shrink-0">
@@ -190,8 +207,15 @@ export function Editor({ scene }: { scene: Scene }) {
             )}
           </div>
           <button
+            onClick={() => setFindOpen(true)}
+            className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-ink)]"
+            title="Find & replace (⌘F)"
+          >
+            Find
+          </button>
+          <button
             onClick={() => setHistoryOpen(true)}
-            className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
+            className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-ink)]"
             title="Version history"
           >
             History

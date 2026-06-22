@@ -89,8 +89,8 @@ function Btn({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
-      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center disabled:opacity-30 ${
-        active ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]" : "text-[var(--wc-muted)] hover:bg-[var(--wc-paper)]"
+      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center disabled:opacity-45 ${
+        active ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]" : "text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
       }`}
       style={{
         fontWeight: bold ? 700 : 500,

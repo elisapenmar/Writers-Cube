@@ -15,6 +15,7 @@ import {
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
 import { SceneHistory } from "@/components/scene-history";
+import { FindReplace } from "@/components/find-replace";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { TypewriterMode } from "@/components/typewriter-mode";
@@ -66,6 +67,18 @@ export function ManuscriptReader({
   const [activeScene, setActiveScene] = useState<ManuscriptScene | null>(null);
   const [focusScene, setFocusScene] = useState<ManuscriptScene | null>(null);
   const [historyScene, setHistoryScene] = useState<ManuscriptScene | null>(null);
+  const [findOpen, setFindOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "f" || e.key === "F")) {
+        e.preventDefault();
+        setFindOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   // Per-scene content override + version, so a block remounts with the text it
   // ended up with after a focus session or a split.
   const [override, setOverride] = useState<Record<string, unknown>>({});
@@ -115,16 +128,27 @@ export function ManuscriptReader({
     chapters.reduce((n, c) => n + c.scenes.length, 0) + looseScenes.length;
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-[var(--wc-page)]">
+    <div className="relative flex-1 flex flex-col h-screen bg-[var(--wc-page)]">
+      {findOpen && activeEditor && (
+        <FindReplace editor={activeEditor} onClose={() => setFindOpen(false)} />
+      )}
       {/* Sticky toolbar — operates on whichever block is focused */}
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
         <div className="flex-1 min-w-0 overflow-x-auto">
           <EditorToolbar editor={activeEditor} />
         </div>
         <button
+          onClick={() => setFindOpen(true)}
+          disabled={!activeScene}
+          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+          title="Find & replace in the focused scene (⌘F)"
+        >
+          Find
+        </button>
+        <button
           onClick={() => activeScene && setHistoryScene(activeScene)}
           disabled={!activeScene}
-          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
           title="Version history of the focused scene"
         >
           History
@@ -132,7 +156,7 @@ export function ManuscriptReader({
         <button
           onClick={() => setFocusScene(activeScene)}
           disabled={!activeScene}
-          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
           title="Write the focused scene in distraction-free focus mode"
         >
           ✶ Focus
