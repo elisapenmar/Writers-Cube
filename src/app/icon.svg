@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+  <!-- Writer's Cube mark — matches the wordmark cube in the header. -->
+  <!-- top face (lightest) -->
+  <path d="M12 2.5 21 7l-9 4.5L3 7l9-4.5Z" fill="#9bb0a0"/>
+  <!-- left face -->
+  <path d="M3 7l9 4.5V21l-9-4.5V7Z" fill="#5e7488"/>
+  <!-- right face (darkest) -->
+  <path d="M21 7l-9 4.5V21l9-4.5V7Z" fill="#6f6480"/>
+</svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EXPORT_FORMATS } from "@/lib/manuscript-export";
@@ -67,11 +68,12 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
         {pending ? "…" : "⋯"}
       </button>
 
-      {open && pos && (
-        <>
-          <div className="fixed inset-0 z-[70]" onClick={close} />
+      {open && pos && typeof document !== "undefined" &&
+        createPortal(
+          <>
+          <div className="fixed inset-0 z-[2000]" onClick={close} />
           <div
-            className="fixed z-[71] w-60 rounded-[var(--wc-r-md)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 shadow-[var(--wc-shadow-md)]"
+            className="fixed z-[2001] w-60 rounded-[var(--wc-r-md)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 shadow-[var(--wc-shadow-md)]"
             style={{ top: pos.top, right: pos.right }}
           >
             {view === "root" ? (
@@ -125,8 +127,9 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
               </>
             )}
           </div>
-        </>
-      )}
+          </>,
+          document.body,
+        )}
     </>
   );
 }
