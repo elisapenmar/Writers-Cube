@@ -2,13 +2,14 @@
 
 import { useSyncExternalStore } from "react";
 
-export type Theme = "mist" | "dusk" | "clay";
+export type Theme = "mist" | "dusk" | "clay" | "timber";
 export type Motion = "dynamic" | "static";
 
 export const THEMES: { id: Theme; label: string; hint: string; swatch: string[] }[] = [
   { id: "mist", label: "Mist", hint: "Cool & calm (default)", swatch: ["#edeeeb", "#5e7488", "#87a08f"] },
   { id: "dusk", label: "Dusk", hint: "Dark mode", swatch: ["#1b1e23", "#7f99af", "#9c92ad"] },
   { id: "clay", label: "Clay", hint: "Warm earth", swatch: ["#f2eee6", "#c07a63", "#8aa791"] },
+  { id: "timber", label: "Timber", hint: "Old desk & parchment", swatch: ["#b3895c", "#ece0c8", "#433321"] },
 ];
 
 const THEME_KEY = "wc-theme";

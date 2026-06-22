@@ -10,16 +10,18 @@ Output: public/focus/<style>/<focus>.png  (512x512, transparent)
 Styles kept: "wood" (light wood) and "cream". "darkwood" is ignored.
 Re-run this whenever new dice are added to images/ — it just reprocesses the folder.
 
-Segmentation: skimage.random_walker seeded with the border (background) and the
-die centre (foreground); robust to render grain and to the cream die being a
-near-match for the grey backdrop.
+Segmentation: every backdrop seen so far is NEUTRAL — a light grey/white
+checkerboard (baked in, not real transparency), or a solid black field, both with
+a soft neutral shadow. The carved die, wood or cream, is the only WARM/chromatic
+object. So we key on colour warmth (R-B) + chroma rather than texture, which gives
+clean edges on both backdrop types, then keep the largest warm region that does
+NOT touch the image border (the die is always centred with a margin).
 """
 import glob, os, warnings
 warnings.filterwarnings("ignore")
 from PIL import Image, ImageFilter
 import numpy as np
 from scipy import ndimage
-from skimage.segmentation import random_walker
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "images")
@@ -28,27 +30,38 @@ FOCUSES = ["character", "setting", "plot", "voice", "dialogue", "sensory"]
 SIZE = 512
 
 
+def _candidate_fg(im: Image.Image) -> np.ndarray:
+    arr = np.asarray(im.convert("RGB"), dtype=np.float32)
+    warmth = arr[:, :, 0] - arr[:, :, 2]            # R-B: warm die vs neutral bg
+    chroma = arr.max(axis=2) - arr.min(axis=2)
+    return (warmth > 14) | (chroma > 26)
+
+
 def alpha_mask(im: Image.Image) -> np.ndarray:
-    W, H = im.size
-    sm = im.resize((W // 2, H // 2))
-    a = np.asarray(sm, dtype=np.float64) / 255.0
-    h, w, _ = a.shape
-    mk = np.zeros((h, w), np.int32)
-    m = max(2, int(0.03 * min(h, w)))
-    mk[:m, :] = 1; mk[-m:, :] = 1; mk[:, :m] = 1; mk[:, -m:] = 1   # border = background
-    cy, cx = h // 2, w // 2
-    mk[cy - int(0.16 * h):cy + int(0.16 * h),
-       cx - int(0.08 * w):cx + int(0.08 * w)] = 2                  # centre = die
-    prob = random_walker(a, mk, beta=180, mode="cg_j", channel_axis=-1, return_full_prob=True)
-    fg = prob[1] > 0.62
-    fg = ndimage.binary_fill_holes(fg)
-    lbl, n = ndimage.label(fg)
-    if n > 1:
+    smooth = ndimage.binary_fill_holes(_candidate_fg(im))
+    lbl, n = ndimage.label(smooth)
+    if n == 0:
+        return smooth
+    border = set(lbl[0, :]) | set(lbl[-1, :]) | set(lbl[:, 0]) | set(lbl[:, -1])
+    best, best_sz = None, 0
+    for i in range(1, n + 1):
+        if i in border:
+            continue
+        sz = int((lbl == i).sum())
+        if sz > best_sz:
+            best, best_sz = i, sz
+    if best is None:  # fallback: largest component overall
         sizes = ndimage.sum(np.ones_like(lbl), lbl, range(1, n + 1))
-        fg = lbl == (np.argmax(sizes) + 1)
-    fg = ndimage.binary_erosion(fg, iterations=2)
+        best = int(np.argmax(sizes)) + 1
+    fg = lbl == best
+    st = ndimage.generate_binary_structure(2, 2)
+    fg = ndimage.binary_closing(fg, st, iterations=3)
     fg = ndimage.binary_fill_holes(fg)
-    return fg
+    fg = ndimage.binary_opening(fg, st, iterations=2)
+    # Smooth the contour: blur + re-threshold removes lacy edges / shadow notches.
+    fg = ndimage.gaussian_filter(fg.astype(np.float32), 2.5) > 0.5
+    fg = ndimage.binary_erosion(fg, iterations=1)
+    return ndimage.binary_fill_holes(fg)
 
 
 def cut(path: str) -> Image.Image:

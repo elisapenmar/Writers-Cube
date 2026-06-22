@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Fancy display face for the Sherbet theme's headings. */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap");
 
 :root {
   --background: #fafaf9;
@@ -214,6 +216,111 @@ body {
   --wc-border-strong: rgba(51,48,58,0.14);
 }
 
+/* ===== Theme: Timber (old-timey wooden desk + parchment) ===== */
+[data-theme="timber"] {
+  --wc-slate: #433321;   /* deep walnut — primary action / links */
+  --wc-sage: #4f5b3d;    /* olive */
+  --wc-plum: #4c3340;    /* aged mulberry */
+  --wc-clay: #854a31;    /* sealing-wax terracotta */
+  --wc-ochre: #b07a3c;
+  --wc-ink: #352818;     /* espresso ink */
+  --wc-muted: #473826;
+  --wc-faint: #453522;
+  --wc-stone: #cbb189;
+  --wc-canvas: #c2a079;  /* fallback under the wood texture */
+  --wc-surface: #ece0c8; /* parchment */
+  --wc-paper: #f0e6d2;
+  --wc-page: #efe5cf;    /* writing surface = parchment */
+  --wc-border: rgba(53,40,24,0.18);
+  --wc-border-strong: rgba(53,40,24,0.30);
+  --wc-on-accent: #f6eedb;
+  --wc-shadow-sm: 0 1px 2px rgba(40,28,14,0.18);
+  --wc-shadow-md: 0 10px 28px rgba(40,28,14,0.22);
+}
+/* The wooden desk — a cream wash keeps text legible (WCAG) over the grain. */
+[data-theme="timber"] .wc-cube-bg {
+  background-color: var(--wc-canvas);
+  background-image:
+    linear-gradient(rgba(239,229,207,0.50), rgba(239,229,207,0.50)),
+    url("/textures/wood.jpg");
+  background-size: cover;
+  background-position: center;
+}
+[data-theme="timber"] .wc-cube-field { display: none; } /* the desk is the backdrop */
+/* Cards / panels become parchment sheets. */
+[data-theme="timber"] .wc-card,
+[data-theme="timber"] .wc-raised,
+[data-theme="timber"] .wc-surface {
+  background-image: url("/textures/parchment.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Clay theme: more solid, defined cards — crisper outline, top highlight, lift. */
+[data-theme="clay"] {
+  --wc-border: rgba(51,48,58,0.16);
+  --wc-border-strong: rgba(51,48,58,0.28);
+}
+[data-theme="clay"] .wc-card,
+[data-theme="clay"] .wc-raised {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    0 1px 0 rgba(51,48,58,0.04),
+    var(--wc-shadow-md);
+}
+
+/* ===== Theme: Sherbet (pastel, fancy headings, glittery) ===== */
+[data-theme="sherbet"] {
+  --wc-slate: #a8345f;   /* raspberry — primary action / links */
+  --wc-sage: #2c7858;    /* mint */
+  --wc-plum: #6f4aa0;    /* grape */
+  --wc-clay: #a64c1c;    /* tangerine */
+  --wc-ochre: #d99a2b;   /* lemon */
+  --wc-ink: #54283c;     /* deep berry text */
+  --wc-muted: #6f3a4f;
+  --wc-faint: #7d4860;
+  --wc-stone: #f0d9d6;
+  --wc-canvas: #fce7e6;
+  --wc-surface: #fff5f1;
+  --wc-paper: #ffeef1;
+  --wc-page: #fffaf8;
+  --wc-border: rgba(84,40,60,0.12);
+  --wc-border-strong: rgba(84,40,60,0.22);
+  --wc-on-accent: #ffffff;
+  --wc-shadow-sm: 0 1px 2px rgba(168,52,95,0.10);
+  --wc-shadow-md: 0 10px 28px rgba(168,52,95,0.14);
+}
+/* Fancy headings in Sherbet. */
+[data-theme="sherbet"] .font-serif {
+  font-family: "Playfair Display", Georgia, serif;
+  letter-spacing: 0.01em;
+}
+/* Glittery pastel backdrop: a soft gradient with drifting sparkles. */
+[data-theme="sherbet"] .wc-cube-bg {
+  background-color: #fce7e6;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.7) 0 1.2px, transparent 2px),
+    linear-gradient(135deg, #ffe1ec 0%, #fdeede 45%, #e3f6ee 100%);
+  background-size: 130px 130px, 190px 190px, 250px 250px, 100% 100%;
+  background-position: 0 0, 60px 40px, 25px 90px, 0 0;
+  animation: wc-glitter 14s linear infinite;
+}
+@keyframes wc-glitter {
+  to {
+    background-position: 130px 130px, -130px 190px, 250px -250px, 0 0;
+  }
+}
+/* A little gloss on Sherbet cards. */
+[data-theme="sherbet"] .wc-card,
+[data-theme="sherbet"] .wc-raised {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), var(--wc-shadow-md);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="sherbet"] .wc-cube-bg { animation: none; }
+}
+
 .wc-cream { background: var(--wc-canvas); }
 .wc-paper { background: var(--wc-paper); }
 .wc-canvas { background: var(--wc-canvas); }
@@ -341,10 +448,6 @@ body {
 }
 .wc-tumbling { animation: wc-tumble 500ms ease-in-out; }
 
-/* Dark mode: settle the wood die faces into the dark surface. */
-[data-theme="dusk"] .wc-die-img {
-  filter: brightness(0.72) saturate(0.95) contrast(1.02);
-}
 
 /* injected-from-draft highlight */
 .wc-injected {

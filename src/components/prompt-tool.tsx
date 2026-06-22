@@ -24,10 +24,14 @@ type GoalType = "words" | "minutes";
 // public/focus/<style>/<focus>.png (produced by scripts/cut-dice.py). Each theme
 // uses one consistent material; a missing file falls back to dice pips. Drop new
 // cutouts into the folder to light them up — no code change needed.
+// Wood dice are reserved for the Timber (wooden-desk) theme; every other theme
+// uses the cream dice.
 const THEME_DIE_STYLE: Record<string, "wood" | "cream"> = {
   mist: "cream",
-  clay: "wood",
-  dusk: "wood", // gently darkened in CSS for dark mode
+  clay: "cream",
+  dusk: "cream",
+  sherbet: "cream",
+  timber: "wood",
 };
 
 const FOCUS_ORDER: PromptFocus[] = [

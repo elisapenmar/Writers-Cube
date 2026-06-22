@@ -3,6 +3,9 @@ import { CubeMark } from "@/components/cube-mark";
 import { AccountMenu } from "@/components/account-menu";
 import { createClient } from "@/lib/supabase/server";
 
+// Allow AI server actions invoked from these pages up to 60s on Vercel.
+export const maxDuration = 60;
+
 export default async function HubLayout({
   children,
 }: {

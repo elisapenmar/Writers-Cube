@@ -10,6 +10,9 @@ import {
 import { getActiveProjectId } from "@/server/projects";
 import { getPublishSettings } from "@/server/publish";
 
+// EPUB/DOCX rendering can take a moment — allow up to 60s on Vercel.
+export const maxDuration = 60;
+
 const VALID: ExportFormat[] = ["md", "txt", "html", "docx", "epub", "pdf"];
 
 export async function GET(request: NextRequest) {

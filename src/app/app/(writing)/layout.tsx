@@ -4,6 +4,9 @@ import { getOrCreateProject } from "@/server/scenes";
 import { listExercises } from "@/server/prompts";
 import { listLooseScenes } from "@/server/loose";
 
+// Allow AI server actions invoked from these pages up to 60s on Vercel.
+export const maxDuration = 60;
+
 export default async function WritingLayout({
   children,
 }: {
