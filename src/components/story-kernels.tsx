@@ -137,10 +137,7 @@ function KernelCard({
   }
 
   return (
-    <div
-      className="wc-card p-3 flex flex-col group"
-      style={{ borderTop: "3px solid var(--wc-plum)" }}
-    >
+    <div className="wc-card p-3 flex flex-col group">
       <div className="flex items-start gap-2">
         <input
           value={title}
