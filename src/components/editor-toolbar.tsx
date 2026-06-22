@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Editor } from "@tiptap/react";
+import { RTE_FONTS } from "@/lib/rte-fonts";
 
 /**
  * Formatting toolbar bound to a TipTap editor. Re-renders on every editor
@@ -39,6 +40,8 @@ export function EditorToolbar({
     }
   };
   const hasIndent = typeof (editor.commands as Record<string, unknown>).indent === "function";
+  const hasFont = typeof (editor.commands as Record<string, unknown>).setFontFamily === "function";
+  const currentFont = (editor.getAttributes("textStyle").fontFamily as string) || "";
 
   return (
     <div
@@ -47,6 +50,28 @@ export function EditorToolbar({
       <Btn label={<UndoIcon />} title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
       <Btn label={<RedoIcon />} title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
       <Divider />
+      {hasFont && (
+        <>
+          <select
+            value={currentFont}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const css = e.target.value;
+              if (css) chain().setFontFamily(css).run();
+              else chain().unsetFontFamily().run();
+            }}
+            title="Font"
+            className="h-7 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 text-xs text-[var(--wc-ink)] focus:outline-none"
+          >
+            {RTE_FONTS.map((f) => (
+              <option key={f.label} value={f.css}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <Divider />
+        </>
+      )}
       <Btn label="B" title="Bold (⌘B)" active={editor.isActive("bold")} bold onClick={() => chain().toggleBold().run()} />
       <Btn label="I" title="Italic (⌘I)" active={editor.isActive("italic")} italic onClick={() => chain().toggleItalic().run()} />
       <Btn label="U" title="Underline (⌘U)" active={editor.isActive("underline")} underline onClick={() => chain().toggleUnderline().run()} />

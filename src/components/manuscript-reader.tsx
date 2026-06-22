@@ -4,6 +4,7 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { Indent } from "@/lib/indent";
+import { TextStyle, FontFamily } from "@tiptap/extension-text-style";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
@@ -251,7 +252,7 @@ function SceneBlock({
 
   const editor = useEditor(
     {
-      extensions: [StarterKit, Underline, Indent, ...ALL_TAG_MARKS],
+      extensions: [StarterKit, Underline, Indent, TextStyle, FontFamily, ...ALL_TAG_MARKS],
       content: (contentOverride as object | null) ??
         (scene.content as object | null) ?? {
         type: "doc",
