@@ -131,6 +131,23 @@ export async function disconnectDrive(): Promise<void> {
   await supabase.from("google_credentials").delete().eq("user_id", user.id);
 }
 
+const dense = (t: string) => t.replace(/\s+/g, "").length;
+
+/** Plain-text export → markdown-ish: one line per paragraph, chapter-ish lines
+ *  promoted to "## " so the parser splits chapters. */
+function plainToMarkdownish(plain: string): string {
+  const lines = plain.replace(/\r\n/g, "\n").split("\n").map((l) => l.trim());
+  return lines
+    .map((l) => {
+      if (!l) return "";
+      if (l.length < 60 && /^(chapter\b.*|prologue|epilogue|part\b.*)$/i.test(l)) {
+        return `## ${l}`;
+      }
+      return l;
+    })
+    .join("\n\n");
+}
+
 /** Import a Google Doc's contents as a new project. Returns the project id. */
 export async function importDriveDoc(fileId: string): Promise<{ projectId: string }> {
   // Fetch the doc name for the title.
@@ -138,19 +155,33 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
   const meta = (await metaRes.json()) as { name?: string };
   const title = meta.name ?? "Imported document";
 
-  // Export as HTML to preserve headings → chapters.
-  const htmlRes = await driveFetch(
-    `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,
-  );
-  const html = await htmlRes.text();
-  let text = await htmlToText(html);
-
-  // Fall back to a plain-text export if the HTML yielded nothing usable.
-  if (text.replace(/\s+/g, "").length < 2) {
+  // Plain text is the most reliable export — one line per paragraph.
+  let text = "";
+  try {
     const txtRes = await driveFetch(
       `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/plain")}`,
     );
-    text = await txtRes.text();
+    text = plainToMarkdownish(await txtRes.text());
+  } catch {
+    /* fall through to HTML */
+  }
+
+  // HTML backup (also preserves headings) if plain text gave nothing.
+  if (dense(text) < 2) {
+    try {
+      const htmlRes = await driveFetch(
+        `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,
+      );
+      text = await htmlToText(await htmlRes.text());
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (dense(text) < 2) {
+    throw new Error(
+      `“${title}” looks empty — Google didn't return any text for it. Open it in Google Docs to confirm it has content, then try again.`,
+    );
   }
 
   const { projectId } = await importTextAsProject(text, title);

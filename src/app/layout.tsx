@@ -18,11 +18,12 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased" data-theme="mist" data-motion="dynamic" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
-        {/* Per-theme display faces: Playfair (Sherbet), Patua One slab (Clay). */}
+        {/* Per-theme display faces: Patua One slab (Clay), Ultra (Timber),
+            Pacifico script (Sherbet). */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Patua+One&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Pacifico&family=Patua+One&family=Ultra&display=swap"
           rel="stylesheet"
         />
       </head>

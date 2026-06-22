@@ -245,6 +245,11 @@ body {
   background-position: center;
 }
 [data-theme="timber"] .wc-cube-field { display: none; } /* the desk is the backdrop */
+/* Stout, old-timey slab headings stamped into the wood. */
+[data-theme="timber"] .font-serif {
+  font-family: "Ultra", Georgia, serif;
+  letter-spacing: 0.005em;
+}
 /* Cards / panels become parchment sheets. */
 [data-theme="timber"] .wc-card,
 [data-theme="timber"] .wc-raised,
@@ -307,10 +312,11 @@ body {
   --wc-shadow-sm: 0 1px 2px rgba(168,52,95,0.10);
   --wc-shadow-md: 0 10px 28px rgba(168,52,95,0.14);
 }
-/* Fancy headings in Sherbet. */
+/* Curly script headings in Sherbet. */
 [data-theme="sherbet"] .font-serif {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Pacifico", "Brush Script MT", cursive;
   letter-spacing: 0.01em;
+  line-height: 1.25;
 }
 /* Glittery pastel backdrop: a soft gradient with drifting sparkles. */
 [data-theme="sherbet"] .wc-cube-bg {

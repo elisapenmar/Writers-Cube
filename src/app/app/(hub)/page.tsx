@@ -15,7 +15,7 @@ import { WelcomeModal } from "@/components/welcome-modal";
 import { CubeMark } from "@/components/cube-mark";
 import { CubeField } from "@/components/cube-field";
 
-const PROJECTS_PREVIEW = 3;
+const PROJECTS_PREVIEW = 6;
 const KERNELS_PREVIEW = 3;
 
 async function safeExercises(projectId: string | null): Promise<ExerciseSummary[]> {
