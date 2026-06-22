@@ -45,6 +45,15 @@ body {
   font-family: var(--font-serif);
 }
 
+/* The writing surface ALWAYS renders in the standard manuscript font — themes
+   restyle the app chrome only, never a project's prose. A user's own font choice
+   (TipTap FontFamily) applies as an inline style on a span and still wins. */
+.ProseMirror,
+.prose,
+.prose :where(p, h1, h2, h3, h4, li, blockquote) {
+  font-family: var(--font-serif) !important;
+}
+
 /* Dark theme: lighten the manuscript text on the dark writing page. */
 [data-theme="dusk"] .prose {
   --tw-prose-body: #d9dbd7;
@@ -214,8 +223,8 @@ body {
   --wc-border-strong: rgba(51,48,58,0.14);
 }
 
-/* ===== Theme: Timber (old-timey wooden desk + parchment) ===== */
-[data-theme="timber"] {
+/* ===== Theme: Parchment (old-timey wooden desk + parchment) ===== */
+[data-theme="parchment"] {
   --wc-slate: #433321;   /* deep walnut — primary action / links */
   --wc-sage: #4f5b3d;    /* olive */
   --wc-plum: #4c3340;    /* aged mulberry */
@@ -236,7 +245,7 @@ body {
   --wc-shadow-md: 0 10px 28px rgba(40,28,14,0.22);
 }
 /* The wooden desk — a cream wash keeps text legible (WCAG) over the grain. */
-[data-theme="timber"] .wc-cube-bg {
+[data-theme="parchment"] .wc-cube-bg {
   background-color: var(--wc-canvas);
   background-image:
     linear-gradient(rgba(239,229,207,0.50), rgba(239,229,207,0.50)),
@@ -244,16 +253,16 @@ body {
   background-size: cover;
   background-position: center;
 }
-[data-theme="timber"] .wc-cube-field { display: none; } /* the desk is the backdrop */
-/* Stout, old-timey slab headings stamped into the wood. */
-[data-theme="timber"] .font-serif {
-  font-family: "Ultra", Georgia, serif;
-  letter-spacing: 0.005em;
+[data-theme="parchment"] .wc-cube-field { display: none; } /* the desk is the backdrop */
+/* Old-timey typewriter headings, struck onto the page. */
+[data-theme="parchment"] .font-serif {
+  font-family: "Special Elite", "Courier New", monospace;
+  letter-spacing: 0.01em;
 }
 /* Cards / panels become parchment sheets. */
-[data-theme="timber"] .wc-card,
-[data-theme="timber"] .wc-raised,
-[data-theme="timber"] .wc-surface {
+[data-theme="parchment"] .wc-card,
+[data-theme="parchment"] .wc-raised,
+[data-theme="parchment"] .wc-surface {
   background-image: url("/textures/parchment.jpg");
   background-size: cover;
   background-position: center;
@@ -265,11 +274,11 @@ body {
   --wc-border: rgba(120,78,48,0.34);        /* warm earthen hairline */
   --wc-border-strong: rgba(120,78,48,0.55); /* outlined controls */
 }
-/* Blocky slab headings for the solid, earthy feel. */
+/* Stout slab headings for the solid, earthy feel. */
 [data-theme="clay"] .font-serif {
-  font-family: "Patua One", Georgia, serif;
+  font-family: "Ultra", Georgia, serif;
   font-weight: 400;
-  letter-spacing: 0.002em;
+  letter-spacing: 0.004em;
 }
 [data-theme="clay"] .wc-card,
 [data-theme="clay"] .wc-raised {

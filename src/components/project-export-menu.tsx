@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EXPORT_FORMATS } from "@/lib/manuscript-export";
@@ -10,13 +10,38 @@ import { archiveProject } from "@/server/projects";
 export function ProjectExportMenu({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"root" | "export">("root");
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const [pending, start] = useTransition();
+
+  function place() {
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+  }
+
+  function openMenu() {
+    setView("root");
+    place();
+    setOpen(true);
+  }
 
   function close() {
     setOpen(false);
     setView("root");
   }
+
+  // Keep the fixed menu anchored to the button while open.
+  useEffect(() => {
+    if (!open) return;
+    const onMove = () => place();
+    window.addEventListener("scroll", onMove, true);
+    window.addEventListener("resize", onMove);
+    return () => {
+      window.removeEventListener("scroll", onMove, true);
+      window.removeEventListener("resize", onMove);
+    };
+  }, [open]);
 
   function archive() {
     close();
@@ -27,13 +52,13 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="relative">
+    <>
       <button
+        ref={btnRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((o) => !o);
-          setView("root");
+          open ? close() : openMenu();
         }}
         disabled={pending}
         className="rounded-[var(--wc-r-sm)] border border-[var(--wc-border)] bg-[var(--wc-surface)] px-2.5 py-1 text-xs text-zinc-600 hover:border-[var(--wc-slate)] hover:text-zinc-900 disabled:opacity-50"
@@ -42,15 +67,16 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
         {pending ? "…" : "⋯"}
       </button>
 
-      {open && (
+      {open && pos && (
         <>
-          <div className="fixed inset-0 z-20" onClick={close} />
-          <div className="absolute right-0 z-30 mt-1 w-60 rounded-[var(--wc-r-md)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 shadow-[var(--wc-shadow-md)]">
+          <div className="fixed inset-0 z-[70]" onClick={close} />
+          <div
+            className="fixed z-[71] w-60 rounded-[var(--wc-r-md)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 shadow-[var(--wc-shadow-md)]"
+            style={{ top: pos.top, right: pos.right }}
+          >
             {view === "root" ? (
               <>
-                <MenuButton onClick={() => setView("export")}>
-                  ↓ Export
-                </MenuButton>
+                <MenuButton onClick={() => setView("export")}>↓ Export</MenuButton>
                 <Link
                   href="/app/publish"
                   onClick={close}
@@ -101,7 +127,7 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 }
 

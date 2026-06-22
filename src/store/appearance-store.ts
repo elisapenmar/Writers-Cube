@@ -2,14 +2,14 @@
 
 import { useSyncExternalStore } from "react";
 
-export type Theme = "mist" | "dusk" | "clay" | "timber" | "sherbet";
+export type Theme = "mist" | "dusk" | "clay" | "parchment" | "sherbet";
 export type Motion = "dynamic" | "static";
 
 export const THEMES: { id: Theme; label: string; hint: string; swatch: string[] }[] = [
   { id: "mist", label: "Mist", hint: "Cool & calm (default)", swatch: ["#edeeeb", "#5e7488", "#87a08f"] },
   { id: "dusk", label: "Dusk", hint: "Dark mode", swatch: ["#1b1e23", "#7f99af", "#9c92ad"] },
   { id: "clay", label: "Clay", hint: "Warm earth", swatch: ["#f2eee6", "#c07a63", "#8aa791"] },
-  { id: "timber", label: "Timber", hint: "Old desk & parchment", swatch: ["#b3895c", "#ece0c8", "#433321"] },
+  { id: "parchment", label: "Parchment", hint: "Old desk & parchment", swatch: ["#b3895c", "#ece0c8", "#433321"] },
   { id: "sherbet", label: "Sherbet", hint: "Pastel & glittery", swatch: ["#ffe1ec", "#a8345f", "#2c7858"] },
 ];
 

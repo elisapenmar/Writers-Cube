@@ -89,12 +89,12 @@ const SYSTEM_PROMPTS: Record<BrainstormMode, string> = {
 export async function listBrainstorms(): Promise<BrainstormSummary[]> {
   const { supabase, user } = await requireUser();
   const projectId = await resolveProjectId(supabase, user.id);
-  const { data, error } = await supabase
+  let q = supabase
     .from("brainstorms")
     .select("id, title, summary, mode, messages, created_at, updated_at")
-    .eq("user_id", user.id)
-    .eq("project_id", projectId ?? "")
-    .order("updated_at", { ascending: false });
+    .eq("user_id", user.id);
+  q = projectId ? q.eq("project_id", projectId) : q.is("project_id", null);
+  const { data, error } = await q.order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []).map((b) => {
     const msgs = (b.messages as BrainstormMessage[] | null) ?? [];
@@ -127,20 +127,21 @@ export async function getBrainstorm(id?: string): Promise<{
   if (id) {
     // Validate the id belongs to the ACTIVE project — a persisted id from
     // another project must not leak its conversation in here.
-    const { data } = await supabase
+    let q = supabase
       .from("brainstorms")
       .select("id, messages, mode, title, summary")
       .eq("id", id)
-      .eq("user_id", user.id)
-      .eq("project_id", projectId ?? "")
-      .maybeSingle();
+      .eq("user_id", user.id);
+    q = projectId ? q.eq("project_id", projectId) : q.is("project_id", null);
+    const { data } = await q.maybeSingle();
     row = data;
   } else {
-    const { data } = await supabase
+    let q = supabase
       .from("brainstorms")
       .select("id, messages, mode, title, summary")
-      .eq("user_id", user.id)
-      .eq("project_id", projectId ?? "")
+      .eq("user_id", user.id);
+    q = projectId ? q.eq("project_id", projectId) : q.is("project_id", null);
+    const { data } = await q
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -438,11 +439,12 @@ export async function organizeBrainstorm(
   const { supabase, user } = await requireUser();
   const projectId = await resolveProjectId(supabase, user.id);
   // Latest brainstorm conversation for this project
-  const { data: latestBs } = await supabase
+  let bsQ = supabase
     .from("brainstorms")
     .select("messages")
-    .eq("user_id", user.id)
-    .eq("project_id", projectId ?? "")
+    .eq("user_id", user.id);
+  bsQ = projectId ? bsQ.eq("project_id", projectId) : bsQ.is("project_id", null);
+  const { data: latestBs } = await bsQ
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();

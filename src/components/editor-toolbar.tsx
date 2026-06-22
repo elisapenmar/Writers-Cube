@@ -45,7 +45,7 @@ export function EditorToolbar({
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-0.5 ${className}`}
+      className={`flex flex-nowrap items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
     >
       <Btn label={<UndoIcon />} title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
       <Btn label={<RedoIcon />} title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
@@ -61,7 +61,7 @@ export function EditorToolbar({
               else chain().unsetFontFamily().run();
             }}
             title="Font"
-            className="h-7 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 text-xs text-[var(--wc-ink)] focus:outline-none"
+            className="h-7 shrink-0 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 text-xs text-[var(--wc-ink)] focus:outline-none"
           >
             {RTE_FONTS.map((f) => (
               <option key={f.label} value={f.css}>
@@ -160,7 +160,7 @@ function Btn({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       title={title}
-      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center disabled:opacity-45 ${
+      className={`min-w-7 h-7 px-1.5 rounded text-sm grid place-items-center shrink-0 disabled:opacity-45 ${
         active ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]" : "text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
       }`}
       style={{
@@ -175,5 +175,5 @@ function Btn({
 }
 
 function Divider() {
-  return <span className="w-px h-5 bg-[var(--wc-stone)] mx-1" />;
+  return <span className="w-px h-5 bg-[var(--wc-stone)] mx-1 shrink-0" />;
 }
