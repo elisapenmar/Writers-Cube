@@ -16,7 +16,7 @@ export function EditorToolbar({
 }) {
   const [, force] = useState(0);
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     const update = () => force((n) => n + 1);
     editor.on("transaction", update);
     editor.on("selectionUpdate", update);
@@ -26,15 +26,24 @@ export function EditorToolbar({
     };
   }, [editor]);
 
-  if (!editor) return null;
+  // A destroyed editor (e.g. a block that just remounted after a split) must
+  // not be touched — editor.can()/isActive() throw on a torn-down view.
+  if (!editor || editor.isDestroyed) return null;
   const chain = () => editor.chain().focus();
+  const can = (fn: "undo" | "redo") => {
+    try {
+      return editor.can()[fn]();
+    } catch {
+      return false;
+    }
+  };
 
   return (
     <div
       className={`flex flex-wrap items-center gap-0.5 ${className}`}
     >
-      <Btn label="↶" title="Undo (⌘Z)" active={false} disabled={!editor.can().undo()} onClick={() => chain().undo().run()} />
-      <Btn label="↷" title="Redo (⌘⇧Z)" active={false} disabled={!editor.can().redo()} onClick={() => chain().redo().run()} />
+      <Btn label="↶" title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
+      <Btn label="↷" title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
       <Divider />
       <Btn label="B" title="Bold (⌘B)" active={editor.isActive("bold")} bold onClick={() => chain().toggleBold().run()} />
       <Btn label="I" title="Italic (⌘I)" active={editor.isActive("italic")} italic onClick={() => chain().toggleItalic().run()} />

@@ -77,6 +77,9 @@ export function ManuscriptReader({
   }
 
   function remount(sceneId: string, content: unknown) {
+    // The block's editor will be torn down — drop the stale reference so the
+    // toolbar doesn't touch a destroyed editor.
+    setActiveEditor(null);
     setOverride((o) => ({ ...o, [sceneId]: content }));
     setVersion((v) => ({ ...v, [sceneId]: (v[sceneId] ?? 0) + 1 }));
   }
