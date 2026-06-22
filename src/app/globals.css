@@ -341,6 +341,11 @@ body {
 }
 .wc-tumbling { animation: wc-tumble 500ms ease-in-out; }
 
+/* Dark mode: settle the wood die faces into the dark surface. */
+[data-theme="dusk"] .wc-die-img {
+  filter: brightness(0.72) saturate(0.95) contrast(1.02);
+}
+
 /* injected-from-draft highlight */
 .wc-injected {
   color: var(--wc-terracotta);

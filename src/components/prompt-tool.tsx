@@ -14,16 +14,20 @@ import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
+import { useAppearance } from "@/store/appearance-store";
 
 type Mode = "new" | "existing";
 type WritingMode = "free" | "typewriter";
 type GoalType = "words" | "minutes";
 
-// Carved-wood die faces. Add the rest (plot, dialogue, sensory) the same way.
-const FOCUS_IMAGE: Partial<Record<PromptFocus, string>> = {
-  character: "/focus/character.png",
-  setting: "/focus/setting.png",
-  voice: "/focus/voice.png",
+// Carved-wood die faces, by material style. Cutouts live in
+// public/focus/<style>/<focus>.png (produced by scripts/cut-dice.py). Each theme
+// uses one consistent material; a missing file falls back to dice pips. Drop new
+// cutouts into the folder to light them up — no code change needed.
+const THEME_DIE_STYLE: Record<string, "wood" | "cream"> = {
+  mist: "cream",
+  clay: "wood",
+  dusk: "wood", // gently darkened in CSS for dark mode
 };
 
 const FOCUS_ORDER: PromptFocus[] = [
@@ -95,6 +99,9 @@ export function PromptTool({
   // Free-write surface
   const [writeOpen, setWriteOpen] = useState(false);
   const [typewriterOpen, setTypewriterOpen] = useState(false);
+
+  const { theme } = useAppearance();
+  const dieStyle = THEME_DIE_STYLE[theme] ?? "cream";
 
   function toggleFocus(f: PromptFocus) {
     setFocuses((prev) => {
@@ -253,10 +260,10 @@ export function PromptTool({
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
             {FOCUS_ORDER.map((f) => (
               <DieFace
-                key={f}
+                key={`${f}:${dieStyle}`}
                 label={FOCUS_META[f].label}
                 pips={FOCUS_META[f].pips}
-                image={FOCUS_IMAGE[f]}
+                image={`/focus/${dieStyle}/${f}.png`}
                 selected={focuses.has(f)}
                 onClick={() => toggleFocus(f)}
               />
@@ -677,8 +684,10 @@ function DieFace({
   onClick: () => void;
   image?: string;
 }) {
-  // Carved-wood image face: the image is the die; label sits underneath.
-  if (image) {
+  // If a carved-wood cutout exists for this face, the image *is* the die and the
+  // label sits underneath. If the file is missing (404), fall back to pips.
+  const [imgOk, setImgOk] = useState(Boolean(image));
+  if (image && imgOk) {
     return (
       <button
         onClick={onClick}
@@ -696,7 +705,8 @@ function DieFace({
           <img
             src={image}
             alt=""
-            className="h-full w-full object-cover transition group-hover:scale-[1.03]"
+            onError={() => setImgOk(false)}
+            className="wc-die-img h-full w-full object-contain transition group-hover:scale-[1.03]"
           />
         </span>
         <span className="text-[11px] font-medium leading-tight text-center text-[var(--wc-ink)]">
