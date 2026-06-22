@@ -42,6 +42,7 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
     title: string;
     author_name: string | null;
     agent_name: string | null;
+    form: string | null;
   };
   let existing: ProjectRow | null = null;
   let existingErr: { message?: string } | null = null;
@@ -49,7 +50,7 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
   if (activeId) {
     const res = await supabase
       .from("projects")
-      .select("id, title, author_name, agent_name")
+      .select("id, title, author_name, agent_name, form")
       .eq("user_id", user.id)
       .eq("id", activeId)
       .maybeSingle();
@@ -59,7 +60,7 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
   if (!existing) {
     const res = await supabase
       .from("projects")
-      .select("id, title, author_name, agent_name")
+      .select("id, title, author_name, agent_name, form")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true })
       .limit(1)
@@ -76,17 +77,19 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
   let title: string;
   let author_name: string | null = null;
   let agent_name: string | null = null;
+  let form = "novel";
 
   if (existing) {
     projectId = existing.id;
     title = existing.title;
     author_name = (existing.author_name as string | null) ?? null;
     agent_name = (existing.agent_name as string | null) ?? null;
+    form = (existing.form as string | null) ?? "novel";
   } else {
     const { data: created, error } = await supabase
       .from("projects")
       .insert({ user_id: user.id, title: "My Novel" })
-      .select("id, title, author_name, agent_name")
+      .select("id, title, author_name, agent_name, form")
       .single();
     if (error || !created) {
       if (isMissingProjectMetadata(error)) throw new Error(PROJECT_METADATA_REMINDER);
@@ -96,6 +99,7 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
     title = created.title;
     author_name = (created.author_name as string | null) ?? null;
     agent_name = (created.agent_name as string | null) ?? null;
+    form = (created.form as string | null) ?? "novel";
   }
 
   const { data: chapters } = await supabase
@@ -118,7 +122,7 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
     scenes: (scenes ?? []).filter((s) => s.chapter_id === c.id),
   }));
 
-  return { id: projectId, title, author_name, agent_name, chapters: chaptersWithScenes };
+  return { id: projectId, title, author_name, agent_name, form, chapters: chaptersWithScenes };
 }
 
 export async function updateProjectMetadata(
@@ -172,6 +176,29 @@ export async function createChapter(projectId: string) {
   if (error || !data) throw new Error(error?.message ?? "create chapter failed");
   revalidatePath("/app", "layout");
   return data.id;
+}
+
+/** Flat forms (poetry/short story/essay): add a piece, creating the single
+ *  holding chapter if needed. Returns the new scene id. */
+export async function createPieceInProject(projectId: string): Promise<string> {
+  const { supabase } = await requireUser();
+  let { data: chapter } = await supabase
+    .from("chapters")
+    .select("id")
+    .eq("project_id", projectId)
+    .order("position", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!chapter) {
+    const { data: created, error } = await supabase
+      .from("chapters")
+      .insert({ project_id: projectId, title: "Pieces", position: 0 })
+      .select("id")
+      .single();
+    if (error || !created) throw new Error(error?.message ?? "create failed");
+    chapter = created;
+  }
+  return createScene(chapter.id as string);
 }
 
 export async function createScene(chapterId: string) {

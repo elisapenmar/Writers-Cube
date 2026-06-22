@@ -173,19 +173,35 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
   const meta = (await metaRes.json()) as { name?: string };
   const title = meta.name ?? "Imported document";
 
-  // Plain text is the most reliable export — one line per paragraph.
+  // 1) DOCX export → mammoth: reads tables, text boxes, and full body the most
+  //    faithfully (plain/HTML exports can drop content trapped in those).
   let text = "";
   try {
-    const txtRes = await driveFetch(
-      `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/plain")}`,
+    const docxRes = await driveFetch(
+      `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(DOCX_MIME)}`,
     );
-    text = plainToMarkdownish(await txtRes.text());
+    const buf = Buffer.from(await docxRes.arrayBuffer());
+    const mammoth = (await import("mammoth")).default;
+    const { value } = await mammoth.convertToHtml({ buffer: buf });
+    text = await htmlToText(value);
   } catch {
-    /* fall through to HTML */
+    /* fall through */
   }
 
-  // HTML backup (also preserves headings) if plain text gave nothing.
-  if (dense(text) < 2) {
+  // 2) Plain text — one line per paragraph.
+  if (bodyDense(text) < 2) {
+    try {
+      const txtRes = await driveFetch(
+        `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/plain")}`,
+      );
+      text = plainToMarkdownish(await txtRes.text());
+    } catch {
+      /* fall through */
+    }
+  }
+
+  // 3) HTML backup.
+  if (bodyDense(text) < 2) {
     try {
       const htmlRes = await driveFetch(
         `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,

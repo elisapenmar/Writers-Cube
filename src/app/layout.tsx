@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Quill",
+  title: "Writer's Cube",
   description: "Writer's Cube — V0.5",
 };
 

@@ -159,11 +159,12 @@ export async function deleteProjectForever(id: string): Promise<void> {
   revalidatePath("/app", "layout");
 }
 
-export async function createProject(title?: string): Promise<{ id: string }> {
+export async function createProject(title?: string, form?: string): Promise<{ id: string }> {
   const { supabase, user } = await requireUser();
+  const f = ["novel", "short_story", "poetry", "essay"].includes(form ?? "") ? form : "novel";
   const { data, error } = await supabase
     .from("projects")
-    .insert({ user_id: user.id, title: title?.trim() || "Untitled Project" })
+    .insert({ user_id: user.id, title: title?.trim() || "Untitled Project", form: f })
     .select("id")
     .single();
   if (error || !data) throw new Error(error?.message ?? "create project failed");
@@ -180,6 +181,20 @@ export async function openProject(formData: FormData): Promise<void> {
 
 export async function createProjectAndOpen(formData: FormData): Promise<void> {
   const title = String(formData.get("title") ?? "").trim();
-  await createProject(title || undefined);
+  const form = String(formData.get("form") ?? "novel");
+  await createProject(title || undefined, form);
   redirect("/app/manuscript");
+}
+
+/** Change a project's form (novel / short_story / poetry / essay). */
+export async function updateProjectForm(projectId: string, form: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const f = ["novel", "short_story", "poetry", "essay"].includes(form) ? form : "novel";
+  const { error } = await supabase
+    .from("projects")
+    .update({ form: f })
+    .eq("id", projectId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
 }

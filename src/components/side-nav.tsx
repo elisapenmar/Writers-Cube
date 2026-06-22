@@ -24,6 +24,7 @@ import type { Chapter, ProjectTree, Scene } from "@/lib/types";
 import {
   createChapter,
   createScene,
+  createPieceInProject,
   renameChapter,
   renameScene,
   reorderChapters,
@@ -32,6 +33,7 @@ import {
   attachUncategorizedToChapter,
   signOut,
 } from "@/server/scenes";
+import { termsFor } from "@/lib/project-forms";
 import { EditableTitle } from "@/components/editable-title";
 import { createLooseScene } from "@/server/loose";
 import { useOrganize } from "@/store/organize-store";
@@ -95,6 +97,15 @@ export function SideNav({
       router.push(`/app/scene/${sceneId}`);
     });
   }
+
+  function addPiece() {
+    startTransition(async () => {
+      const sceneId = await createPieceInProject(project.id);
+      router.push(`/app/scene/${sceneId}`);
+    });
+  }
+
+  const terms = termsFor(project.form);
 
   function onChapterDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -178,18 +189,27 @@ export function SideNav({
         <ToolsRow />
       </div>
 
-      {/* Chapters header + view toggle */}
+      {/* Structure header + view toggle */}
       <div className="px-3 pt-3 pb-1.5 flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)]">
-          Chapters
+          {terms.flatHeader}
         </span>
         <SceneScrollToggle firstSceneId={firstSceneId} />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
-        {chapters.length === 0 ? (
+        {terms.flat ? (
+          <FlatPieces
+            chapters={chapters}
+            activeSceneId={params.sceneId}
+            sensors={sensors}
+            mounted={mounted}
+            pieceLabel={terms.pieceSingular}
+            onReorder={onScenesDragEnd}
+          />
+        ) : chapters.length === 0 ? (
           <p className="px-2 py-4 text-sm text-[var(--wc-faint)]">
-            No chapters yet. Add one to begin.
+            No {terms.groupPlural.toLowerCase()} yet. Add one to begin.
           </p>
         ) : !mounted ? (
           <ul className="space-y-1">
@@ -299,11 +319,11 @@ export function SideNav({
 
       <div className="border-t border-[var(--wc-border)] p-3 space-y-2">
         <button
-          onClick={addChapter}
+          onClick={terms.flat ? addPiece : addChapter}
           disabled={pending}
           className="w-full rounded-md bg-[var(--wc-slate)] px-3 py-2 text-sm text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-50"
         >
-          + New chapter
+          + New {(terms.flat ? terms.pieceSingular : terms.groupSingular).toLowerCase()}
         </button>
         <div className="flex items-center justify-between text-xs">
           <Link
@@ -577,6 +597,68 @@ function SortableChapter({
         </SortableContext>
       </DndContext>
     </li>
+  );
+}
+
+/** Flat list of pieces (poetry / short story / essay) — no chapter layer. */
+function FlatPieces({
+  chapters,
+  activeSceneId,
+  sensors,
+  mounted,
+  pieceLabel,
+  onReorder,
+}: {
+  chapters: Chapter[];
+  activeSceneId: string | undefined;
+  sensors: ReturnType<typeof useSensors>;
+  mounted: boolean;
+  pieceLabel: string;
+  onReorder: (chapterId: string, e: DragEndEvent) => void;
+}) {
+  const scenes = chapters.flatMap((c) => c.scenes);
+  if (scenes.length === 0) {
+    return (
+      <p className="px-2 py-4 text-sm text-[var(--wc-faint)]">
+        No {pieceLabel.toLowerCase()}s yet. Add one to begin.
+      </p>
+    );
+  }
+  if (!mounted) {
+    return (
+      <ul className="space-y-0.5 px-1">
+        {scenes.map((s) => (
+          <li key={s.id}>
+            <Link
+              href={`/app/scene/${s.id}`}
+              className={`block truncate rounded px-2 py-1 text-sm ${
+                activeSceneId === s.id
+                  ? "bg-[var(--wc-paper)] text-[var(--wc-ink)]"
+                  : "text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+              }`}
+            >
+              {s.title}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  const chapterOf = (id: string) => chapters.find((c) => c.scenes.some((s) => s.id === id));
+  function onDragEnd(e: DragEndEvent) {
+    const ch = chapterOf(String(e.active.id));
+    if (ch) onReorder(ch.id, e);
+  }
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={scenes.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+        <ul className="space-y-0.5 px-1">
+          {scenes.map((s) => (
+            <SortableScene key={s.id} scene={s} active={activeSceneId === s.id} />
+          ))}
+        </ul>
+      </SortableContext>
+    </DndContext>
   );
 }
 

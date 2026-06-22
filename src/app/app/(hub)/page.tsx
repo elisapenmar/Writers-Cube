@@ -134,6 +134,17 @@ export default async function Dashboard() {
                 placeholder="New project title…"
                 className="flex-1 bg-[var(--wc-surface)] rounded-[var(--wc-r-md)] border border-[var(--wc-border)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--wc-slate)]"
               />
+              <select
+                name="form"
+                defaultValue="novel"
+                title="What are you writing?"
+                className="bg-[var(--wc-surface)] rounded-[var(--wc-r-md)] border border-[var(--wc-border)] px-2 py-2 text-sm focus:outline-none focus:border-[var(--wc-slate)]"
+              >
+                <option value="novel">Novel</option>
+                <option value="short_story">Short story</option>
+                <option value="poetry">Poetry</option>
+                <option value="essay">Essay</option>
+              </select>
               <button
                 type="submit"
                 className="rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105"

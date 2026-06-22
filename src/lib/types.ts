@@ -21,5 +21,6 @@ export type ProjectTree = {
   title: string;
   author_name: string | null;
   agent_name: string | null;
+  form: string;
   chapters: Chapter[];
 };
