@@ -53,6 +53,12 @@ body {
 .prose :where(p, h1, h2, h3, h4, li, blockquote) {
   font-family: var(--font-serif) !important;
 }
+/* Inside a project workspace, a theme's display font never applies to headings,
+   scene/chapter titles, or title inputs either — the whole workspace stays
+   standard. (Display fonts are a chrome/landing flourish only.) */
+.wc-workspace .font-serif {
+  font-family: var(--font-serif) !important;
+}
 
 /* Dark theme: lighten the manuscript text on the dark writing page. */
 [data-theme="dusk"] .prose {

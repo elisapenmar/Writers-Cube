@@ -382,7 +382,9 @@ function NotesEditor({
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => {
-          if (draft !== value) onChange(draft);
+          const cleaned = normalizeBullets(draft);
+          if (cleaned !== value) onChange(cleaned);
+          setDraft(cleaned);
           onStopEdit();
         }}
         onKeyDown={(e) => {
@@ -390,21 +392,59 @@ function NotesEditor({
             setDraft(value);
             onStopEdit();
           }
+          // Enter starts a new bullet (Shift+Enter for a soft line).
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            const ta = e.currentTarget;
+            const pos = ta.selectionStart;
+            const next = draft.slice(0, pos) + "\n• " + draft.slice(ta.selectionEnd);
+            setDraft(next);
+            requestAnimationFrame(() => {
+              ta.selectionStart = ta.selectionEnd = pos + 3;
+            });
+          }
         }}
-        rows={Math.max(2, Math.ceil(draft.length / 60))}
-        placeholder="Notes for this section…"
+        rows={Math.max(2, draft.split("\n").length + 1)}
+        placeholder="• A beat or note per line…"
         className="w-full mt-1 bg-[var(--wc-canvas)] border border-[var(--wc-border)] rounded px-2 py-1.5 text-sm font-serif leading-relaxed outline-none focus:border-[var(--wc-border-strong)]"
       />
     );
   }
+  const bullets = bulletLines(value);
   return (
     <div
-      onClick={onStartEdit}
+      onClick={() => {
+        onStartEdit();
+        if (!value.trim()) setDraft("• ");
+      }}
       className="mt-0.5 ml-1 cursor-text text-sm text-[var(--wc-muted)] font-serif leading-relaxed hover:bg-[var(--wc-canvas)] rounded px-1"
     >
-      {value || <span className="italic text-[var(--wc-faint)]">Add notes…</span>}
+      {bullets.length > 0 ? (
+        <ul className="list-disc pl-5 space-y-0.5">
+          {bullets.map((b, i) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+      ) : (
+        <span className="italic text-[var(--wc-faint)]">Add notes…</span>
+      )}
     </div>
   );
+}
+
+/** Clean bullet strings (leading •/-/* removed). */
+function bulletLines(text: string): string[] {
+  return (text ?? "")
+    .split("\n")
+    .map((l) => l.replace(/^\s*[•\-*]\s*/, "").trim())
+    .filter(Boolean);
+}
+
+/** Re-emit as one "• "-prefixed line per bullet. */
+function normalizeBullets(text: string): string {
+  return bulletLines(text)
+    .map((l) => `• ${l}`)
+    .join("\n");
 }
 
 function SaveLabel({

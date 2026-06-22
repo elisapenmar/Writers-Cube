@@ -213,7 +213,7 @@ async function runFill(
     max_tokens: 2500,
     system: `You are filling in sections of a novelist's story outline using her ${sourceLabel}.
 
-For each outline section listed below, write a brief paragraph (1–3 sentences) describing what happens in that section, grounded ONLY in the source material. Use her own words and details wherever possible.
+For each outline section listed below, return 2–4 short bullet points (NOT prose) of what happens there — one beat, fact, or turn per line, each line starting with "• ". Keep each bullet to a single clause where possible. Ground every bullet ONLY in the source material, using her own words and details.
 
 If the material doesn't give you enough for a particular section, omit it (don't make things up). It's fine to skip sections.
 
@@ -231,7 +231,7 @@ Use the suggest_outline_content tool to return the filled sections.`,
                 type: "object",
                 properties: {
                   id: { type: "string", description: "outline node id" },
-                  content: { type: "string", description: "1–3 sentence draft" },
+                  content: { type: "string", description: "2–4 lines, each starting with '• '" },
                 },
                 required: ["id", "content"],
               },

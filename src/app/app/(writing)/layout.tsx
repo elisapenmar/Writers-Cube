@@ -37,7 +37,7 @@ export default async function WritingLayout({
   }
 
   return (
-    <div className="flex flex-1 min-h-screen">
+    <div className="wc-workspace flex flex-1 min-h-screen">
       <SideNav project={project} uncategorized={uncategorized} />
       <AppShell>{children}</AppShell>
       <StudioTour />
