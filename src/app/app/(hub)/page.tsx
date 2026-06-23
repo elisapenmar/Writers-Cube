@@ -10,6 +10,7 @@ import { listKernels, type StoryKernel } from "@/server/kernels";
 import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
 import { ImportButton } from "@/components/import-button";
+import { BackupControls } from "@/components/backup-controls";
 import { ProjectExportMenu } from "@/components/project-export-menu";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { CubeMark } from "@/components/cube-mark";
@@ -154,6 +155,12 @@ export default async function Dashboard() {
               </button>
             </form>
             <ImportButton />
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 text-[11px] text-[var(--wc-faint)]">
+            <span aria-hidden>🛟</span>
+            <span className="shrink-0">Your work:</span>
+            <BackupControls />
           </div>
         </section>
 

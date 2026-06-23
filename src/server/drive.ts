@@ -358,3 +358,52 @@ export async function exportProjectToDrive(projectId: string): Promise<{ name: s
   if (!res.ok) throw new Error(`Upload to Drive failed (${res.status})`);
   return { name };
 }
+
+const BACKUP_FOLDER = "Writer's Cube Backups";
+
+async function findOrCreateBackupFolder(): Promise<string> {
+  const q = encodeURIComponent(
+    `name='${BACKUP_FOLDER}' and mimeType='${FOLDER_MIME}' and trashed=false`,
+  );
+  const found = await driveFetch(`${DRIVE_API}/files?q=${q}&fields=files(id)`);
+  const json = (await found.json()) as { files?: { id: string }[] };
+  if (json.files?.[0]) return json.files[0].id;
+  const created = await driveFetch(`${DRIVE_API}/files`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: BACKUP_FOLDER, mimeType: FOLDER_MIME }),
+  });
+  const c = (await created.json()) as { id: string };
+  return c.id;
+}
+
+/** Upload a full-account JSON backup into the user's "Writer's Cube Backups" folder. */
+export async function uploadBackupToDrive(
+  filename: string,
+  json: string,
+): Promise<{ fileId: string }> {
+  const folderId = await findOrCreateBackupFolder();
+  const boundary = `wcbk${Date.now()}`;
+  const metadata = JSON.stringify({
+    name: filename,
+    parents: [folderId],
+    mimeType: "application/json",
+  });
+  const pre =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n`;
+  const post = `\r\n--${boundary}--`;
+  const body = Buffer.concat([
+    Buffer.from(pre, "utf-8"),
+    Buffer.from(json, "utf-8"),
+    Buffer.from(post, "utf-8"),
+  ]);
+  const res = await driveFetch(`${DRIVE_UPLOAD}?uploadType=multipart&fields=id`, {
+    method: "POST",
+    headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+    body: body as unknown as BodyInit,
+  });
+  if (!res.ok) throw new Error(`Backup upload failed (${res.status})`);
+  const out = (await res.json()) as { id: string };
+  return { fileId: out.id };
+}
