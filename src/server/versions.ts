@@ -30,21 +30,29 @@ function countWords(doc: unknown): number {
 const SNAPSHOT_INTERVAL_MS = 3 * 60 * 1000; // at most one snapshot per 3 minutes
 
 /**
- * Record a version snapshot for a scene, throttled so autosaves don't flood the
- * history. Safe to call on every save — it no-ops if the latest snapshot is recent.
+ * Record a version snapshot for a scene. Throttled by default so autosaves don't
+ * flood the history; pass { force: true } for safety snapshots (e.g. before a
+ * destructive write) that must always be captured.
  */
-export async function snapshotScene(sceneId: string, content: unknown): Promise<void> {
+export async function snapshotScene(
+  sceneId: string,
+  content: unknown,
+  opts?: { force?: boolean },
+): Promise<void> {
   try {
+    if (!content) return;
     const { supabase, user } = await requireUser();
-    const { data: last } = await supabase
-      .from("scene_versions")
-      .select("created_at")
-      .eq("scene_id", sceneId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (last && Date.now() - new Date(last.created_at as string).getTime() < SNAPSHOT_INTERVAL_MS) {
-      return;
+    if (!opts?.force) {
+      const { data: last } = await supabase
+        .from("scene_versions")
+        .select("created_at")
+        .eq("scene_id", sceneId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last && Date.now() - new Date(last.created_at as string).getTime() < SNAPSHOT_INTERVAL_MS) {
+        return;
+      }
     }
     await supabase.from("scene_versions").insert({
       scene_id: sceneId,

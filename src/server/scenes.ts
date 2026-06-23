@@ -365,6 +365,9 @@ export async function splitScene(
     .maybeSingle();
   if (!scene) throw new Error("Scene not found");
 
+  // Safety: capture the whole pre-split scene so the split is reversible.
+  await snapshotScene(sceneId, scene.content, { force: true });
+
   const doc = scene.content as { content?: Block[] } | null;
   const blocks: Block[] = Array.isArray(doc?.content) ? (doc!.content as Block[]) : [];
 
@@ -516,6 +519,9 @@ export async function splitSceneAt(
   if (blockIndex <= 0 || blockIndex >= blocks.length) {
     throw new Error("Pick a spot inside the text (not the very start or end) to split.");
   }
+  // Safety: capture the whole pre-split scene so the split is reversible.
+  await snapshotScene(sceneId, scene.content, { force: true });
+
   const head = blocks.slice(0, blockIndex);
   const tail = blocks.slice(blockIndex);
 
@@ -623,6 +629,11 @@ export async function mergeScene(
   const laterBlocks = ((later.content as { content?: Block[] } | null)?.content ?? []) as Block[];
   const merged = docOf([...earlierBlocks, ...laterBlocks]);
 
+  // Safety: snapshot both scenes' pre-merge content (the later scene is deleted,
+  // so this is the only place its standalone history survives the merge).
+  await snapshotScene(earlier.id, earlier.content, { force: true });
+  await snapshotScene(earlier.id, later.content, { force: true });
+
   await supabase
     .from("scenes")
     .update({
@@ -655,6 +666,22 @@ export async function mergeScene(
 export async function updateSceneContent(sceneId: string, content: unknown) {
   const { supabase } = await requireUser();
   const word_count = countWordsInDoc(content);
+
+  // Write-safety guard: if this save empties or sharply shrinks the scene,
+  // force-snapshot the CURRENT content first so the prior words are always
+  // recoverable from History — even if a bug or a stray autosave caused it.
+  const { data: cur } = await supabase
+    .from("scenes")
+    .select("content, word_count")
+    .eq("id", sceneId)
+    .maybeSingle();
+  const curWords = (cur?.word_count as number) ?? 0;
+  const emptiesIt = word_count === 0 && curWords > 0;
+  const bigShrink = curWords >= 40 && word_count < curWords * 0.5;
+  if (cur?.content && (emptiesIt || bigShrink)) {
+    await snapshotScene(sceneId, cur.content, { force: true });
+  }
+
   const { error } = await supabase
     .from("scenes")
     .update({ content, word_count, updated_at: new Date().toISOString() })
