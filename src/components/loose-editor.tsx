@@ -16,8 +16,22 @@ import {
 } from "@/server/loose";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
+import { SceneHistory } from "@/components/scene-history";
+import { listContentVersions, getContentVersion } from "@/server/versions";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+function countWords(doc: unknown): number {
+  let text = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc);
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
 
 export function LooseEditor({ scene }: { scene: LooseScene }) {
   const router = useRouter();
@@ -25,6 +39,7 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
   const [savedAt, setSavedAt] = useState<string | null>(scene.updated_at);
   const [wordCount, setWordCount] = useState(scene.word_count);
   const [title, setTitle] = useState(scene.title);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -109,6 +124,13 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
           <span className="tabular-nums">{wordCount} words</span>
           <SaveLabel status={status} savedAt={savedAt} />
           <button
+            onClick={() => setHistoryOpen(true)}
+            className="rounded-md border border-[var(--wc-border-strong)] px-2 py-1 text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+            title="Version history"
+          >
+            History
+          </button>
+          <button
             onClick={remove}
             className="rounded-md px-2 py-1 text-[var(--wc-faint)] hover:text-red-700"
           >
@@ -116,6 +138,29 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
           </button>
         </div>
       </header>
+
+      {historyOpen && (
+        <SceneHistory
+          sceneId={scene.id}
+          sceneTitle={title || "Untitled"}
+          loaders={{
+            list: () => listContentVersions("loose_scene", scene.id),
+            get: getContentVersion,
+            restore: async (versionId) => {
+              const content = await getContentVersion(versionId);
+              await updateLooseSceneContent(scene.id, content); // snapshots current first
+              return { content };
+            },
+          }}
+          onClose={() => setHistoryOpen(false)}
+          onRestore={(content) => {
+            if (editor) {
+              editor.commands.setContent(content as object, { emitUpdate: false });
+              setWordCount(countWords(content));
+            }
+          }}
+        />
+      )}
 
       <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
         <EditorToolbar editor={editor} />

@@ -93,18 +93,32 @@ function when(iso: string): string {
   });
 }
 
-/** A Google-Docs-style version history drawer for a single scene. */
+export type HistoryLoaders = {
+  list: () => Promise<SceneVersion[]>;
+  get: (id: string) => Promise<unknown>;
+  restore: (id: string) => Promise<{ content: unknown }>;
+};
+
+/** A Google-Docs-style version history drawer for a single scene (or, with
+ *  custom loaders, any versioned content). */
 export function SceneHistory({
   sceneId,
   sceneTitle,
+  loaders,
   onClose,
   onRestore,
 }: {
   sceneId: string;
   sceneTitle: string;
+  loaders?: HistoryLoaders;
   onClose: () => void;
   onRestore: (content: unknown) => void;
 }) {
+  const L: HistoryLoaders = loaders ?? {
+    list: () => listSceneVersions(sceneId),
+    get: getSceneVersionContent,
+    restore: restoreSceneVersion,
+  };
   const [versions, setVersions] = useState<SceneVersion[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [diff, setDiff] = useState<(DiffPart | { type: "gap"; text: string })[] | null>(null);
@@ -115,7 +129,7 @@ export function SceneHistory({
   useEffect(() => {
     void (async () => {
       try {
-        const v = await listSceneVersions(sceneId);
+        const v = await L.list();
         setVersions(v);
         if (v[0]) void choose(v, 0);
       } catch (e) {
@@ -136,8 +150,8 @@ export function SceneHistory({
     try {
       const older = list[index + 1]; // versions are newest-first
       const [newContent, oldContent] = await Promise.all([
-        getSceneVersionContent(v.id),
-        older ? getSceneVersionContent(older.id) : Promise.resolve(null),
+        L.get(v.id),
+        older ? L.get(older.id) : Promise.resolve(null),
       ]);
       const parts = diffParagraphs(
         oldContent ? paragraphs(oldContent) : [],
@@ -156,7 +170,7 @@ export function SceneHistory({
     setBusy(true);
     setError(null);
     try {
-      const { content } = await restoreSceneVersion(selected);
+      const { content } = await L.restore(selected);
       onRestore(content);
       onClose();
     } catch (e) {
