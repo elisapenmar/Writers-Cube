@@ -173,51 +173,39 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
   const meta = (await metaRes.json()) as { name?: string };
   const title = meta.name ?? "Imported document";
 
-  // 1) DOCX export → mammoth: reads tables, text boxes, and full body the most
-  //    faithfully (plain/HTML exports can drop content trapped in those).
-  let text = "";
-  try {
-    const docxRes = await driveFetch(
-      `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(DOCX_MIME)}`,
-    );
-    const buf = Buffer.from(await docxRes.arrayBuffer());
-    const mammoth = (await import("mammoth")).default;
-    const { value } = await mammoth.convertToHtml({ buffer: buf });
-    text = await htmlToText(value);
-    console.log(`[wc-import] docx bytes=${buf.length} html=${value.length} text=${text.length} body=${bodyDense(text)}`);
-  } catch (e) {
-    console.log(`[wc-import] docx export failed: ${e instanceof Error ? e.message : e}`);
-  }
+  // Export the doc three ways and KEEP WHICHEVER HAS THE MOST BODY TEXT.
+  // (Google's exports are inconsistent — DOCX can come back near-empty while
+  //  HTML/plain have the full content, or vice-versa. Don't trust just one.)
+  const exportUrl = (mime: string) =>
+    `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(mime)}`;
 
-  // 2) Plain text — one line per paragraph.
-  if (bodyDense(text) < 2) {
+  async function tryExport(label: string, fn: () => Promise<string>): Promise<string> {
     try {
-      const txtRes = await driveFetch(
-        `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/plain")}`,
-      );
-      const raw = await txtRes.text();
-      text = plainToMarkdownish(raw);
-      console.log(`[wc-import] plain raw=${raw.length} text=${text.length} body=${bodyDense(text)} head="${raw.slice(0, 80).replace(/\s+/g, " ")}"`);
+      const t = (await fn()).trim();
+      console.log(`[wc-import] ${label} body=${bodyDense(t)} len=${t.length}`);
+      return t;
     } catch (e) {
-      console.log(`[wc-import] plain export failed: ${e instanceof Error ? e.message : e}`);
+      console.log(`[wc-import] ${label} failed: ${e instanceof Error ? e.message : e}`);
+      return "";
     }
   }
 
-  // 3) HTML backup.
-  if (bodyDense(text) < 2) {
-    try {
-      const htmlRes = await driveFetch(
-        `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent("text/html")}`,
-      );
-      const raw = await htmlRes.text();
-      text = await htmlToText(raw);
-      console.log(`[wc-import] html raw=${raw.length} text=${text.length} body=${bodyDense(text)}`);
-    } catch (e) {
-      console.log(`[wc-import] html export failed: ${e instanceof Error ? e.message : e}`);
-    }
-  }
+  const [htmlText, plainText, docxText] = await Promise.all([
+    tryExport("html", async () => htmlToText(await (await driveFetch(exportUrl("text/html"))).text())),
+    tryExport("plain", async () => plainToMarkdownish(await (await driveFetch(exportUrl("text/plain"))).text())),
+    tryExport("docx", async () => {
+      const buf = Buffer.from(await (await driveFetch(exportUrl(DOCX_MIME))).arrayBuffer());
+      const mammoth = (await import("mammoth")).default;
+      const { value } = await mammoth.convertToHtml({ buffer: buf });
+      return htmlToText(value);
+    }),
+  ]);
 
-  console.log(`[wc-import] FINAL title="${title}" body=${bodyDense(text)} text="${text.slice(0, 120).replace(/\s+/g, " ")}"`);
+  // Pick the richest. Prefer HTML/docx (keep headings) over plain when tied-ish.
+  const candidates = [htmlText, docxText, plainText];
+  const text = candidates.reduce((best, c) => (bodyDense(c) > bodyDense(best) ? c : best), "");
+  console.log(`[wc-import] FINAL title="${title}" body=${bodyDense(text)} sample="${text.slice(0, 100).replace(/\s+/g, " ")}"`);
+
   if (bodyDense(text) < 2) {
     throw emptyImportError(title, text);
   }
