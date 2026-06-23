@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { snapshotContent } from "@/server/versions";
 
 export type LooseScene = {
   id: string;
@@ -104,6 +105,19 @@ export async function updateLooseSceneContent(
   const { supabase } = await requireUser();
   const word_count = countWords(content);
   const savedAt = new Date().toISOString();
+
+  // Write-safety: snapshot prior content before an emptying/shrinking save.
+  const { data: cur } = await supabase
+    .from("loose_scenes")
+    .select("content, word_count")
+    .eq("id", id)
+    .maybeSingle();
+  const curWords = (cur?.word_count as number) ?? 0;
+  const shrink = (word_count === 0 && curWords > 0) || (curWords >= 40 && word_count < curWords * 0.5);
+  if (cur?.content && shrink) {
+    await snapshotContent("loose_scene", id, cur.content, { force: true });
+  }
+
   const { error } = await supabase
     .from("loose_scenes")
     .update({ content, word_count, updated_at: savedAt })
@@ -112,6 +126,7 @@ export async function updateLooseSceneContent(
     if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
     throw new Error(error.message);
   }
+  await snapshotContent("loose_scene", id, content);
   return { word_count, savedAt };
 }
 

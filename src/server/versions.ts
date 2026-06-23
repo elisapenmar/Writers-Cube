@@ -16,6 +16,10 @@ async function requireUser() {
 }
 
 function countWords(doc: unknown): number {
+  // Plain text (e.g. notes) or a TipTap doc — handle both.
+  if (typeof doc === "string") {
+    return doc.trim().split(/\s+/).filter(Boolean).length;
+  }
   let text = "";
   const walk = (n: unknown) => {
     if (!n || typeof n !== "object") return;
@@ -28,6 +32,74 @@ function countWords(doc: unknown): number {
 }
 
 const SNAPSHOT_INTERVAL_MS = 3 * 60 * 1000; // at most one snapshot per 3 minutes
+
+export type ContentVersion = { id: string; word_count: number; created_at: string };
+
+/**
+ * Generic, append-only version snapshot for any content type (loose scenes,
+ * notes, …). Throttled by default; pass { force: true } for safety snapshots.
+ */
+export async function snapshotContent(
+  entityType: string,
+  entityId: string,
+  content: unknown,
+  opts?: { force?: boolean },
+): Promise<void> {
+  try {
+    if (content == null || content === "") return;
+    const { supabase, user } = await requireUser();
+    if (!opts?.force) {
+      const { data: last } = await supabase
+        .from("content_versions")
+        .select("created_at")
+        .eq("entity_type", entityType)
+        .eq("entity_id", entityId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last && Date.now() - new Date(last.created_at as string).getTime() < SNAPSHOT_INTERVAL_MS) {
+        return;
+      }
+    }
+    await supabase.from("content_versions").insert({
+      user_id: user.id,
+      entity_type: entityType,
+      entity_id: entityId,
+      content,
+      word_count: countWords(content),
+    });
+  } catch {
+    // History is best-effort; never block a save.
+  }
+}
+
+export async function listContentVersions(
+  entityType: string,
+  entityId: string,
+): Promise<ContentVersion[]> {
+  const { supabase, user } = await requireUser();
+  const { data, error } = await supabase
+    .from("content_versions")
+    .select("id, word_count, created_at")
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) return [];
+  return (data ?? []) as ContentVersion[];
+}
+
+export async function getContentVersion(versionId: string): Promise<unknown> {
+  const { supabase, user } = await requireUser();
+  const { data } = await supabase
+    .from("content_versions")
+    .select("content")
+    .eq("id", versionId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return data?.content ?? null;
+}
 
 /**
  * Record a version snapshot for a scene. Throttled by default so autosaves don't

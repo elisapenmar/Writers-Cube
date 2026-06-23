@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
+import { snapshotContent } from "@/server/versions";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 import type { BrainstormMode } from "@/lib/brainstorm-modes";
 
@@ -422,6 +423,22 @@ export async function saveNotes(text: string): Promise<void> {
   const { supabase, user } = await requireUser();
   const projectId = await resolveProjectId(supabase, user.id);
   if (!projectId) throw new Error("No project found");
+
+  // Write-safety: snapshot prior notes before an emptying/shrinking save.
+  const { data: cur } = await supabase
+    .from("projects")
+    .select("notes")
+    .eq("id", projectId)
+    .maybeSingle();
+  const curText = ((cur?.notes as string | null) ?? "").trim();
+  const next = text.trim();
+  const shrink =
+    (next.length === 0 && curText.length > 0) ||
+    (curText.length >= 200 && next.length < curText.length * 0.5);
+  if (curText && shrink) {
+    await snapshotContent("notes", projectId, curText, { force: true });
+  }
+
   const { error } = await supabase
     .from("projects")
     .update({ notes: text, updated_at: new Date().toISOString() })
@@ -430,6 +447,7 @@ export async function saveNotes(text: string): Promise<void> {
     if (isMissingNotesColumn(error)) throw new Error(MIGRATION_REMINDER);
     throw new Error(error.message);
   }
+  await snapshotContent("notes", projectId, text);
   revalidatePath("/app/brainstorm");
 }
 
