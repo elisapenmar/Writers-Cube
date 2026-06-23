@@ -208,6 +208,15 @@ export async function importTextAsProject(
     (n, ch) => n + ch.scenes.reduce((m, sc) => m + wordCount(sc.paragraphs), 0),
     0,
   );
+  console.error(
+    `[wcimp-parse] words=${words} len=${text.length} sample=${JSON.stringify(text.slice(0, 100))}`,
+  );
+  // Never leave a blank project behind — fail loudly instead.
+  if (words === 0) {
+    throw new Error(
+      `“${title}” imported with no readable text. If it's a Google Doc, its content may be in a document tab that Drive doesn't export — open it in Google Docs and use File → Download → Microsoft Word (.docx), then import that file from your computer.`,
+    );
+  }
   const projectId = await persistParsed(supabase, user.id, parsed, title);
   await setActiveProject(projectId);
   return { projectId, words };
