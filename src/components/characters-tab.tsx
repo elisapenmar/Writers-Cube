@@ -11,6 +11,7 @@ import {
   type Character,
 } from "@/server/characters";
 import { AiSourceMenu } from "@/components/ai-source-menu";
+import { CharacterGrid } from "@/components/character-grid";
 
 /** Split a description into clean bullet strings (leading •/-/* removed). */
 function bulletLines(text: string): string[] {
@@ -33,6 +34,8 @@ export function CharactersTab() {
   const [info, setInfo] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [showGrid, setShowGrid] = useState(false);
+  const [gridKey, setGridKey] = useState(0);
 
   useEffect(() => {
     void load();
@@ -42,6 +45,7 @@ export function CharactersTab() {
     try {
       setCharacters(await listCharacters());
       setError(null);
+      setGridKey((k) => k + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Load failed");
     }
@@ -110,6 +114,17 @@ export function CharactersTab() {
           {(characters?.length ?? 0) === 1 ? "" : "s"}
         </div>
         <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setShowGrid((g) => !g)}
+            className={`rounded-md px-2 py-1 text-xs border ${
+              showGrid
+                ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
+                : "border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+            }`}
+            title="Show where each character appears, chapter by chapter"
+          >
+            ▦ Grid
+          </button>
           <AiSourceMenu
             label="Pull characters"
             busy={pulling || pending}
@@ -147,6 +162,14 @@ export function CharactersTab() {
             <button onClick={() => setInfo(null)} className="ml-2 underline">
               Dismiss
             </button>
+          </div>
+        )}
+        {showGrid && (
+          <div className="mb-1">
+            <CharacterGrid refreshKey={gridKey} />
+            <p className="mt-1 text-[10px] text-[var(--wc-faint)]">
+              Numbers = name mentions per chapter. Click a cell to jump to the scene.
+            </p>
           </div>
         )}
         {(characters ?? []).length === 0 && !error ? (
@@ -187,6 +210,7 @@ function CharacterCard({
   const [description, setDescription] = useState(character.description);
   const [savingDescription, setSavingDescription] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -227,6 +251,14 @@ function CharacterCard({
   return (
     <div className="bg-[var(--wc-surface)] border border-[var(--wc-border)] rounded-md p-3 group">
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          className="shrink-0 w-4 text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
+          title={expanded ? "Collapse" : "Expand details"}
+          aria-label="Toggle character details"
+        >
+          {expanded ? "▾" : "▸"}
+        </button>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -254,7 +286,28 @@ function CharacterCard({
         </button>
       </div>
 
-      {editingDescription ? (
+      {!expanded ? (
+        <div
+          onClick={() => setExpanded(true)}
+          className="mt-1 cursor-pointer text-sm text-[var(--wc-muted)] font-serif leading-snug hover:bg-[var(--wc-canvas)] rounded px-1 -mx-1"
+        >
+          {bulletLines(description).length > 0 ? (
+            <p className="line-clamp-2">
+              {bulletLines(description)[0]}
+              {bulletLines(description).length > 1 && (
+                <span className="text-[10px] text-[var(--wc-faint)]">
+                  {" "}
+                  · +{bulletLines(description).length - 1} more
+                </span>
+              )}
+            </p>
+          ) : (
+            <span className="italic text-[var(--wc-faint)]">
+              Broad strokes — click to add details
+            </span>
+          )}
+        </div>
+      ) : editingDescription ? (
         <textarea
           autoFocus
           value={description}

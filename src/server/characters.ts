@@ -16,6 +16,103 @@ export type Character = {
   updated_at: string;
 };
 
+export type CharacterMatrix = {
+  chapters: { id: string; title: string }[];
+  rows: {
+    id: string;
+    name: string;
+    counts: number[]; // mentions per chapter (aligned with `chapters`)
+    sceneByChapter: (string | null)[]; // first scene per chapter that mentions them
+    total: number;
+  }[];
+};
+
+function countName(hay: string, name: string): number {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`\\b${escaped}\\b`, "gi");
+  const m = hay.match(re);
+  return m ? m.length : 0;
+}
+
+/**
+ * Build the character × chapter occurrence grid for the active project: counts
+ * each character's name mentions per chapter (from scene prose) and the first
+ * scene in each chapter where they appear (for linking into the manuscript).
+ */
+export async function characterChapterMatrix(): Promise<CharacterMatrix> {
+  const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return { chapters: [], rows: [] };
+
+  const { data: chars } = await supabase
+    .from("characters")
+    .select("id, name, position")
+    .eq("user_id", user.id)
+    .eq("project_id", projectId)
+    .order("position", { ascending: true });
+  const characters = (chars ?? []).filter((c) => String(c.name ?? "").trim());
+
+  const { data: chapters } = await supabase
+    .from("chapters")
+    .select("id, title, position")
+    .eq("project_id", projectId)
+    .order("position", { ascending: true });
+  const chapterList = chapters ?? [];
+  const chapterIds = chapterList.map((c) => c.id as string);
+
+  const { data: scenes } = chapterIds.length
+    ? await supabase
+        .from("scenes")
+        .select("id, chapter_id, position, content")
+        .in("chapter_id", chapterIds)
+        .order("position", { ascending: true })
+    : { data: [] as { id: string; chapter_id: string; content: unknown }[] };
+
+  // Per-chapter concatenated prose + the ordered scenes (for first-mention links).
+  const textByChapter = new Map<string, string>();
+  const scenesByChapter = new Map<string, { id: string; text: string }[]>();
+  for (const s of scenes ?? []) {
+    const cid = s.chapter_id as string;
+    const text = plainTextFromDoc((s as { content?: unknown }).content);
+    textByChapter.set(cid, (textByChapter.get(cid) ?? "") + " " + text);
+    const arr = scenesByChapter.get(cid) ?? [];
+    arr.push({ id: s.id as string, text });
+    scenesByChapter.set(cid, arr);
+  }
+
+  const rows = characters.map((c) => {
+    const name = String(c.name).trim();
+    const counts: number[] = [];
+    const sceneByChapter: (string | null)[] = [];
+    let total = 0;
+    for (const ch of chapterList) {
+      const cid = ch.id as string;
+      const count = countName(textByChapter.get(cid) ?? "", name);
+      counts.push(count);
+      total += count;
+      let scene: string | null = null;
+      if (count > 0) {
+        for (const s of scenesByChapter.get(cid) ?? []) {
+          if (countName(s.text, name) > 0) {
+            scene = s.id;
+            break;
+          }
+        }
+      }
+      sceneByChapter.push(scene);
+    }
+    return { id: c.id as string, name, counts, sceneByChapter, total };
+  });
+
+  return {
+    chapters: chapterList.map((c) => ({
+      id: c.id as string,
+      title: String(c.title ?? ""),
+    })),
+    rows,
+  };
+}
+
 async function requireUser() {
   const supabase = await createClient();
   const {
