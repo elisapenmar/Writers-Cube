@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
 import { snapshotContent } from "@/server/versions";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
+import { htmlToPlainText } from "@/lib/html-text";
 import type { BrainstormMode } from "@/lib/brainstorm-modes";
 
 export type { BrainstormMode } from "@/lib/brainstorm-modes";
@@ -506,7 +507,7 @@ export async function organizeBrainstorm(
         messages: [
           {
             role: "user",
-            content: `EXISTING NOTES:\n\n${existingNotes}\n\n---\n\nRECENT CONVERSATION:\n\n${transcript}\n\n---\n\nOutput the updated notes now.`,
+            content: `EXISTING NOTES:\n\n${htmlToPlainText(existingNotes)}\n\n---\n\nRECENT CONVERSATION:\n\n${transcript}\n\n---\n\nOutput the updated notes now.`,
           },
         ],
       });

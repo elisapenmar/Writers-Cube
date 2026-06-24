@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import { Indent } from "@/lib/indent";
+import { TextStyle, FontFamily } from "@tiptap/extension-text-style";
+import { ALL_TAG_MARKS } from "@/lib/tag-mark";
+import { EditorToolbar } from "@/components/editor-toolbar";
 import { extractDocumentText } from "@/server/import";
 
 const LEGACY_STORAGE_KEY = "wc-organize";
@@ -419,6 +426,22 @@ export function OrganizePanel() {
   );
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Notes are persisted as a string that now holds HTML. Legacy notes, AI-generated
+// notes, and imported documents arrive as plain text — wrap them into paragraphs
+// so they render (and keep their line breaks) in the rich editor.
+function notesToHtml(value: string): string {
+  if (!value) return "";
+  if (/^\s*</.test(value)) return value; // already HTML
+  return value
+    .split(/\n{2,}/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
 function NotesEditor({
   value,
   saving,
@@ -428,25 +451,60 @@ function NotesEditor({
   value: string;
   saving: boolean;
   savedAt: string | null;
-  onChange: (text: string) => void;
+  onChange: (html: string) => void;
 }) {
+  const editor = useEditor({
+    extensions: [StarterKit, Underline, Indent, TextStyle, FontFamily, ...ALL_TAG_MARKS],
+    content: notesToHtml(value),
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-sm max-w-none min-h-full leading-relaxed focus:outline-none",
+      },
+    },
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    immediatelyRender: false,
+  });
+
+  // Push external updates (AI "Generate"/"Add from chat", which set notes through
+  // the store) into the editor — without echoing the editor's own output back.
+  const lastSynced = useRef<string>(value);
+  useEffect(() => {
+    if (!editor) return;
+    if (value === lastSynced.current || value === editor.getHTML()) {
+      lastSynced.current = value;
+      return;
+    }
+    editor.commands.setContent(notesToHtml(value), { emitUpdate: false });
+    lastSynced.current = value;
+  }, [value, editor]);
+
+  const isEmpty = value.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim() === "";
+
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-1 text-xs text-[var(--wc-faint)] border-b border-[var(--wc-border)]">
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex items-center justify-between px-3 py-1 text-xs text-[var(--wc-faint)] border-b border-[var(--wc-border)]">
         <ImportDocButton
-          onImported={(text) => onChange(value ? `${value}\n\n${text}` : text)}
+          onImported={(text) =>
+            editor?.chain().focus("end").insertContent(notesToHtml(text)).run()
+          }
         />
         <SaveLabel saving={saving} savedAt={savedAt} />
       </div>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        spellCheck={true}
-        placeholder="Your working notes will appear here. Edit freely — your changes save automatically.
-
-Run a brainstorm session, then click 'Generate' (or 'Add from chat' once notes exist) to have the AI distill the conversation into notes here."
-        className="flex-1 resize-none p-5 bg-[var(--wc-surface)] text-sm text-[var(--wc-ink)] leading-relaxed font-serif focus:outline-none whitespace-pre-wrap"
+      <EditorToolbar
+        editor={editor}
+        className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-2 py-1"
       />
+      <div className="relative flex-1 overflow-y-auto bg-[var(--wc-surface)] px-4 py-3">
+        {isEmpty && (
+          <p className="pointer-events-none absolute inset-x-4 top-3 text-sm text-[var(--wc-faint)] leading-relaxed">
+            Your working notes appear here — edit freely; changes save
+            automatically. Run a brainstorm, then click{" "}
+            <span className="font-medium">Generate</span> to distill it into notes.
+          </p>
+        )}
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }

@@ -1,15 +1,11 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import { Indent } from "@/lib/indent";
-import { TextStyle, FontFamily } from "@tiptap/extension-text-style";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Scene } from "@/lib/types";
 import { updateSceneContent, splitScene, splitSceneAt, mergeScene } from "@/server/scenes";
-import { ALL_TAG_MARKS } from "@/lib/tag-mark";
+import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
@@ -35,7 +31,7 @@ export function Editor({ scene }: { scene: Scene }) {
 
   const editor = useEditor(
     {
-      extensions: [StarterKit, Underline, Indent, TextStyle, FontFamily, ...ALL_TAG_MARKS],
+      extensions: RTE_EXTENSIONS,
       content: (scene.content as object | null) ?? {
         type: "doc",
         content: [{ type: "paragraph" }],

@@ -6,6 +6,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
+import { htmlToPlainText } from "@/lib/html-text";
 import type { MindMapNode } from "@/server/brainstorm";
 import type { SavedMindMap } from "@/server/mindmap";
 import type { TimelineState, TimelineLane } from "@/server/timeline";
@@ -39,7 +40,7 @@ async function gatherStory(projectId: string) {
     .select("notes")
     .eq("id", projectId)
     .maybeSingle();
-  const notes = ((project?.notes as string | undefined) ?? "").trim();
+  const notes = htmlToPlainText((project?.notes as string | undefined) ?? "").trim();
 
   const { data: chapters } = await supabase
     .from("chapters")
