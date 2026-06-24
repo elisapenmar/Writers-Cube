@@ -33,7 +33,12 @@ function parseMarkdownish(text: string, fallbackTitle: string): Parsed {
     if (para.length) {
       const t = para.join(" ").trim();
       if (t) {
-        if (!chapter) chapter = { title: "Chapter 1", scenes: [] };
+        if (!chapter) {
+          // Lazily create the holding chapter AND register it — otherwise a
+          // document with no explicit heading drops all its content.
+          chapter = { title: "Chapter 1", scenes: [] };
+          chapters.push(chapter);
+        }
         if (!scene) {
           scene = { paragraphs: [] };
           chapter.scenes.push(scene);
@@ -208,13 +213,10 @@ export async function importTextAsProject(
     (n, ch) => n + ch.scenes.reduce((m, sc) => m + wordCount(sc.paragraphs), 0),
     0,
   );
-  console.error(
-    `[wcimp-parse] words=${words} len=${text.length} sample=${JSON.stringify(text.slice(0, 100))}`,
-  );
   // Never leave a blank project behind — fail loudly instead.
   if (words === 0) {
     throw new Error(
-      `“${title}” imported with no readable text. If it's a Google Doc, its content may be in a document tab that Drive doesn't export — open it in Google Docs and use File → Download → Microsoft Word (.docx), then import that file from your computer.`,
+      `“${title}” imported with no readable text. Open it and confirm it has content, then try again.`,
     );
   }
   const projectId = await persistParsed(supabase, user.id, parsed, title);

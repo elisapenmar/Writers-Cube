@@ -179,13 +179,10 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
   const exportUrl = (mime: string) =>
     `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(mime)}`;
 
-  async function tryExport(label: string, fn: () => Promise<string>): Promise<string> {
+  async function tryExport(_label: string, fn: () => Promise<string>): Promise<string> {
     try {
-      const t = (await fn()).trim();
-      console.log(`[wc-import] ${label} body=${bodyDense(t)} len=${t.length}`);
-      return t;
-    } catch (e) {
-      console.log(`[wc-import] ${label} failed: ${e instanceof Error ? e.message : e}`);
+      return (await fn()).trim();
+    } catch {
       return "";
     }
   }
@@ -204,7 +201,6 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
   // Pick the richest. Prefer HTML/docx (keep headings) over plain when tied-ish.
   const candidates = [htmlText, docxText, plainText];
   const text = candidates.reduce((best, c) => (bodyDense(c) > bodyDense(best) ? c : best), "");
-  console.log(`[wc-import] FINAL title="${title}" body=${bodyDense(text)} sample="${text.slice(0, 100).replace(/\s+/g, " ")}"`);
 
   if (bodyDense(text) < 2) {
     throw emptyImportError(title, text);
