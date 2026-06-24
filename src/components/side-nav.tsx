@@ -142,10 +142,10 @@ export function SideNav({
 
   if (navCollapsed) {
     return (
-      <aside className="w-12 shrink-0 border-r border-[var(--wc-border)] bg-[var(--wc-surface)] flex flex-col h-screen items-center py-3 gap-3">
+      <aside className="w-12 shrink-0 border-r border-[var(--wc-border)] bg-[var(--wc-surface)] flex flex-col min-h-screen items-center py-3 gap-3">
         <button
           onClick={toggleNavCollapsed}
-          className="w-8 h-8 rounded-lg text-[var(--wc-faint)] hover:bg-[var(--wc-paper)] grid place-items-center"
+          className="sticky top-3 z-10 w-8 h-8 rounded-lg bg-[var(--wc-surface)] text-[var(--wc-faint)] hover:bg-[var(--wc-paper)] grid place-items-center"
           title="Expand side nav"
         >
           <SidebarToggle collapsed />
