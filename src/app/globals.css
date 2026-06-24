@@ -45,6 +45,58 @@ body {
   font-family: var(--font-serif);
 }
 
+/* Images & tables inside the editor */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.5em auto;
+  display: block;
+}
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid var(--wc-slate);
+}
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1em 0;
+  overflow: hidden;
+}
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid var(--wc-border-strong, #c9c4bb);
+  padding: 0.35em 0.55em;
+  vertical-align: top;
+  position: relative;
+  min-width: 3em;
+}
+.ProseMirror th {
+  background: var(--wc-paper, #f0eee9);
+  font-weight: 600;
+  text-align: left;
+}
+.ProseMirror td p,
+.ProseMirror th p {
+  margin: 0;
+}
+.ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(80, 90, 120, 0.12);
+  pointer-events: none;
+}
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--wc-slate);
+  cursor: col-resize;
+}
+
 /* The writing surface ALWAYS renders in the standard manuscript font — themes
    restyle the app chrome only, never a project's prose. A user's own font choice
    (TipTap FontFamily) applies as an inline style on a span and still wins. */

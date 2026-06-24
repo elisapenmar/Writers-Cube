@@ -274,8 +274,10 @@ export function PromptTool({
               />
             ))}
             <DieFace
+              key={`seed:${dieStyle}`}
               label="Scenario seed"
               seed
+              image={`/focus/${dieStyle}/scenario.png`}
               selected={scenarioSeed}
               onClick={() => setScenarioSeed((v) => !v)}
             />

@@ -26,7 +26,7 @@ from scipy import ndimage
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "images")
 OUT = os.path.join(ROOT, "public", "focus")
-FOCUSES = ["character", "setting", "plot", "voice", "dialogue", "sensory"]
+FOCUSES = ["character", "setting", "plot", "voice", "dialogue", "sensory", "scenario"]
 SIZE = 512
 
 
@@ -65,13 +65,20 @@ def alpha_mask(im: Image.Image) -> np.ndarray:
 
 
 def cut(path: str) -> Image.Image:
-    im = Image.open(path).convert("RGB")
+    im = Image.open(path).convert("RGBA")
     W, H = im.size
-    fg = alpha_mask(im)
-    mask = Image.fromarray((fg * 255).astype("uint8")).resize((W, H)).filter(ImageFilter.GaussianBlur(1.2))
-    res = im.convert("RGBA"); res.putalpha(mask)
+    alpha = np.asarray(im.getchannel("A"))
+    if (alpha < 10).mean() > 0.02:
+        # Already cut out (real transparency) — keep the artist's alpha as-is.
+        res = im
+    else:
+        # Opaque source on a neutral backdrop — key the warm die out.
+        fg = alpha_mask(im.convert("RGB"))
+        mask = Image.fromarray((fg * 255).astype("uint8")).resize((W, H)).filter(ImageFilter.GaussianBlur(1.2))
+        res = im.copy(); res.putalpha(mask)
     bbox = res.getchannel("A").getbbox()
-    res = res.crop(bbox)
+    if bbox:
+        res = res.crop(bbox)
     # paste onto a centred transparent square with a little breathing room
     side = int(max(res.size) * 1.08)
     canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))

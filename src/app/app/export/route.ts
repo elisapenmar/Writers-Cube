@@ -4,6 +4,7 @@ import {
   type Manuscript,
   type ExportFormat,
   tiptapToParagraphs,
+  tiptapToHtml,
   renderManuscript,
   safeName,
 } from "@/lib/manuscript-export";
@@ -66,7 +67,11 @@ export async function GET(request: NextRequest) {
         .filter((s) => s.chapter_id === c.id)
         .map((s) => {
           totalWords += s.word_count ?? 0;
-          return { title: s.title, paragraphs: tiptapToParagraphs(s.content) };
+          return {
+            title: s.title,
+            paragraphs: tiptapToParagraphs(s.content),
+            html: tiptapToHtml(s.content),
+          };
         }),
     })),
   };

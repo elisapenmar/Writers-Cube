@@ -43,6 +43,14 @@ p { margin: 0; text-indent: ${indent}; ${spaced ? "margin-bottom: 0.9em; text-in
 p.first { text-indent: 0; }
 ${s.dropCaps ? `p.first::first-letter { font-size: 3.2em; line-height: 0.8; float: left; padding-right: 0.06em; }` : ""}
 .scene-break { text-align: center; text-indent: 0; margin: 1.4em 0; letter-spacing: 0.3em; }
+img { max-width: 100%; height: auto; display: block; margin: 1em auto; }
+ul, ol { margin: 0.6em 0 0.6em 1.4em; text-indent: 0; }
+li { text-indent: 0; }
+blockquote { margin: 1em 0 1em 1.2em; padding-left: 0.8em; border-left: 2px solid #ccc; font-style: italic; text-indent: 0; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #999; padding: 0.3em 0.5em; text-align: left; vertical-align: top; }
+th { background: #eee; }
+table p { text-indent: 0; margin: 0; }
 .front { text-align: center; }
 .copyright { font-size: 0.9em; line-height: 1.6; }
 .dedication { font-style: italic; text-align: center; margin-top: 6em; }
@@ -133,10 +141,15 @@ export async function renderEpub(m: Manuscript, s: PublishSettings): Promise<Buf
     const parts: string[] = [`<h2 class="chapter-title">${esc(heading)}</h2>`];
     ch.scenes.forEach((scene, si) => {
       if (si > 0) parts.push(`<p class="scene-break">${esc(s.sceneBreak)}</p>`);
-      scene.paragraphs.forEach((p, pi) => {
-        const cls = pi === 0 ? ' class="first"' : "";
-        parts.push(`<p${cls}>${esc(p)}</p>`);
-      });
+      if (scene.html) {
+        // Rich content (lists, images, tables, colors) preserved in the ebook.
+        parts.push(scene.html);
+      } else {
+        scene.paragraphs.forEach((p, pi) => {
+          const cls = pi === 0 ? ' class="first"' : "";
+          parts.push(`<p${cls}>${esc(p)}</p>`);
+        });
+      }
     });
     const file = `chapter-${ci + 1}.xhtml`;
     oebps.file(file, xhtmlDoc(heading, lang, parts.join("\n")));

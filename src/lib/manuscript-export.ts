@@ -16,7 +16,7 @@ import {
 } from "@/lib/publish-types";
 import { renderEpub } from "@/lib/epub";
 
-export type ManuscriptScene = { title: string; paragraphs: string[] };
+export type ManuscriptScene = { title: string; paragraphs: string[]; html?: string };
 export type ManuscriptChapter = { title: string; scenes: ManuscriptScene[] };
 export type Manuscript = {
   title: string;
@@ -62,6 +62,80 @@ function inlineText(node: { content?: unknown[]; text?: string; type?: string })
   let s = "";
   for (const c of node.content ?? []) s += inlineText(c as { content?: unknown[]; text?: string; type?: string });
   return s;
+}
+
+function escHtml(t: string): string {
+  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+type RNode = {
+  type?: string;
+  text?: string;
+  attrs?: Record<string, unknown>;
+  content?: unknown[];
+  marks?: { type?: string; attrs?: Record<string, unknown> }[];
+};
+
+function renderInlineHtml(node: unknown): string {
+  const n = node as RNode;
+  if (n.type === "text") {
+    let t = escHtml(n.text ?? "");
+    for (const mk of n.marks ?? []) {
+      if (mk.type === "bold") t = `<strong>${t}</strong>`;
+      else if (mk.type === "italic") t = `<em>${t}</em>`;
+      else if (mk.type === "underline") t = `<u>${t}</u>`;
+      else if (mk.type === "strike") t = `<s>${t}</s>`;
+      else if (mk.type === "textStyle" && mk.attrs?.color)
+        t = `<span style="color:${escHtml(String(mk.attrs.color))}">${t}</span>`;
+    }
+    return t;
+  }
+  if (n.type === "hardBreak") return "<br/>";
+  return (n.content ?? []).map(renderInlineHtml).join("");
+}
+
+function renderBlockHtml(block: unknown): string {
+  const b = block as RNode;
+  const kids = () => (b.content ?? []).map(renderBlockHtml).join("");
+  const inline = () => (b.content ?? []).map(renderInlineHtml).join("");
+  switch (b.type) {
+    case "paragraph": {
+      const t = inline();
+      return `<p>${t || "&nbsp;"}</p>`;
+    }
+    case "heading":
+      return `<h${Math.min(6, Number(b.attrs?.level) || 2)}>${inline()}</h${Math.min(6, Number(b.attrs?.level) || 2)}>`;
+    case "blockquote":
+      return `<blockquote>${kids()}</blockquote>`;
+    case "bulletList":
+      return `<ul>${kids()}</ul>`;
+    case "orderedList":
+      return `<ol>${kids()}</ol>`;
+    case "listItem":
+      return `<li>${kids()}</li>`;
+    case "image": {
+      const src = b.attrs?.src ? String(b.attrs.src) : "";
+      if (!src) return "";
+      return `<img src="${escHtml(src)}" alt="${escHtml(String(b.attrs?.alt ?? ""))}"/>`;
+    }
+    case "table":
+      return `<table>${kids()}</table>`;
+    case "tableRow":
+      return `<tr>${kids()}</tr>`;
+    case "tableHeader":
+      return `<th>${kids()}</th>`;
+    case "tableCell":
+      return `<td>${kids()}</td>`;
+    default:
+      return (b.content ?? []).map(renderBlockHtml).join("");
+  }
+}
+
+/** Render a TipTap doc to HTML, preserving lists, images, tables, colors & marks. */
+export function tiptapToHtml(doc: unknown): string {
+  const node = doc as { content?: unknown[] } | null;
+  if (!node?.content) return "";
+  return node.content.map(renderBlockHtml).join("\n");
 }
 
 export function safeName(s: string) {
@@ -189,10 +263,13 @@ export function renderPrintHtml(m: Manuscript, s: PublishSettings): string {
       const scenes = ch.scenes
         .map((sc, si) => {
           const sep = si > 0 ? `<p class="scene-break">${esc(s.sceneBreak)}</p>` : "";
-          const paras = sc.paragraphs
-            .map((p, pi) => `<p${pi === 0 ? ' class="first"' : ""}>${esc(p)}</p>`)
-            .join("\n");
-          return sep + paras;
+          // Rich HTML (images, tables, colors, lists) when available; else plain paragraphs.
+          const bodyHtml = sc.html
+            ? sc.html
+            : sc.paragraphs
+                .map((p, pi) => `<p${pi === 0 ? ' class="first"' : ""}>${esc(p)}</p>`)
+                .join("\n");
+          return sep + bodyHtml;
         })
         .join("\n");
       return `<section class="chapter"><h2 class="chapter-title">${heading}</h2>\n${scenes}</section>`;
@@ -221,6 +298,14 @@ export function renderPrintHtml(m: Manuscript, s: PublishSettings): string {
   ${s.dropCaps ? "p.first::first-letter { font-size: 3.2em; line-height: 0.8; float: left; padding: 0.02em 0.06em 0 0; }" : ""}
   .scene-break { text-align: center; text-indent: 0; margin: 1.4em 0; letter-spacing: 0.3em; }
   .end { text-align: center; margin-top: 3em; letter-spacing: 0.2em; }
+  img { max-width: 100%; height: auto; display: block; margin: 1em auto; text-indent: 0; }
+  ul, ol { margin: 0.6em 0 0.6em 1.4em; text-indent: 0; }
+  li { margin: 0.2em 0; text-indent: 0; }
+  blockquote { margin: 1em 0 1em 1.2em; padding-left: 0.8em; border-left: 2px solid #ccc; font-style: italic; text-indent: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; text-indent: 0; page-break-inside: avoid; }
+  th, td { border: 1px solid #999; padding: 0.35em 0.5em; text-align: left; vertical-align: top; }
+  th { background: #f0eee9; font-weight: 600; }
+  table p { text-indent: 0; margin: 0; }
   /* Screen-only helper bar; hidden when printing/saving to PDF. */
   .pdf-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 0.75rem; justify-content: center; padding: 0.6rem; background: #33303a; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem; z-index: 9999; }
   .pdf-bar button { background: #fff; color: #33303a; border: 0; border-radius: 8px; padding: 0.4rem 0.9rem; font-size: 0.85rem; cursor: pointer; }
