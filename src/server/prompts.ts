@@ -154,11 +154,38 @@ export async function generatePrompt(opts: {
   focuses: PromptFocus[];
   scenarioSeed: boolean; // true → format = seed
   depth: PromptDepth;
-  mode: "new" | "existing";
+  mode: "new" | "existing" | "inspiration";
   projectId?: string | null;
 }): Promise<GenerateResult> {
   await requireUser();
   const format: PromptFormat | null = opts.scenarioSeed ? "seed" : "exercise";
+
+  // Source: the writer's kernels & inspirations — blend a few of those collected
+  // fragments into a fresh prompt (bisociation).
+  if (opts.mode === "inspiration") {
+    const { supabase, user } = await requireUser();
+    const snippets = await collectInspirationSnippets(supabase, user.id);
+    if (snippets.length === 0) {
+      return {
+        rendered: null,
+        message:
+          "Add a story kernel or some inspiration first — then I can blend them into a prompt.",
+      };
+    }
+    try {
+      const template = await authorInspirationPrompt(
+        opts.focuses,
+        opts.depth,
+        format ?? "exercise",
+        pickRandom(snippets, 3),
+      );
+      if (template) {
+        return { rendered: renderPrompt(template, EMPTY_BAG, false) };
+      }
+    } catch {
+      /* fall through to the library below */
+    }
+  }
 
   // Grounding entities (shared by both the LLM-mix and library paths).
   let bag: EntityBag = EMPTY_BAG;
@@ -209,7 +236,7 @@ export async function generatePrompt(opts: {
     focuses: opts.focuses,
     format,
     depth: opts.depth,
-    mode: opts.mode,
+    mode: opts.mode === "existing" ? "existing" : "new",
   });
   // Relax filters progressively if nothing matched.
   if (candidates.length === 0) {
@@ -217,7 +244,7 @@ export async function generatePrompt(opts: {
       focuses: opts.focuses,
       format: null,
       depth: "any",
-      mode: opts.mode,
+      mode: opts.mode === "existing" ? "existing" : "new",
     });
   }
   if (candidates.length === 0) {
@@ -225,7 +252,7 @@ export async function generatePrompt(opts: {
       focuses: [],
       format: null,
       depth: "any",
-      mode: opts.mode,
+      mode: opts.mode === "existing" ? "existing" : "new",
     });
   }
   if (candidates.length === 0) {
@@ -332,6 +359,126 @@ Use {{character}} and at least one of {{place}}/{{thread}} so the prompt is anch
     constraint: format === "exercise" ? out.constraint : undefined,
     deeper: out.deeper || "Push the moment one beat further than is comfortable.",
     source: out.source || "grounded in your draft",
+  };
+}
+
+type InspirationSnippet = { title: string; body: string; source?: string };
+
+async function collectInspirationSnippets(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<InspirationSnippet[]> {
+  const out: InspirationSnippet[] = [];
+  const { data: kernels } = await supabase
+    .from("story_kernels")
+    .select("title, body")
+    .eq("user_id", userId);
+  for (const k of kernels ?? []) {
+    const body = String((k as { body?: string }).body ?? "").trim();
+    if (body) out.push({ title: String((k as { title?: string }).title ?? ""), body });
+  }
+  const { data: insp } = await supabase
+    .from("inspirations")
+    .select("title, body, source")
+    .eq("user_id", userId);
+  for (const i of insp ?? []) {
+    const body = String((i as { body?: string }).body ?? "").trim();
+    if (body)
+      out.push({
+        title: String((i as { title?: string }).title ?? ""),
+        body,
+        source: String((i as { source?: string }).source ?? ""),
+      });
+  }
+  return out;
+}
+
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, Math.min(n, copy.length));
+}
+
+/**
+ * Author an original prompt by BLENDING 2-3 of the writer's collected kernels /
+ * inspirations (bisociation — force a connection between unrelated fragments).
+ */
+async function authorInspirationPrompt(
+  focuses: PromptFocus[],
+  depth: PromptDepth,
+  format: PromptFormat,
+  snippets: InspirationSnippet[],
+): Promise<PromptObject | null> {
+  const focusList = focuses.length ? focuses.join(" + ") : "open";
+  const material = snippets
+    .map(
+      (s, i) =>
+        `(${i + 1}) ${s.title ? s.title + " — " : ""}${s.body}${s.source ? `  [${s.source}]` : ""}`,
+    )
+    .join("\n\n");
+  const formatGuidance =
+    format === "seed"
+      ? `Write a SCENARIO SEED: a concrete situation (named people, a specific place, mid-moment) in "text", plus an open craft question in "question".`
+      : `Write a CRAFT EXERCISE: a clear instruction in "text" plus an explicit rule in "constraint".`;
+
+  const anthropic = getAnthropic();
+  const completion = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 700,
+    system: `You author an original writing prompt by BLENDING two or three unrelated fragments of inspiration a writer has collected (lines, images, half-ideas from things they read or jotted down). Use bisociation: force a surprising connection BETWEEN the fragments so something new emerges. Never just restate one fragment, and never quote them at length — the result should feel generative and a little uncanny, clearly born from the collision.
+
+${focusList !== "open" ? `Lean into this craft focus: ${focusList}. ` : ""}Depth: ${depth === "deep" ? "a substantial deep dive" : "a ~5-minute warm-up"}.
+
+${formatGuidance}
+
+Do NOT use placeholder slots — write it out fully. "deeper" = one escalation. "source" = a few words naming which fragments you blended. Call author_prompt; no prose.`,
+    tools: [
+      {
+        name: "author_prompt",
+        description: "Return a writing prompt blended from the inspirations.",
+        input_schema: {
+          type: "object",
+          properties: {
+            text: { type: "string" },
+            question: { type: "string" },
+            constraint: { type: "string" },
+            deeper: { type: "string" },
+            source: { type: "string" },
+          },
+          required: ["text", "deeper"],
+        },
+      },
+    ],
+    tool_choice: { type: "tool", name: "author_prompt" },
+    messages: [
+      {
+        role: "user",
+        content: `Fragments of inspiration to blend:\n\n${material}\n\nAuthor one ${format} prompt that blends them.`,
+      },
+    ],
+  });
+
+  const toolUse = completion.content.find(
+    (c): c is Anthropic.ToolUseBlock => c.type === "tool_use",
+  );
+  const out = toolUse?.input as
+    | { text?: string; question?: string; constraint?: string; deeper?: string; source?: string }
+    | undefined;
+  if (!out?.text) return null;
+  return {
+    id: `inspo-${focuses.join("-") || "any"}-${Date.now()}`,
+    format,
+    focus: focuses[0] ?? "voice",
+    mode: "new",
+    depth: depth === "any" ? "warmup" : depth,
+    text: out.text,
+    question: format === "seed" ? out.question : undefined,
+    constraint: format === "exercise" ? out.constraint : undefined,
+    deeper: out.deeper || "Push the collision one beat further.",
+    source: out.source || "blended from your inspirations",
   };
 }
 

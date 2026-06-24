@@ -17,7 +17,7 @@ import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { useAppearance } from "@/store/appearance-store";
 
-type Mode = "new" | "existing";
+type Mode = "new" | "existing" | "inspiration";
 type WritingMode = "free" | "typewriter";
 type GoalType = "words" | "minutes";
 
@@ -181,7 +181,7 @@ export function PromptTool({
     await saveExercise({
       projectId: mode === "existing" ? projectId : null,
       rendered,
-      promptMode: mode,
+      promptMode: mode === "existing" ? "existing" : "new",
       writingMode,
       goalType: writingMode === "typewriter" ? goalType : null,
       goalValue: writingMode === "typewriter" ? goalValue : null,
@@ -222,7 +222,7 @@ export function PromptTool({
 
         {/* Step 1 — Mode */}
         <Section n={1} title="What are we doing?">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <ModeCard
               active={mode === "new"}
               title="Start something new"
@@ -240,6 +240,12 @@ export function PromptTool({
                 }
                 setPickerOpen(true);
               }}
+            />
+            <ModeCard
+              active={mode === "inspiration"}
+              title="From your inspiration"
+              blurb="Blend a few of your story kernels & saved inspirations into one prompt."
+              onClick={() => setMode("inspiration")}
             />
           </div>
           {mode === "existing" && (
@@ -701,19 +707,17 @@ function DieFace({
         aria-pressed={selected}
         className="group flex flex-col items-center gap-1 rounded-[var(--wc-r-md)] p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wc-slate)]"
       >
-        <span
-          className={`relative aspect-square w-full overflow-hidden rounded-[var(--wc-r-md)] transition ${
-            selected
-              ? "ring-2 ring-[var(--wc-slate)] ring-offset-2 ring-offset-[var(--wc-surface)]"
-              : "ring-1 ring-[var(--wc-border)] group-hover:ring-[var(--wc-border-strong)]"
-          }`}
-        >
+        <span className="relative aspect-square w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={image}
             alt=""
             onError={() => setImgOk(false)}
-            className="wc-die-img h-full w-full object-contain transition group-hover:scale-[1.03]"
+            className={`wc-die-img h-full w-full object-contain transition group-hover:scale-[1.04] ${
+              selected
+                ? "scale-[1.06] drop-shadow-[0_3px_9px_rgba(46,50,59,0.28)]"
+                : ""
+            }`}
           />
         </span>
         <span className="text-[11px] font-medium leading-tight text-center text-[var(--wc-ink)]">
