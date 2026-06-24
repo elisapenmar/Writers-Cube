@@ -158,9 +158,9 @@ function layoutRadial(nodes: MindMapNode[]): LayoutResult[] {
   }
 
   function distanceAt(depth: number): number {
-    if (depth === 1) return 280;
-    if (depth === 2) return 210;
-    return 170;
+    if (depth === 1) return 200;
+    if (depth === 2) return 155;
+    return 125;
   }
 
   const positions = new Map<string, LayoutResult>();
@@ -216,7 +216,7 @@ function resolvePositions(
   });
 
   // Iterative collision relief — push unpinned nodes apart from any neighbor.
-  const minDist = 230;
+  const minDist = 175;
   for (let iter = 0; iter < 80; iter++) {
     let moved = false;
     for (let i = 0; i < merged.length; i++) {
@@ -301,7 +301,7 @@ export function MindMap({
           label: "New idea",
           parent: parentId,
         };
-        // Place the new node ~210px away from parent in a sensible direction.
+        // Place the new node ~155px away from parent in a sensible direction.
         const parentPos = positionMap[parentId] ?? {
           x: 0,
           y: 0,
@@ -310,8 +310,8 @@ export function MindMap({
           Math.atan2(parentPos.y, parentPos.x) ||
           -Math.PI / 2 + Math.random() * Math.PI;
         const newPos: SavedPosition = {
-          x: parentPos.x + 210 * Math.cos(angle),
-          y: parentPos.y + 210 * Math.sin(angle),
+          x: parentPos.x + 155 * Math.cos(angle),
+          y: parentPos.y + 155 * Math.sin(angle),
         };
         const updatedNodes = [...nodesData, newNode];
         const updatedPositions = { ...positionMap, [newId]: newPos };
