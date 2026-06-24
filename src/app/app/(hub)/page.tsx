@@ -7,8 +7,10 @@ import {
 } from "@/server/projects";
 import { listExercises, type ExerciseSummary } from "@/server/prompts";
 import { listKernels, type StoryKernel } from "@/server/kernels";
+import { listInspirations, type Inspiration } from "@/server/inspirations";
 import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
+import { Inspirations } from "@/components/inspirations";
 import { ImportButton } from "@/components/import-button";
 import { BackupControls } from "@/components/backup-controls";
 import { ProjectExportMenu } from "@/components/project-export-menu";
@@ -18,6 +20,7 @@ import { CubeField } from "@/components/cube-field";
 
 const PROJECTS_PREVIEW = 6;
 const KERNELS_PREVIEW = 3;
+const INSPIRATIONS_PREVIEW = 3;
 
 async function safeExercises(projectId: string | null): Promise<ExerciseSummary[]> {
   try {
@@ -35,6 +38,14 @@ async function safeKernels(): Promise<StoryKernel[]> {
   }
 }
 
+async function safeInspirations(): Promise<Inspiration[]> {
+  try {
+    return await listInspirations();
+  } catch {
+    return [];
+  }
+}
+
 export default async function Dashboard() {
   const [projects, activeProjectId] = await Promise.all([
     listProjects(),
@@ -43,9 +54,10 @@ export default async function Dashboard() {
   const active =
     projects.find((p) => p.id === activeProjectId) ?? projects[0] ?? null;
 
-  const [practice, kernels] = await Promise.all([
+  const [practice, kernels, inspirations] = await Promise.all([
     safeExercises(null),
     safeKernels(),
+    safeInspirations(),
   ]);
 
   const recentProjects = [...projects].reverse().slice(0, PROJECTS_PREVIEW);
@@ -166,6 +178,9 @@ export default async function Dashboard() {
 
         {/* Story kernels */}
         <StoryKernels initial={kernels} limit={KERNELS_PREVIEW} />
+
+        {/* Inspiration */}
+        <Inspirations initial={inspirations} limit={INSPIRATIONS_PREVIEW} />
 
         {/* Practice library */}
         <section>
