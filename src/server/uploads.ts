@@ -35,3 +35,19 @@ export async function uploadRteImage(formData: FormData): Promise<{ url: string 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return { url: data.publicUrl };
 }
+
+/** Upload raw image bytes (e.g. an imported base64 image) and return its URL. */
+export async function uploadImageBytes(
+  userId: string,
+  bytes: Buffer,
+  ext: string,
+  contentType: string,
+): Promise<string | null> {
+  const supabase = await createClient();
+  const path = `${userId}/${crypto.randomUUID()}.${ext || "png"}`;
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, bytes, { contentType: contentType || "image/png", upsert: false });
+  if (error) return null;
+  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+}

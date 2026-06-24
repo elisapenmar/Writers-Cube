@@ -334,7 +334,7 @@ export async function exportProjectToDrive(projectId: string): Promise<{ name: s
         .filter((s) => s.chapter_id === c.id)
         .map((s) => {
           totalWords += s.word_count ?? 0;
-          return { title: s.title, paragraphs: tiptapToParagraphs(s.content) };
+          return { title: s.title, paragraphs: tiptapToParagraphs(s.content), doc: s.content };
         }),
     })),
   };

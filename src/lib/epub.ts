@@ -1,11 +1,14 @@
 import JSZip from "jszip";
 import type { Manuscript } from "@/lib/manuscript-export";
+import { fetchImageBytes } from "@/lib/image-bytes";
 import {
   type PublishSettings,
   FONT_STACKS,
   LINE_SPACING_VALUE,
   chapterHeading,
 } from "@/lib/publish-types";
+
+type EpubImage = { id: string; path: string; mime: string; bytes: Buffer };
 
 function esc(s: string): string {
   return s
@@ -102,6 +105,27 @@ export async function renderEpub(m: Manuscript, s: PublishSettings): Promise<Buf
 
   const sections: Section[] = [];
 
+  // Collect & embed images: fetch each <img src>, store the file inside the
+  // ebook, and rewrite the src to a relative path so the book is self-contained.
+  const images: EpubImage[] = [];
+  const imageBySrc = new Map<string, string>(); // src → relative href
+  async function embedImages(html: string): Promise<string> {
+    const srcs = [...html.matchAll(/<img[^>]*\bsrc="([^"]+)"/gi)].map((m) => m[1]);
+    for (const src of srcs) {
+      if (imageBySrc.has(src)) continue;
+      const img = await fetchImageBytes(src);
+      if (!img) {
+        imageBySrc.set(src, src); // leave as-is if unfetchable
+        continue;
+      }
+      const id = `img-${images.length + 1}`;
+      const path = `images/${id}.${img.ext}`;
+      images.push({ id, path, mime: img.mime, bytes: img.bytes });
+      imageBySrc.set(src, path);
+    }
+    return html.replace(/(<img[^>]*\bsrc=")([^"]+)(")/gi, (_m, a, src, b) => a + (imageBySrc.get(src) ?? src) + b);
+  }
+
   // Title page — always included on exports.
   {
     const body = `<div class="front">
@@ -136,25 +160,33 @@ export async function renderEpub(m: Manuscript, s: PublishSettings): Promise<Buf
   }
 
   // Chapters
-  m.chapters.forEach((ch, ci) => {
+  for (let ci = 0; ci < m.chapters.length; ci++) {
+    const ch = m.chapters[ci];
     const heading = chapterHeading(s.chapterHeadingStyle, ci, ch.title);
     const parts: string[] = [`<h2 class="chapter-title">${esc(heading)}</h2>`];
-    ch.scenes.forEach((scene, si) => {
+    for (let si = 0; si < ch.scenes.length; si++) {
+      const scene = ch.scenes[si];
       if (si > 0) parts.push(`<p class="scene-break">${esc(s.sceneBreak)}</p>`);
       if (scene.html) {
-        // Rich content (lists, images, tables, colors) preserved in the ebook.
-        parts.push(scene.html);
+        // Rich content (lists, images, tables, colors) preserved in the ebook;
+        // images are pulled into the package so the ebook is self-contained.
+        parts.push(await embedImages(scene.html));
       } else {
         scene.paragraphs.forEach((p, pi) => {
           const cls = pi === 0 ? ' class="first"' : "";
           parts.push(`<p${cls}>${esc(p)}</p>`);
         });
       }
-    });
+    }
     const file = `chapter-${ci + 1}.xhtml`;
     oebps.file(file, xhtmlDoc(heading, lang, parts.join("\n")));
     sections.push({ id: `chapter-${ci + 1}`, file, label: heading, nav: true });
-  });
+  }
+
+  // Write the embedded image files into the package.
+  for (const im of images) {
+    oebps.file(im.path, im.bytes);
+  }
 
   // The End
   if (s.theEnd) {
@@ -201,9 +233,12 @@ ${navPoints}
   );
 
   // content.opf
-  const manifestItems = sections
-    .map((sec) => `    <item id="${sec.id}" href="${sec.file}" media-type="application/xhtml+xml"/>`)
-    .join("\n");
+  const manifestItems = [
+    ...sections.map(
+      (sec) => `    <item id="${sec.id}" href="${sec.file}" media-type="application/xhtml+xml"/>`,
+    ),
+    ...images.map((im) => `    <item id="${im.id}" href="${im.path}" media-type="${im.mime}"/>`),
+  ].join("\n");
   const spineItems = sections.map((sec) => `    <itemref idref="${sec.id}"/>`).join("\n");
   const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
   const identifier = s.isbn ? `urn:isbn:${esc(s.isbn)}` : bookId;

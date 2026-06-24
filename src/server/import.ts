@@ -5,6 +5,29 @@ import mammoth from "mammoth";
 import { createClient } from "@/lib/supabase/server";
 import { setActiveProject } from "@/server/projects";
 import { htmlToTiptapBlocks, type TBlock } from "@/lib/html-to-tiptap";
+import { decodeDataUri } from "@/lib/image-bytes";
+import { uploadImageBytes } from "@/server/uploads";
+
+/** Offload any base64 (data:) images to Storage in place, so imported images
+ *  don't bloat the content rows / backups. Best-effort; leaves src untouched on failure. */
+async function offloadImages(blocks: TBlock[], userId: string): Promise<void> {
+  const imgs: TBlock[] = [];
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as TBlock;
+    if (node.type === "image" && typeof node.attrs?.src === "string") imgs.push(node);
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  blocks.forEach(walk);
+  for (const img of imgs) {
+    const src = String(img.attrs!.src);
+    if (!src.startsWith("data:")) continue;
+    const decoded = decodeDataUri(src);
+    if (!decoded) continue;
+    const url = await uploadImageBytes(userId, decoded.bytes, decoded.ext, decoded.mime);
+    if (url) img.attrs!.src = url;
+  }
+}
 
 type ParsedScene = { paragraphs: string[] };
 type ParsedChapter = { title: string; scenes: ParsedScene[] };
@@ -361,6 +384,8 @@ export async function importHtmlAsProject(
     // Rich conversion came up empty — fall back to the (fixed) text parser.
     return importTextAsProject(htmlToMarkdownish(html), title);
   }
+  // Move embedded (base64) images to Storage so rows/backups stay lean.
+  await offloadImages(blocks, user.id);
   const { title: parsedTitle, chapters } = splitBlocksIntoChapters(blocks, title);
   const projectId = await persistRich(supabase, user.id, parsedTitle, chapters);
   await setActiveProject(projectId);

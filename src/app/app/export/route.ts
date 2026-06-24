@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
             title: s.title,
             paragraphs: tiptapToParagraphs(s.content),
             html: tiptapToHtml(s.content),
+            doc: s.content,
           };
         }),
     })),

@@ -268,7 +268,7 @@ export function PromptTool({
 
         {/* Step 2 — What to work on */}
         <Section n={2} title="What to work on" hint="Pick any number, or roll the die.">
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
             {FOCUS_ORDER.map((f) => (
               <DieFace
                 key={`${f}:${dieStyle}`}
@@ -720,7 +720,13 @@ function DieFace({
             }`}
           />
         </span>
-        <span className="text-[11px] font-medium leading-tight text-center text-[var(--wc-ink)]">
+        <span
+          className={`text-[11px] leading-tight text-center ${
+            selected
+              ? "font-semibold text-[var(--wc-slate)]"
+              : "font-medium text-[var(--wc-ink)]"
+          }`}
+        >
           {label}
         </span>
       </button>

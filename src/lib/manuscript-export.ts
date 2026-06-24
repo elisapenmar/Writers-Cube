@@ -5,7 +5,13 @@ import {
   TextRun,
   HeadingLevel,
   AlignmentType,
+  ImageRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
 } from "docx";
+import { fetchImageBytes, imageSize } from "@/lib/image-bytes";
 import { tiptapToMarkdown } from "@/lib/tiptap-to-markdown";
 import {
   type PublishSettings,
@@ -16,7 +22,7 @@ import {
 } from "@/lib/publish-types";
 import { renderEpub } from "@/lib/epub";
 
-export type ManuscriptScene = { title: string; paragraphs: string[]; html?: string };
+export type ManuscriptScene = { title: string; paragraphs: string[]; html?: string; doc?: unknown };
 export type ManuscriptChapter = { title: string; scenes: ManuscriptScene[] };
 export type Manuscript = {
   title: string;
@@ -333,8 +339,151 @@ const SP: Record<PublishSettings["lineSpacing"], number> = {
   double: 480,
 };
 
+type DocxOpts = {
+  font?: string;
+  size: number;
+  align?: (typeof AlignmentType)[keyof typeof AlignmentType];
+  lineSpacing: number;
+  afterPara?: number;
+  firstLine?: number;
+  italics?: boolean;
+};
+
+function runsFromInline(content: unknown[] | undefined, o: DocxOpts): TextRun[] {
+  const runs: TextRun[] = [];
+  for (const c of content ?? []) {
+    const n = c as RNode;
+    if (n.type === "text") {
+      const marks = n.marks ?? [];
+      const colorMark = marks.find((mk) => mk.type === "textStyle" && mk.attrs?.color);
+      runs.push(
+        new TextRun({
+          text: n.text ?? "",
+          bold: marks.some((mk) => mk.type === "bold"),
+          italics: o.italics || marks.some((mk) => mk.type === "italic"),
+          strike: marks.some((mk) => mk.type === "strike"),
+          underline: marks.some((mk) => mk.type === "underline") ? {} : undefined,
+          color: colorMark ? String(colorMark.attrs!.color).replace(/^#/, "") : undefined,
+          size: o.size,
+          font: o.font,
+        }),
+      );
+    } else if (n.type === "hardBreak") {
+      runs.push(new TextRun({ break: 1 }));
+    } else if (n.content) {
+      runs.push(...runsFromInline(n.content, o));
+    }
+  }
+  return runs.length ? runs : [new TextRun({ text: "", size: o.size, font: o.font })];
+}
+
+async function imageParagraph(src: string, o: DocxOpts): Promise<Paragraph | null> {
+  if (!src) return null;
+  const img = await fetchImageBytes(src);
+  if (!img || img.ext === "svg") return null;
+  const dim = imageSize(img.bytes);
+  let width = 450;
+  let height = 300;
+  if (dim && dim.width > 0) {
+    width = Math.min(450, dim.width);
+    height = Math.round(width * (dim.height / dim.width));
+  }
+  const type = img.ext === "jpg" ? "jpg" : img.ext === "gif" ? "gif" : "png";
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 120, after: 120 },
+    children: [
+      new ImageRun({ data: img.bytes, transformation: { width, height }, type } as never),
+    ],
+  });
+}
+
+async function docxBlocks(nodes: unknown[] | undefined, o: DocxOpts): Promise<(Paragraph | Table)[]> {
+  const out: (Paragraph | Table)[] = [];
+  for (const node of nodes ?? []) {
+    const b = node as RNode;
+    if (b.type === "paragraph") {
+      out.push(
+        new Paragraph({
+          alignment: o.align,
+          spacing: { line: o.lineSpacing, after: o.afterPara },
+          indent: o.firstLine ? { firstLine: o.firstLine } : undefined,
+          children: runsFromInline(b.content, o),
+        }),
+      );
+    } else if (b.type === "heading") {
+      out.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 240, after: 120 },
+          children: runsFromInline(b.content, o),
+        }),
+      );
+    } else if (b.type === "blockquote") {
+      for (const child of b.content ?? []) {
+        const c = child as RNode;
+        if (c.type === "paragraph") {
+          out.push(
+            new Paragraph({
+              indent: { left: 480 },
+              spacing: { line: o.lineSpacing, after: o.afterPara },
+              children: runsFromInline(c.content, { ...o, italics: true }),
+            }),
+          );
+        } else {
+          out.push(...(await docxBlocks([c], o)));
+        }
+      }
+    } else if (b.type === "bulletList" || b.type === "orderedList") {
+      let n = 1;
+      for (const li of b.content ?? []) {
+        const liNode = li as RNode;
+        let first = true;
+        for (const child of liNode.content ?? []) {
+          const c = child as RNode;
+          if (c.type === "paragraph") {
+            const runs = runsFromInline(c.content, o);
+            if (first && b.type === "orderedList") {
+              runs.unshift(new TextRun({ text: `${n}. `, size: o.size, font: o.font }));
+            }
+            out.push(
+              new Paragraph({
+                bullet: first && b.type === "bulletList" ? { level: 0 } : undefined,
+                indent: { left: 480 },
+                spacing: { after: 0 },
+                children: runs,
+              }),
+            );
+            first = false;
+          }
+        }
+        n++;
+      }
+    } else if (b.type === "image") {
+      const para = await imageParagraph(b.attrs?.src ? String(b.attrs.src) : "", o);
+      if (para) out.push(para);
+    } else if (b.type === "table") {
+      const rows: TableRow[] = [];
+      for (const r of b.content ?? []) {
+        const rn = r as RNode;
+        const cells: TableCell[] = [];
+        for (const c of rn.content ?? []) {
+          const cn = c as RNode;
+          const cellBlocks = await docxBlocks(cn.content, { ...o, firstLine: undefined });
+          cells.push(new TableCell({ children: cellBlocks.length ? cellBlocks : [new Paragraph({})] }));
+        }
+        rows.push(new TableRow({ children: cells }));
+      }
+      if (rows.length) out.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows }));
+    } else if (b.content) {
+      out.push(...(await docxBlocks(b.content, o)));
+    }
+  }
+  return out;
+}
+
 export async function renderDocx(m: Manuscript, settings?: PublishSettings): Promise<Buffer> {
-  const children: Paragraph[] = [];
+  const children: (Paragraph | Table)[] = [];
   const s = settings;
   const title = s?.title || m.title;
   const author = s?.author ?? m.author ?? null;
@@ -407,7 +556,8 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
     }
   }
 
-  m.chapters.forEach((ch, ci) => {
+  for (let ci = 0; ci < m.chapters.length; ci++) {
+    const ch = m.chapters[ci];
     const heading = s ? chapterHeading(s.chapterHeadingStyle, ci, ch.title) : `Chapter ${ci + 1} — ${ch.title}`;
     children.push(
       new Paragraph({
@@ -418,7 +568,8 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
         children: [new TextRun({ text: heading, bold: true, size: 28, font: fontName })],
       }),
     );
-    ch.scenes.forEach((sc, si) => {
+    for (let si = 0; si < ch.scenes.length; si++) {
+      const sc = ch.scenes[si];
       if (si > 0) {
         children.push(
           new Paragraph({
@@ -428,18 +579,32 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
           }),
         );
       }
-      for (const p of sc.paragraphs) {
-        children.push(
-          new Paragraph({
-            alignment: align,
-            spacing: { line: lineSpacing, after: afterPara },
-            indent: firstLine ? { firstLine } : undefined,
-            children: [new TextRun({ text: p, size: sizeHalfPt, font: fontName })],
-          }),
-        );
+      const docNode = sc.doc as { content?: unknown[] } | null;
+      if (docNode?.content) {
+        // Rich path: keep images, tables, lists, colours, marks.
+        const blocks = await docxBlocks(docNode.content, {
+          font: fontName,
+          size: sizeHalfPt,
+          align,
+          lineSpacing,
+          afterPara,
+          firstLine,
+        });
+        children.push(...blocks);
+      } else {
+        for (const p of sc.paragraphs) {
+          children.push(
+            new Paragraph({
+              alignment: align,
+              spacing: { line: lineSpacing, after: afterPara },
+              indent: firstLine ? { firstLine } : undefined,
+              children: [new TextRun({ text: p, size: sizeHalfPt, font: fontName })],
+            }),
+          );
+        }
       }
-    });
-  });
+    }
+  }
 
   if (!s || s.theEnd) {
     children.push(
