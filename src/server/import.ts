@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import mammoth from "mammoth";
 import { createClient } from "@/lib/supabase/server";
 import { setActiveProject } from "@/server/projects";
+import { htmlToTiptapBlocks, type TBlock } from "@/lib/html-to-tiptap";
 
 type ParsedScene = { paragraphs: string[] };
 type ParsedChapter = { title: string; scenes: ParsedScene[] };
@@ -224,6 +225,148 @@ export async function importTextAsProject(
   return { projectId, words };
 }
 
+// ---- Rich (formatting-preserving) HTML import ----
+
+function textOfBlock(b: TBlock): string {
+  let t = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const nn = n as { type?: string; text?: string; content?: unknown[] };
+    if (nn.type === "text" && typeof nn.text === "string") t += nn.text + " ";
+    if (Array.isArray(nn.content)) nn.content.forEach(walk);
+  };
+  walk(b);
+  return t;
+}
+
+function countBlockWords(blocks: TBlock[]): number {
+  return blocks.map(textOfBlock).join(" ").trim().split(/\s+/).filter(Boolean).length;
+}
+
+type RichScene = { content: TBlock[] };
+type RichChapter = { title: string; scenes: RichScene[] };
+
+/** Split TipTap blocks into chapters (at headings) and scenes (at scene-breaks). */
+function splitBlocksIntoChapters(
+  blocks: TBlock[],
+  fallbackTitle: string,
+): { title: string; chapters: RichChapter[] } {
+  let title = fallbackTitle;
+  const chapters: RichChapter[] = [];
+  let chapter: RichChapter | null = null;
+  let scene: RichScene | null = null;
+  let sawTitle = false;
+
+  const ensureScene = () => {
+    if (!chapter) {
+      chapter = { title: "Chapter 1", scenes: [] };
+      chapters.push(chapter);
+    }
+    if (!scene) {
+      scene = { content: [] };
+      chapter.scenes.push(scene);
+    }
+  };
+
+  for (const b of blocks) {
+    if (b.type === "heading") {
+      const level = (b.attrs?.level as number) ?? 1;
+      const htext = textOfBlock(b).trim();
+      if (level === 1 && !sawTitle && chapters.length === 0 && !scene) {
+        title = htext || title;
+        sawTitle = true;
+        continue;
+      }
+      if (level <= 2) {
+        chapter = {
+          title: htext.replace(/^chapter\s+\d+\s*[—:-]?\s*/i, "").trim() || `Chapter ${chapters.length + 1}`,
+          scenes: [],
+        };
+        chapters.push(chapter);
+        scene = null;
+        continue;
+      }
+      ensureScene();
+      scene!.content.push(b);
+      continue;
+    }
+    if (b.type === "paragraph" && SCENE_BREAK.test(textOfBlock(b).trim())) {
+      if (chapter) scene = null;
+      continue;
+    }
+    ensureScene();
+    scene!.content.push(b);
+  }
+
+  if (chapters.length === 0) {
+    chapters.push({ title: "Chapter 1", scenes: [{ content: blocks }] });
+  }
+  for (const c of chapters) {
+    if (c.scenes.length === 0) c.scenes.push({ content: [] });
+  }
+  return { title, chapters };
+}
+
+async function persistRich(
+  supabase: SupabaseLike,
+  userId: string,
+  title: string,
+  chapters: RichChapter[],
+): Promise<string> {
+  const { data: project, error: projErr } = await supabase
+    .from("projects")
+    .insert({ user_id: userId, title: title || "Imported manuscript" })
+    .select("id")
+    .single();
+  if (projErr || !project) throw new Error(projErr?.message ?? "Could not create project");
+
+  for (let ci = 0; ci < chapters.length; ci++) {
+    const ch = chapters[ci];
+    const { data: chapter, error: chErr } = await supabase
+      .from("chapters")
+      .insert({ project_id: project.id, title: ch.title || `Chapter ${ci + 1}`, position: ci })
+      .select("id")
+      .single();
+    if (chErr || !chapter) throw new Error(chErr?.message ?? "Could not create chapter");
+
+    const scenes = ch.scenes.length ? ch.scenes : [{ content: [] }];
+    for (let si = 0; si < scenes.length; si++) {
+      const blocks = scenes[si].content.length ? scenes[si].content : [{ type: "paragraph" }];
+      const { error: scErr } = await supabase.from("scenes").insert({
+        chapter_id: chapter.id,
+        title: scenes.length > 1 ? `Scene ${si + 1}` : "Scene 1",
+        position: si,
+        content: { type: "doc", content: blocks },
+        word_count: countBlockWords(scenes[si].content),
+      });
+      if (scErr) throw new Error(scErr.message);
+    }
+  }
+  return project.id as string;
+}
+
+/**
+ * Import semantic HTML (mammoth/Google Docs) as a project, PRESERVING formatting
+ * — bullet & numbered lists, headings, bold/italic/underline. Falls back to the
+ * plain-text path if the rich conversion yields nothing.
+ */
+export async function importHtmlAsProject(
+  html: string,
+  title: string,
+): Promise<{ projectId: string; words: number }> {
+  const { supabase, user } = await requireUser();
+  const blocks = htmlToTiptapBlocks(html);
+  const words = countBlockWords(blocks);
+  if (words === 0) {
+    // Rich conversion came up empty — fall back to the (fixed) text parser.
+    return importTextAsProject(htmlToMarkdownish(html), title);
+  }
+  const { title: parsedTitle, chapters } = splitBlocksIntoChapters(blocks, title);
+  const projectId = await persistRich(supabase, user.id, parsedTitle, chapters);
+  await setActiveProject(projectId);
+  return { projectId, words };
+}
+
 export async function importManuscript(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   const file = formData.get("file");
@@ -233,20 +376,22 @@ export async function importManuscript(formData: FormData): Promise<void> {
   const name = file.name.toLowerCase();
   const buf = Buffer.from(await file.arrayBuffer());
 
-  let text: string;
+  const baseTitle = file.name.replace(/\.(docx|md|markdown|txt)$/i, "");
+
   if (name.endsWith(".docx")) {
+    // Rich path: preserve lists, headings, and bold/italic from the docx.
     const { value } = await mammoth.convertToHtml({ buffer: buf });
-    text = htmlToMarkdownish(value);
-  } else if (name.endsWith(".md") || name.endsWith(".markdown") || name.endsWith(".txt")) {
-    text = buf.toString("utf-8");
-  } else {
-    throw new Error("Unsupported file. Use .docx, .md, or .txt.");
+    await importHtmlAsProject(value, baseTitle);
+    redirect("/app/manuscript");
   }
 
-  const baseTitle = file.name.replace(/\.(docx|md|markdown|txt)$/i, "");
-  const parsed = parseMarkdownish(text, baseTitle);
-  const projectId = await persistParsed(supabase, user.id, parsed, baseTitle);
+  if (name.endsWith(".md") || name.endsWith(".markdown") || name.endsWith(".txt")) {
+    const text = buf.toString("utf-8");
+    const parsed = parseMarkdownish(text, baseTitle);
+    const projectId = await persistParsed(supabase, user.id, parsed, baseTitle);
+    await setActiveProject(projectId);
+    redirect("/app/manuscript");
+  }
 
-  await setActiveProject(projectId);
-  redirect("/app/manuscript");
+  throw new Error("Unsupported file. Use .docx, .md, or .txt.");
 }

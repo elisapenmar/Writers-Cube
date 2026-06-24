@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { htmlToText, importTextAsProject } from "@/server/import";
+import { importTextAsProject, importHtmlAsProject } from "@/server/import";
 import {
   type Manuscript,
   tiptapToParagraphs,
@@ -173,41 +173,46 @@ export async function importDriveDoc(fileId: string): Promise<{ projectId: strin
   const meta = (await metaRes.json()) as { name?: string };
   const title = meta.name ?? "Imported document";
 
-  // Export the doc three ways and KEEP WHICHEVER HAS THE MOST BODY TEXT.
-  // (Google's exports are inconsistent — DOCX can come back near-empty while
-  //  HTML/plain have the full content, or vice-versa. Don't trust just one.)
   const exportUrl = (mime: string) =>
     `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(mime)}`;
-
-  async function tryExport(_label: string, fn: () => Promise<string>): Promise<string> {
+  const tryGet = async (fn: () => Promise<string>): Promise<string> => {
     try {
-      return (await fn()).trim();
+      return await fn();
     } catch {
       return "";
     }
-  }
+  };
+  const visibleLen = (html: string) =>
+    html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length;
 
-  const [htmlText, plainText, docxText] = await Promise.all([
-    tryExport("html", async () => htmlToText(await (await driveFetch(exportUrl("text/html"))).text())),
-    tryExport("plain", async () => plainToMarkdownish(await (await driveFetch(exportUrl("text/plain"))).text())),
-    tryExport("docx", async () => {
+  // Get the doc as semantic HTML two ways — DOCX→mammoth (cleanest lists) and
+  // Google's HTML export — and import whichever has more content, PRESERVING
+  // formatting. Google's exports are inconsistent, so we don't trust just one.
+  const [docxHtml, googleHtml] = await Promise.all([
+    tryGet(async () => {
       const buf = Buffer.from(await (await driveFetch(exportUrl(DOCX_MIME))).arrayBuffer());
       const mammoth = (await import("mammoth")).default;
       const { value } = await mammoth.convertToHtml({ buffer: buf });
-      return htmlToText(value);
+      return value;
     }),
+    tryGet(async () => (await driveFetch(exportUrl("text/html"))).text()),
   ]);
 
-  // Pick the richest. Prefer HTML/docx (keep headings) over plain when tied-ish.
-  const candidates = [htmlText, docxText, plainText];
-  const text = candidates.reduce((best, c) => (bodyDense(c) > bodyDense(best) ? c : best), "");
-
-  if (bodyDense(text) < 2) {
-    throw emptyImportError(title, text);
+  const html = visibleLen(docxHtml) >= visibleLen(googleHtml) ? docxHtml : googleHtml;
+  if (visibleLen(html) >= 2) {
+    const { projectId } = await importHtmlAsProject(html, title);
+    return { projectId };
   }
 
-  const { projectId } = await importTextAsProject(text, title);
-  return { projectId };
+  // Last resort: plain-text export.
+  const plain = await tryGet(async () =>
+    plainToMarkdownish(await (await driveFetch(exportUrl("text/plain"))).text()),
+  );
+  if (bodyDense(plain) >= 2) {
+    const { projectId } = await importTextAsProject(plain, title);
+    return { projectId };
+  }
+  throw emptyImportError(title, html || plain);
 }
 
 // ---- File browser ----
@@ -270,20 +275,22 @@ export async function importDriveFile(
   // Non-Google files are downloaded directly.
   const dl = await driveFetch(`${DRIVE_API}/files/${fileId}?alt=media`);
 
-  let text: string;
   if (mimeType === DOCX_MIME) {
+    // Rich path: preserve lists/headings/marks from the Word doc.
     const buf = Buffer.from(await dl.arrayBuffer());
     const mammoth = (await import("mammoth")).default;
     const { value } = await mammoth.convertToHtml({ buffer: buf });
-    text = await htmlToText(value);
-  } else {
-    text = await dl.text();
+    if (value.replace(/<[^>]+>/g, " ").trim().length < 2) {
+      throw emptyImportError(title, value);
+    }
+    const { projectId } = await importHtmlAsProject(value, title);
+    return { projectId };
   }
 
+  const text = await dl.text();
   if (bodyDense(text) < 2) {
     throw emptyImportError(title, text);
   }
-
   const { projectId } = await importTextAsProject(text, title);
   return { projectId };
 }
