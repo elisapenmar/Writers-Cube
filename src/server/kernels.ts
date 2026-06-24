@@ -8,6 +8,7 @@ export type StoryKernel = {
   id: string;
   title: string;
   body: string;
+  content?: unknown | null;
   created_at: string;
   updated_at: string;
 };
@@ -47,6 +48,20 @@ export async function listKernels(): Promise<StoryKernel[]> {
   return (data ?? []) as StoryKernel[];
 }
 
+export async function getKernel(id: string): Promise<StoryKernel | null> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase
+    .from("story_kernels")
+    .select("id, title, body, content, created_at, updated_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+    throw new Error(error.message);
+  }
+  return (data as StoryKernel) ?? null;
+}
+
 export async function createKernel(): Promise<StoryKernel> {
   const { supabase, user } = await requireUser();
   const { data, error } = await supabase
@@ -64,12 +79,13 @@ export async function createKernel(): Promise<StoryKernel> {
 
 export async function updateKernel(
   id: string,
-  patch: { title?: string; body?: string },
+  patch: { title?: string; body?: string; content?: unknown },
 ): Promise<void> {
   const { supabase } = await requireUser();
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (typeof patch.title === "string") update.title = patch.title.slice(0, 200);
   if (typeof patch.body === "string") update.body = patch.body;
+  if (patch.content !== undefined) update.content = patch.content;
   const { error } = await supabase
     .from("story_kernels")
     .update(update)

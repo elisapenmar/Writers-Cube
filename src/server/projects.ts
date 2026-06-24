@@ -173,6 +173,58 @@ export async function createProject(title?: string, form?: string): Promise<{ id
   return { id: data.id as string };
 }
 
+function docWordCount(doc: unknown): number {
+  let text = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc);
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
+
+/**
+ * Spin a standalone piece of writing (a kernel or a practice piece) into a new
+ * project: creates the project, a first chapter, and a scene holding `content`,
+ * then makes it the active project. Returns the new project id.
+ */
+export async function createProjectFromContent(
+  title: string,
+  content: unknown,
+): Promise<{ id: string }> {
+  const { id } = await createProject(title || undefined, "novel");
+
+  const { supabase } = await requireUser();
+  const doc =
+    content && typeof content === "object" &&
+    (content as { type?: string }).type === "doc"
+      ? content
+      : EMPTY_DOC;
+
+  const { data: chap, error: cErr } = await supabase
+    .from("chapters")
+    .insert({ project_id: id, title: "Chapter 1", position: 0 })
+    .select("id")
+    .single();
+  if (cErr || !chap) throw new Error(cErr?.message ?? "create chapter failed");
+
+  const { error: sErr } = await supabase.from("scenes").insert({
+    chapter_id: chap.id as string,
+    title: "Scene 1",
+    position: 0,
+    content: doc,
+    word_count: docWordCount(doc),
+  });
+  if (sErr) throw new Error(sErr.message);
+
+  revalidatePath("/app", "layout");
+  return { id };
+}
+
 export async function openProject(formData: FormData): Promise<void> {
   const projectId = String(formData.get("projectId") ?? "");
   if (projectId) await setActiveProject(projectId);

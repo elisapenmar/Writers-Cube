@@ -1,70 +1,53 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { Indent } from "@/lib/indent";
 import { TextStyle, FontFamily } from "@tiptap/extension-text-style";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { updateExercise } from "@/server/prompts";
+import { updateKernel } from "@/server/kernels";
 import { createProjectFromContent } from "@/server/projects";
 import { EditorToolbar } from "@/components/editor-toolbar";
-import { ALL_TAG_MARKS } from "@/lib/tag-mark";
-import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-function countWords(doc: unknown): number {
-  let text = "";
-  const walk = (n: unknown) => {
-    if (!n || typeof n !== "object") return;
-    const node = n as { type?: string; text?: string; content?: unknown[] };
-    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
-    if (Array.isArray(node.content)) node.content.forEach(walk);
-  };
-  walk(doc);
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
+const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
-export function ExerciseEditor({
+export function KernelEditor({
   id,
   initialTitle,
   initialContent,
-  promptText,
 }: {
   id: string;
   initialTitle: string;
   initialContent: unknown;
-  promptText: string;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [save, setSave] = useState<SaveState>("idle");
-  const [words, setWords] = useState(() => countWords(initialContent));
   const [promoting, startPromote] = useTransition();
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor({
-    extensions: [StarterKit, Underline, Indent, TextStyle, FontFamily, ...ALL_TAG_MARKS],
-    content:
-      (initialContent as object | null) ?? { type: "doc", content: [{ type: "paragraph" }] },
+    extensions: [StarterKit, Underline, Indent, TextStyle, FontFamily],
+    content: (initialContent as object | null) ?? EMPTY_DOC,
     immediatelyRender: false,
     editorProps: {
       attributes: {
         class:
-          "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed min-h-[40vh]",
+          "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed min-h-[50vh]",
       },
     },
     onUpdate: ({ editor }) => {
       if (contentTimer.current) clearTimeout(contentTimer.current);
       setSave("saving");
       const doc = editor.getJSON();
-      setWords(countWords(doc));
       contentTimer.current = setTimeout(async () => {
         try {
-          await updateExercise(id, { content: doc, wordCount: countWords(doc) });
+          await updateKernel(id, { content: doc });
           setSave("saved");
         } catch {
           setSave("error");
@@ -78,8 +61,7 @@ export function ExerciseEditor({
     const handler = () => {
       if (contentTimer.current && editor) {
         clearTimeout(contentTimer.current);
-        const doc = editor.getJSON();
-        void updateExercise(id, { content: doc, wordCount: countWords(doc) });
+        void updateKernel(id, { content: editor.getJSON() });
       }
     };
     window.addEventListener("beforeunload", handler);
@@ -96,7 +78,7 @@ export function ExerciseEditor({
     setSave("saving");
     titleTimer.current = setTimeout(async () => {
       try {
-        await updateExercise(id, { title: next });
+        await updateKernel(id, { title: next });
         setSave("saved");
       } catch {
         setSave("error");
@@ -109,8 +91,8 @@ export function ExerciseEditor({
     const doc = editor.getJSON();
     startPromote(async () => {
       try {
-        await updateExercise(id, { content: doc, wordCount: countWords(doc) });
-        await createProjectFromContent(title || promptText.slice(0, 60) || "Untitled", doc);
+        await updateKernel(id, { content: doc });
+        await createProjectFromContent(title || "Untitled", doc);
         router.push("/app/manuscript");
         router.refresh();
       } catch {
@@ -124,40 +106,26 @@ export function ExerciseEditor({
       <input
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
-        placeholder="Untitled exercise"
+        placeholder="Untitled kernel"
         className="w-full bg-transparent font-serif text-2xl text-[var(--wc-ink)] outline-none placeholder:text-[var(--wc-faint)] mb-1"
       />
-      <div className="flex items-center gap-2 text-xs text-[var(--wc-faint)] mb-4">
-        <span className="tabular-nums">{words} words</span>
-        <span className="text-[var(--wc-faint)]">·</span>
+      <div className="flex items-center justify-between gap-2 text-xs text-[var(--wc-faint)] mb-4">
         <SaveLabel state={save} />
         <button
           onClick={turnIntoProject}
           disabled={promoting}
-          className="ml-auto rounded-md px-3 py-1.5 text-xs text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
+          className="rounded-md px-3 py-1.5 text-xs text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
           style={{ background: "var(--wc-slate)" }}
-          title="Start a new project seeded with this piece"
+          title="Start a new project seeded with this kernel"
         >
           {promoting ? "Creating…" : "✦ Turn into project"}
         </button>
       </div>
 
-      {/* Prompt reference */}
-      <div className="rounded-2xl wc-paper border border-[rgba(33,31,41,0.08)] p-4 mb-5">
-        <div className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)] mb-1">
-          The prompt
-        </div>
-        <p className="font-serif text-base text-[var(--wc-muted)] leading-relaxed">
-          {promptText}
-        </p>
-      </div>
-
-      {/* Editable continuation */}
       <div className="sticky top-0 z-10 bg-[var(--wc-cream)] py-1.5 border-b border-[var(--wc-border)] mb-3">
         <EditorToolbar editor={editor} />
       </div>
       <div className="rounded-2xl border border-[var(--wc-border)] bg-[var(--wc-surface)] p-6">
-        {editor && <TagBubbleMenu editor={editor} />}
         <EditorContent editor={editor} />
       </div>
     </div>

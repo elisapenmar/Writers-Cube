@@ -148,6 +148,13 @@ function KernelCard({
           placeholder="Working title…"
           className="flex-1 bg-transparent font-serif text-base text-[var(--wc-ink)] outline-none placeholder:text-[var(--wc-faint)]"
         />
+        <Link
+          href={`/app/kernels/${kernel.id}`}
+          className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] opacity-0 group-hover:opacity-100 shrink-0 text-sm leading-none"
+          title="Open in the word processor"
+        >
+          ⤢
+        </Link>
         <button
           onClick={remove}
           className="text-[var(--wc-faint)] hover:text-red-700 opacity-0 group-hover:opacity-100 shrink-0"
