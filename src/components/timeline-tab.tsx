@@ -8,9 +8,13 @@ import {
   type TimelineLane,
   type TimelineEvent,
 } from "@/server/timeline";
-import { SquareArrow, AiDiamond } from "@/components/icons";
-import { generateTimelineFromManuscript } from "@/server/ai-generate";
+import { SquareArrow } from "@/components/icons";
+import {
+  generateTimelineFromManuscript,
+  generateTimelineFromBrainstorm,
+} from "@/server/ai-generate";
 import { EntityLinker } from "@/components/entity-linker";
+import { AiSourceMenu } from "@/components/ai-source-menu";
 
 const LANE_COLORS = ["#8a7a96", "#5d7384", "#8aa791", "#c07a63", "#cdab6b", "#7f8aa6"];
 
@@ -50,6 +54,22 @@ export function TimelineTab() {
         setSaving(false);
       }
     }, 500);
+  }
+
+  async function onGenerate(source: "manuscript" | "brainstorm") {
+    setGenerating(true);
+    setError(null);
+    try {
+      const next =
+        source === "brainstorm"
+          ? await generateTimelineFromBrainstorm()
+          : await generateTimelineFromManuscript();
+      setState(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generate failed");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   if (!state) {
@@ -130,26 +150,15 @@ export function TimelineTab() {
           {saving && " · saving…"}
         </span>
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={async () => {
-              setGenerating(true);
-              setError(null);
-              try {
-                const next = await generateTimelineFromManuscript();
-                setState(next);
-              } catch (e) {
-                setError(e instanceof Error ? e.message : "Generate failed");
-              } finally {
-                setGenerating(false);
-              }
-            }}
-            disabled={generating}
-            className="flex items-center gap-1 rounded-md border border-[var(--wc-slate)] px-2.5 py-1 text-[var(--wc-slate)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-            title="Build a timeline from your manuscript & notes"
-          >
-            <AiDiamond />
-            {generating ? "Reading…" : state.lanes.length > 0 ? "Update" : "Generate"}
-          </button>
+          <AiSourceMenu
+            label={state.lanes.length > 0 ? "Update" : "Generate"}
+            busy={generating}
+            options={[
+              { key: "manuscript", label: "From manuscript", hint: "Your actual prose + notes" },
+              { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat" },
+            ]}
+            onSelect={(k) => onGenerate(k as "manuscript" | "brainstorm")}
+          />
           <button
             onClick={addLane}
             className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)]"

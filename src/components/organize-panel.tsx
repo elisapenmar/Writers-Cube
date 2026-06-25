@@ -71,6 +71,7 @@ import { OutlineTab } from "@/components/outline-tree";
 import { CharactersTab } from "@/components/characters-tab";
 import { TagsTab } from "@/components/tags-tab";
 import { PromptsTab } from "@/components/prompts-tab";
+import { AiSourceMenu } from "@/components/ai-source-menu";
 import { CanvasTab } from "@/components/canvas-tab";
 import { TimelineTab } from "@/components/timeline-tab";
 import {
@@ -118,7 +119,6 @@ export function OrganizePanel() {
 
   const visible = open || pinned;
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [mapGenOpen, setMapGenOpen] = useState(false);
 
   // Hydrate notes from the server on first mount
   useEffect(() => {
@@ -230,7 +230,6 @@ export function OrganizePanel() {
   }
 
   async function generateMapFrom(source: "brainstorm" | "manuscript") {
-    setMapGenOpen(false);
     setOrganizing(true);
     setError(null);
     try {
@@ -323,36 +322,15 @@ export function OrganizePanel() {
             </button>
           )}
           {format === "mindmap" && (
-            <div className="relative">
-              <button
-                onClick={() => setMapGenOpen((o) => !o)}
-                disabled={organizing}
-                className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
-                title="Generate a thought map"
-              >
-                <AiDiamond className="text-[var(--wc-on-accent)]" />
-                {organizing ? "…" : hasCurrent ? "Update" : "Generate"}
-              </button>
-              {mapGenOpen && !organizing && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setMapGenOpen(false)} />
-                  <div className="absolute right-0 z-50 mt-1 w-44 rounded-md border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 shadow-lg">
-                    <button
-                      onClick={() => generateMapFrom("manuscript")}
-                      className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-                    >
-                      <AiDiamond className="text-[var(--wc-slate)]" /> From manuscript
-                    </button>
-                    <button
-                      onClick={() => generateMapFrom("brainstorm")}
-                      className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-                    >
-                      <AiDiamond className="text-[var(--wc-slate)]" /> From brainstorm
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <AiSourceMenu
+              label={hasCurrent ? "Update" : "Generate"}
+              busy={organizing}
+              options={[
+                { key: "manuscript", label: "From manuscript", hint: "Your actual prose + notes" },
+                { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat" },
+              ]}
+              onSelect={(k) => generateMapFrom(k as "manuscript" | "brainstorm")}
+            />
           )}
           <button
             onClick={togglePin}

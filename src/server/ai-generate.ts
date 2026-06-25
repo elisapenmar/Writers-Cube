@@ -138,25 +138,44 @@ Call render_thought_map. No prose.`,
   return { nodes };
 }
 
-/** Build a timeline (lanes of events) from the project's manuscript + notes. */
-export async function generateTimelineFromManuscript(): Promise<TimelineState> {
-  const { supabase, user } = await requireUser();
-  const projectId = await resolveProjectId(supabase, user.id);
-  if (!projectId) throw new Error("No project found.");
-  const { notes, manuscript } = await gatherStory(projectId);
-  if (!manuscript && !notes) {
-    throw new Error("Nothing to read yet — write or import some scenes first.");
+/** Gather the project's most recent brainstorm conversation(s) as plain text. */
+async function gatherBrainstorm(projectId: string): Promise<string> {
+  const { supabase } = await requireUser();
+  const { data } = await supabase
+    .from("brainstorms")
+    .select("messages, updated_at")
+    .eq("project_id", projectId)
+    .order("updated_at", { ascending: false })
+    .limit(3);
+  let out = "";
+  for (const b of data ?? []) {
+    const msgs =
+      ((b as { messages?: { role?: string; content?: string; text?: string }[] }).messages) ?? [];
+    for (const m of msgs) {
+      const text = m.content ?? m.text ?? "";
+      if (text) out += `${m.role === "user" ? "Writer" : "Partner"}: ${text}\n`;
+      if (out.length > 14000) break;
+    }
+    if (out.length > 14000) break;
   }
+  return out.slice(0, 14000).trim();
+}
 
+/** Shared core: ask the model to build a timeline from the given input text. */
+async function buildAndSaveTimeline(
+  projectId: string,
+  userContent: string,
+): Promise<TimelineState> {
+  const { supabase } = await requireUser();
   const anthropic = getAnthropic();
   const completion = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: 2500,
-    system: `You extract a story timeline from a novelist's manuscript + notes.
+    system: `You extract a story timeline from a novelist's material.
 - Identify the key events in the order they happen in the story's chronology.
 - Group them into 1–3 lanes ("tracks") only if the story clearly has parallel threads (e.g. two POVs, two timeframes). Otherwise use a single lane.
 - Each event: a short title, a "when" label using whatever time cues the text gives ("Day 1", "That night", "Twenty years earlier", "Chapter 3"), and a one-sentence note.
-- Only include events actually present in the text. Don't invent.
+- Only include events actually present in the material. Don't invent.
 Call build_timeline. No prose.`,
     tools: [
       {
@@ -193,12 +212,7 @@ Call build_timeline. No prose.`,
       },
     ],
     tool_choice: { type: "tool", name: "build_timeline" },
-    messages: [
-      {
-        role: "user",
-        content: `NOTES:\n${notes || "(none)"}\n\nMANUSCRIPT EXCERPT:\n${manuscript || "(none)"}\n\nBuild the timeline now.`,
-      },
-    ],
+    messages: [{ role: "user", content: userContent }],
   });
 
   const toolUse = completion.content.find(
@@ -226,4 +240,34 @@ Call build_timeline. No prose.`,
     .eq("id", projectId);
   revalidatePath("/app");
   return state;
+}
+
+/** Build a timeline from the project's manuscript + notes. */
+export async function generateTimelineFromManuscript(): Promise<TimelineState> {
+  const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found.");
+  const { notes, manuscript } = await gatherStory(projectId);
+  if (!manuscript && !notes) {
+    throw new Error("Nothing to read yet — write or import some scenes first.");
+  }
+  return buildAndSaveTimeline(
+    projectId,
+    `NOTES:\n${notes || "(none)"}\n\nMANUSCRIPT EXCERPT:\n${manuscript || "(none)"}\n\nBuild the timeline now.`,
+  );
+}
+
+/** Build a timeline from the project's brainstorm conversation. */
+export async function generateTimelineFromBrainstorm(): Promise<TimelineState> {
+  const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found.");
+  const transcript = await gatherBrainstorm(projectId);
+  if (!transcript) {
+    throw new Error("No brainstorm yet — chat in the Brainstorm panel first.");
+  }
+  return buildAndSaveTimeline(
+    projectId,
+    `BRAINSTORM CONVERSATION:\n${transcript}\n\nBuild the timeline now.`,
+  );
 }
