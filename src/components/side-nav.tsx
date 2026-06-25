@@ -507,10 +507,15 @@ function ToolsRow() {
         <span aria-hidden className="text-base leading-none">🗂️</span>
         Organize
       </button>
-      <Link href="/app/tags" className={btn} title="Tagged passages">
+      <button
+        type="button"
+        onClick={() => openGroup("tags")}
+        className={btn}
+        title="Tagged passages"
+      >
         <span aria-hidden className="text-base leading-none">🏷️</span>
         Tags
-      </Link>
+      </button>
       <Link href="/app/prompts" data-tour="prompts" className={btn} title="Writing prompts for this project">
         <span aria-hidden className="text-base leading-none">🎲</span>
         Prompts
