@@ -48,7 +48,7 @@ export function Inspirations({
             Inspiration
           </h2>
           <p className="text-xs text-[var(--wc-faint)]">
-            Lines and passages from what you read — kept here to spark your own.
+            Lines and passages from what you read, kept here to spark your own.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -79,8 +79,8 @@ export function Inspirations({
 
       {items.length === 0 ? (
         <p className="text-sm text-[var(--wc-muted)] rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-6">
-          Nothing here yet. Paste a line that stopped you — a sentence, an image,
-          a turn of phrase — and note where it came from.
+          Nothing here yet. Paste a line that stopped you: a sentence, an image,
+          a turn of phrase. Note where it came from.
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -173,7 +173,7 @@ function InspirationCard({
           setSource(e.target.value);
           schedule({ source: e.target.value });
         }}
-        placeholder="— Source (book, author, link)…"
+        placeholder="Source (book, author, link)…"
         className="mt-1 w-full bg-transparent text-xs italic text-[var(--wc-faint)] outline-none placeholder:text-[var(--wc-faint)]"
       />
       <div className="h-3 text-[10px] text-[var(--wc-faint)]">{saving ? "Saving…" : ""}</div>
