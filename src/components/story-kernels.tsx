@@ -150,10 +150,10 @@ function KernelCard({
         />
         <Link
           href={`/app/kernels/${kernel.id}`}
-          className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] opacity-0 group-hover:opacity-100 shrink-0 text-sm leading-none"
+          className="shrink-0 inline-flex items-center gap-1 rounded-md border border-[var(--wc-border-strong)] px-2 py-0.5 text-[11px] font-medium text-[var(--wc-slate)] hover:bg-[var(--wc-slate)] hover:text-[var(--wc-on-accent)] hover:border-[var(--wc-slate)] transition-colors"
           title="Open in the word processor"
         >
-          ⤢
+          ⤢ Open
         </Link>
         <button
           onClick={remove}
