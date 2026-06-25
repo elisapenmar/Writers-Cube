@@ -96,8 +96,22 @@ export function CharactersTab() {
       setInfo(
         bits.length
           ? `Pulled from ${where}: ${bits.join(", ")}. (Your manual edits were kept.)`
-          : `Nothing new to pull — your list already covers what's in the ${where}.`,
+          : `Nothing new to pull. Your list already covers what's in the ${where}.`,
       );
+      // From the manuscript: also link each bullet to the scene that supports it.
+      if (source === "project") {
+        const fresh = await listCharacters();
+        for (const c of fresh) {
+          if (c.description?.trim()) {
+            try {
+              const bullets = await citeCharacter(c.id);
+              applyPatch(c.id, { bullets });
+            } catch {
+              /* skip a character whose citation pass fails */
+            }
+          }
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Pull failed");
     } finally {
