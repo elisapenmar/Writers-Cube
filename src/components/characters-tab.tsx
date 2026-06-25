@@ -356,7 +356,7 @@ function CharacterCard({
             </p>
           ) : (
             <span className="italic text-[var(--wc-faint)]">
-              Broad strokes — click to add details
+              Broad strokes, click to add details
             </span>
           )}
         </div>
@@ -424,7 +424,7 @@ function CharacterCard({
               </ul>
             ) : (
               <span className="italic text-[var(--wc-faint)]">
-                Traits, arc, voice — one bullet per line…
+                Traits, arc, voice, one bullet per line…
               </span>
             )}
           </div>

@@ -23,7 +23,7 @@ export function MoveExerciseControl({
       try {
         const { looseId } = await moveExercise(exerciseId, projectId);
         if (looseId) {
-          // It became a project page — open it there.
+          // It became a project page, open it there.
           router.push(`/app/loose/${looseId}`);
         }
         router.refresh();

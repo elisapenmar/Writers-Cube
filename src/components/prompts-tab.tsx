@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { listProjects, getActiveProjectId } from "@/server/projects";
 import { PromptTool } from "@/components/prompt-tool";
 
-/** Prompts inside the right-side panel — defaults to a prompt grounded in the
+/** Prompts inside the right-side panel, defaults to a prompt grounded in the
  *  current project, so the writer can work the prompt next to their manuscript. */
 export function PromptsTab() {
   const [data, setData] = useState<{

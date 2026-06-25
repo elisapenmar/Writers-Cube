@@ -24,7 +24,7 @@ type GoalType = "words" | "minutes";
 // Carved-wood die faces, by material style. Cutouts live in
 // public/focus/<style>/<focus>.png (produced by scripts/cut-dice.py). Each theme
 // uses one consistent material; a missing file falls back to dice pips. Drop new
-// cutouts into the folder to light them up — no code change needed.
+// cutouts into the folder to light them up, no code change needed.
 // Wood dice are reserved for the Parchment (wooden-desk) theme; every other
 // theme uses the cream dice.
 const THEME_DIE_STYLE: Record<string, "wood" | "cream"> = {
@@ -180,8 +180,8 @@ export function PromptTool({
   async function persistExercise(content: unknown, wordCount: number) {
     if (!rendered) return;
     if (wordCount <= 0) {
-      // Nothing written — don't clutter the practice library with blanks.
-      throw new Error("Write something first — empty exercises aren't saved.");
+      // Nothing written, don't clutter the practice library with blanks.
+      throw new Error("Write something first, empty exercises aren't saved.");
     }
     await saveExercise({
       projectId: mode === "existing" ? projectId : null,
@@ -225,7 +225,7 @@ export function PromptTool({
           </div>
         </header>
 
-        {/* Step 1 — Mode */}
+        {/* Step 1, Mode */}
         <Section n={1} title="What are we doing?">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <ModeCard
@@ -271,7 +271,7 @@ export function PromptTool({
           )}
         </Section>
 
-        {/* Step 2 — What to work on */}
+        {/* Step 2, What to work on */}
         <Section n={2} title="What to work on" hint="Pick any number, or roll the die.">
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
             {FOCUS_ORDER.map((f) => (
@@ -301,12 +301,12 @@ export function PromptTool({
           </div>
           {scenarioSeed && (
             <p className="mt-2 text-xs text-[var(--wc-plum)]">
-              Scenario seed sets the format — other faces act as topic filters for seeds.
+              Scenario seed sets the format, other faces act as topic filters for seeds.
             </p>
           )}
         </Section>
 
-        {/* Step 3 — Depth & writing mode */}
+        {/* Step 3, Depth & writing mode */}
         <Section n={3} title="Depth & writing mode">
           <div className="flex flex-wrap gap-6">
             <div>
@@ -380,14 +380,14 @@ export function PromptTool({
               />
               {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-              {/* Actions — directly above the writing surface */}
+              {/* Actions, directly above the writing surface */}
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <button
                   onClick={rollAndWrite}
                   disabled={generating}
                   className="rounded-xl px-4 py-2 text-sm border border-[var(--wc-border-strong)] hover:bg-[var(--wc-canvas)] disabled:opacity-50"
                 >
-                  {generating ? "Rolling…" : "↻ Not for me — reroll"}
+                  {generating ? "Rolling…" : "↻ Not for me, reroll"}
                 </button>
                 <button
                   onClick={() => setShowDeeper((v) => !v)}
@@ -466,7 +466,7 @@ export function PromptTool({
               onClick={() => setPickerOpen(false)}
               className="mt-3 text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
             >
-              Cancel — keep it a standalone exercise
+              Cancel, keep it a standalone exercise
             </button>
           </div>
         </div>
@@ -488,7 +488,7 @@ export function PromptTool({
             void persistExercise(doc, wc)
               .then(() => setSaved(true))
               .catch(() => {
-                /* empty / transient — nothing to save */
+                /* empty / transient, nothing to save */
               });
           }}
           promptHeader={
@@ -549,7 +549,7 @@ function PromptCard({
         </p>
       )}
       {rendered.source && (
-        <p className="mt-2 text-xs text-[var(--wc-faint)]">— {rendered.source}</p>
+        <p className="mt-2 text-xs text-[var(--wc-faint)]">{rendered.source}</p>
       )}
       {showDeeper && (
         <div className="mt-4 rounded-xl bg-[rgba(106,85,127,0.07)] border border-[rgba(106,85,127,0.2)] p-3">

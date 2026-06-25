@@ -29,7 +29,7 @@ export default async function PublishPage() {
         ? sampleParas
         : [
             "Your manuscript will appear here once you start writing. This preview reflects the typography and layout choices you make below.",
-            "Adjust the font, spacing, indentation, and chapter style — then export to ebook, print, or Word.",
+            "Adjust the font, spacing, indentation, and chapter style, then export to ebook, print, or Word.",
           ],
   };
 

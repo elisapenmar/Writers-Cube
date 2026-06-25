@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Writer's Cube",
-  description: "Writer's Cube — V0.5",
+  description: "Writer's Cube, V0.5",
 };
 
 // Applied before paint so the chosen theme/motion never flashes the default.

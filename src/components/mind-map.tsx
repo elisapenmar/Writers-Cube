@@ -94,7 +94,7 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
         />
       </div>
 
-      {/* Hover toolbar — Add child + Delete */}
+      {/* Hover toolbar, Add child + Delete */}
       <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition pointer-events-auto">
         <button
           onClick={(e) => {
@@ -215,7 +215,7 @@ function resolvePositions(
     return { ...auto[i], pinned: false };
   });
 
-  // Iterative collision relief — push unpinned nodes apart from any neighbor.
+  // Iterative collision relief, push unpinned nodes apart from any neighbor.
   const minDist = 175;
   for (let iter = 0; iter < 80; iter++) {
     let moved = false;

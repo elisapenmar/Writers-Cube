@@ -14,7 +14,7 @@ const STEPS: Step[] = [
     title: "Welcome to Writer's Cube",
     body: (
       <p>
-        A calm studio for writing your novel — draft in focus, keep your story world
+        A calm studio for writing your novel, draft in focus, keep your story world
         organized, and call on an AI thought-partner only when you want one. Here&apos;s
         the quick tour.
       </p>
@@ -29,7 +29,7 @@ const STEPS: Step[] = [
           scenes, and every scene keeps its own version history.
         </Feature>
         <Feature icon="📖" name="Story Bible" ai>
-          Characters, an outline, a thought map, and a timeline — each can be generated
+          Characters, an outline, a thought map, and a timeline, each can be generated
           from your manuscript or brainstorm.
         </Feature>
         <Feature icon="💭" name="Brainstorm" ai>
@@ -76,7 +76,7 @@ function Feature({
           {name}
           {ai && <AiDiamond className="text-[var(--wc-slate)]" size={12} />}
         </span>{" "}
-        — {children}
+       , {children}
       </span>
     </li>
   );

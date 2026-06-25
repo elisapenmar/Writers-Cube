@@ -53,17 +53,17 @@ export const OUTLINE_TEMPLATES: OutlineTemplate[] = [
       id: uid("root"),
       title: "Three-Act Structure",
       children: [
-        group("Act One — Setup", [
+        group("Act One, Setup", [
           leaf("Opening image / status quo"),
           leaf("Inciting incident"),
           leaf("Plot point 1 (entry into Act 2)"),
         ]),
-        group("Act Two — Confrontation", [
+        group("Act Two, Confrontation", [
           leaf("Rising action"),
           leaf("Midpoint (false victory or defeat)"),
           leaf("Plot point 2 (entry into Act 3)"),
         ]),
-        group("Act Three — Resolution", [
+        group("Act Three, Resolution", [
           leaf("Climax"),
           leaf("Falling action"),
           leaf("Resolution / new status quo"),
@@ -106,7 +106,7 @@ export const OUTLINE_TEMPLATES: OutlineTemplate[] = [
     description: "Fifteen-beat screenwriting structure, adapted for novels.",
     build: () => ({
       id: uid("root"),
-      title: "Save the Cat — 15 Beats",
+      title: "Save the Cat, 15 Beats",
       children: [
         group("Act One", [
           leaf("Opening image"),
@@ -137,21 +137,21 @@ export const OUTLINE_TEMPLATES: OutlineTemplate[] = [
   {
     key: "kishotenketsu",
     name: "Kishōtenketsu",
-    description: "Four-act East Asian structure — no conflict required.",
+    description: "Four-act East Asian structure, no conflict required.",
     build: () => ({
       id: uid("root"),
       title: "Kishōtenketsu",
       children: [
-        group("Ki (起) — Introduction", [
+        group("Ki (起), Introduction", [
           leaf("Establish characters, setting, and circumstances"),
         ]),
-        group("Shō (承) — Development", [
+        group("Shō (承), Development", [
           leaf("Expand on what was introduced; no major changes"),
         ]),
-        group("Ten (転) — Twist", [
+        group("Ten (転), Twist", [
           leaf("Unexpected new element or perspective enters"),
         ]),
-        group("Ketsu (結) — Conclusion", [
+        group("Ketsu (結), Conclusion", [
           leaf("All elements reconcile; new understanding"),
         ]),
       ],
@@ -165,13 +165,13 @@ export const OUTLINE_TEMPLATES: OutlineTemplate[] = [
       id: uid("root"),
       title: "Seven-Point Story Structure",
       children: [
-        leaf("Hook — protagonist's starting state (the opposite of the resolution)"),
-        leaf("Plot turn 1 — inciting incident; the world changes"),
-        leaf("Pinch point 1 — pressure applied; antagonist's first show of force"),
-        leaf("Midpoint — protagonist shifts from reaction to action"),
-        leaf("Pinch point 2 — pressure applied harder; everything seems lost"),
-        leaf("Plot turn 2 — protagonist gets the last piece they need"),
-        leaf("Resolution — final state; the change is embodied"),
+        leaf("Hook, protagonist's starting state (the opposite of the resolution)"),
+        leaf("Plot turn 1, inciting incident; the world changes"),
+        leaf("Pinch point 1, pressure applied; antagonist's first show of force"),
+        leaf("Midpoint, protagonist shifts from reaction to action"),
+        leaf("Pinch point 2, pressure applied harder; everything seems lost"),
+        leaf("Plot turn 2, protagonist gets the last piece they need"),
+        leaf("Resolution, final state; the change is embodied"),
       ],
     }),
   },
@@ -183,20 +183,20 @@ export const OUTLINE_TEMPLATES: OutlineTemplate[] = [
       id: uid("root"),
       title: "Freytag's Pyramid",
       children: [
-        group("Act I — Exposition", [
+        group("Act I, Exposition", [
           leaf("Establish setting, characters, status quo"),
           leaf("Inciting incident closes the act"),
         ]),
-        group("Act II — Rising Action", [
+        group("Act II, Rising Action", [
           leaf("Complications build; stakes increase"),
         ]),
-        group("Act III — Climax", [
-          leaf("Turning point — highest tension"),
+        group("Act III, Climax", [
+          leaf("Turning point, highest tension"),
         ]),
-        group("Act IV — Falling Action", [
+        group("Act IV, Falling Action", [
           leaf("Consequences unfold; momentum reverses"),
         ]),
-        group("Act V — Dénouement", [
+        group("Act V, Dénouement", [
           leaf("Resolution; new equilibrium established"),
         ]),
       ],

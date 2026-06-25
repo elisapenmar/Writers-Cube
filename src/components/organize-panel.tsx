@@ -148,7 +148,7 @@ export function OrganizePanel() {
             setNodes(saved.nodes);
             setPositions(saved.positions);
           } else {
-            // DB is empty — check legacy localStorage for a previous mind map
+            // DB is empty, check legacy localStorage for a previous mind map
             const legacy = readLegacyMindMapFromLocalStorage();
             if (legacy && legacy.length > 0) {
               setNodes(legacy);
@@ -399,7 +399,7 @@ export function OrganizePanel() {
           <>
             <MindMap rawNodes={nodes} initialPositions={positions} />
             <p className="px-4 py-2 text-xs text-[var(--wc-faint)] border-t border-[var(--wc-border)]">
-              Double-click to edit a bubble. Hover for + (add child) and × (delete). Drag to rearrange — positions and edits save automatically.
+              Double-click to edit a bubble. Hover for + (add child) and × (delete). Drag to rearrange, positions and edits save automatically.
             </p>
           </>
         ) : (
@@ -419,7 +419,7 @@ function escapeHtml(s: string): string {
 }
 
 // Notes are persisted as a string that now holds HTML. Legacy notes, AI-generated
-// notes, and imported documents arrive as plain text — wrap them into paragraphs
+// notes, and imported documents arrive as plain text, wrap them into paragraphs
 // so they render (and keep their line breaks) in the rich editor.
 function notesToHtml(value: string): string {
   if (!value) return "";
@@ -455,7 +455,7 @@ function NotesEditor({
   });
 
   // Push external updates (AI "Generate"/"Add from chat", which set notes through
-  // the store) into the editor — without echoing the editor's own output back.
+  // the store) into the editor, without echoing the editor's own output back.
   const lastSynced = useRef<string>(value);
   useEffect(() => {
     if (!editor) return;
@@ -486,7 +486,7 @@ function NotesEditor({
       <div className="relative flex-1 overflow-y-auto bg-[var(--wc-surface)] px-4 py-3">
         {isEmpty && (
           <p className="pointer-events-none absolute inset-x-4 top-3 text-sm text-[var(--wc-faint)] leading-relaxed">
-            Your working notes appear here — edit freely; changes save
+            Your working notes appear here, edit freely; changes save
             automatically. Run a brainstorm, then click{" "}
             <span className="font-medium">Generate</span> to distill it into notes.
           </p>

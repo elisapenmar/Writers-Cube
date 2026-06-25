@@ -6,7 +6,7 @@ import { importManuscript } from "@/server/import";
 
 type View = "menu" | "computer";
 
-/** Compact import control — a dropdown to import from the computer or Google. */
+/** Compact import control, a dropdown to import from the computer or Google. */
 export function ImportButton() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("menu");

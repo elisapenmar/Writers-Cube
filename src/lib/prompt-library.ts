@@ -1,4 +1,4 @@
-// Writer's Cube — seed prompt corpus.
+// Writer's Cube, seed prompt corpus.
 // Authored exemplars; the production engine may also generate prompts with the
 // LLM using these as few-shot examples (see HANDOFF §3).
 
@@ -22,9 +22,9 @@ export type PromptObject = {
   depth: PromptDepth;
   /** May contain {{slots}}: {{character}}, {{character2}}, {{place}}, {{thread}}, {{object}}. */
   text: string;
-  /** Seeds only — the open craft question. */
+  /** Seeds only, the open craft question. */
   question?: string;
-  /** Exercises only — the explicit rule. */
+  /** Exercises only, the explicit rule. */
   constraint?: string;
   /** The "Go deeper" escalation (may contain slots). */
   deeper: string;
@@ -53,7 +53,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     mode: "both",
     depth: "warmup",
     text: "Write an argument in which neither person says what the fight is really about.",
-    constraint: "No dialogue tags and no action beats — pure speech, nothing else.",
+    constraint: "No dialogue tags and no action beats, pure speech, nothing else.",
     deeper: "Now let the real subject be {{thread}}, surfacing only in what they refuse to say.",
     source: "indirect characterization",
   },
@@ -65,7 +65,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     depth: "warmup",
     text: "{{character}} and {{character2}} are arguing in {{place}}, and people nearby are starting to stare.",
     question:
-      "How does their dialogue prove — without either saying so — that neither really knows what they're fighting about?",
+      "How does their dialogue prove, without either saying so, that neither really knows what they're fighting about?",
     deeper: "Reveal mid-scene that the argument is a proxy for {{thread}}, and neither will name it.",
     source: "dialogue subtext",
   },
@@ -91,7 +91,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     depth: "warmup",
     text: "Show a character doing something that contradicts what they just told someone they believe.",
     constraint: "Never explain the contradiction. Let the action stand alone.",
-    deeper: "Make the contradiction the hinge the whole character turns on — and still don't explain it.",
+    deeper: "Make the contradiction the hinge the whole character turns on, and still don't explain it.",
     source: "showing vs. telling",
   },
   {
@@ -100,7 +100,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     focus: "character",
     mode: "existing",
     depth: "deep",
-    text: "{{character}} finally gets the thing they've wanted since the start — {{object}} — but in this scene it's the wrong thing.",
+    text: "{{character}} finally gets the thing they've wanted since the start, {{object}}, but in this scene it's the wrong thing.",
     question:
       "How does getting what they wanted reveal what they actually needed instead?",
     deeper: "Let {{character2}} be the one who sees it first, and say nothing.",
@@ -125,7 +125,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     depth: "warmup",
     text: "{{character}} is performing being fine for {{character2}}, and almost pulling it off.",
     question: "What single small detail gives them away to the reader but not to {{character2}}?",
-    deeper: "Have {{character2}} notice too — and choose to let the performance continue.",
+    deeper: "Have {{character2}} notice too, and choose to let the performance continue.",
     source: "dramatic irony",
   },
 
@@ -183,7 +183,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     focus: "plot",
     mode: "existing",
     depth: "deep",
-    text: "Pick up the thread you've left dangling — {{thread}} — and force it into the open.",
+    text: "Pick up the thread you've left dangling, {{thread}}, and force it into the open.",
     question:
       "What scene would make it impossible for {{character}} to keep avoiding this?",
     deeper: "Make the confrontation arrive a beat too early, before {{character}} is ready.",
@@ -210,7 +210,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     depth: "deep",
     text: "Narrate a scene in first person where the narrator is wrong about what's happening.",
     constraint: "The narrator never realizes it. The reader must.",
-    deeper: "Let the reader catch the truth one paragraph before the narrator almost does — then doesn't.",
+    deeper: "Let the reader catch the truth one paragraph before the narrator almost does, then doesn't.",
     source: "unreliable narration",
   },
   {
@@ -231,7 +231,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     mode: "new",
     depth: "warmup",
     text: "A narrator describes an ordinary morning, but they are grieving and trying very hard not to.",
-    question: "How does the grief leak into the syntax — the rhythm, the things they linger on?",
+    question: "How does the grief leak into the syntax, the rhythm, the things they linger on?",
     deeper: "Never let them cry. Let one short sentence do what the crying would.",
     source: "voice under pressure",
   },
@@ -243,7 +243,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     focus: "sensory",
     mode: "both",
     depth: "warmup",
-    text: "Render a charged moment using only sound and smell — no sight at all.",
+    text: "Render a charged moment using only sound and smell, no sight at all.",
     constraint: "Not one visual detail. If you can see it, cut it.",
     deeper: "Now add a single visual detail at the very end, and make it land like a gut-punch.",
     source: "sensory specificity",
@@ -266,7 +266,7 @@ export const PROMPT_LIBRARY: PromptObject[] = [
     focus: "sensory",
     mode: "both",
     depth: "deep",
-    text: "Write an emotional turn entirely through bodily sensation — what the character feels in their body.",
+    text: "Write an emotional turn entirely through bodily sensation, what the character feels in their body.",
     constraint: "Name no emotions. Only the body.",
     deeper: "Now let the body betray what the character is saying out loud.",
     source: "embodied emotion",

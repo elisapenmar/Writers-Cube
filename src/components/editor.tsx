@@ -92,7 +92,7 @@ export function Editor({ scene }: { scene: Scene }) {
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
     e.preventDefault();
-    // posAtCoords is null when clicking past the end of a line — fall back to
+    // posAtCoords is null when clicking past the end of a line, fall back to
     // the caret position so the menu always opens.
     const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
     const pos = coords?.pos ?? editor.state.selection.from;

@@ -47,7 +47,7 @@ export function PublishStudio({
     });
   }
 
-  // Export links must reflect saved settings — save first if dirty.
+  // Export links must reflect saved settings, save first if dirty.
   const exportHref = (format: string) =>
     `/app/export?project=${projectId}&format=${format}`;
 
@@ -138,7 +138,7 @@ export function PublishStudio({
                   value={s.chapterHeadingStyle}
                   onChange={(v) => update("chapterHeadingStyle", v as ChapterHeadingStyle)}
                   options={[
-                    { value: "numbered-title", label: "Chapter 1 — Title" },
+                    { value: "numbered-title", label: "Chapter 1, Title" },
                     { value: "numbered", label: "Chapter 1" },
                     { value: "title", label: "Title only" },
                   ]}

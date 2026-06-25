@@ -1,4 +1,4 @@
-// Rounded-square icon language for Writer's Cube — no chevrons.
+// Rounded-square icon language for Writer's Cube, no chevrons.
 
 export function SquareArrow({
   dir = "left",

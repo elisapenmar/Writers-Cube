@@ -89,7 +89,7 @@ export function ManuscriptReader({
   }
 
   function remount(sceneId: string, content: unknown) {
-    // The block's editor will be torn down — drop the stale reference so the
+    // The block's editor will be torn down, drop the stale reference so the
     // toolbar doesn't touch a destroyed editor.
     setActiveEditor(null);
     setOverride((o) => ({ ...o, [sceneId]: content }));
@@ -131,7 +131,7 @@ export function ManuscriptReader({
       {findOpen && activeEditor && (
         <FindReplace editor={activeEditor} onClose={() => setFindOpen(false)} />
       )}
-      {/* Sticky toolbar — operates on whichever block is focused */}
+      {/* Sticky toolbar, operates on whichever block is focused */}
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
         <div className="flex-1 min-w-0 overflow-x-auto">
           <EditorToolbar editor={activeEditor} />
@@ -169,7 +169,7 @@ export function ManuscriptReader({
         <div className="max-w-3xl mx-auto py-10 px-6">
           {totalScenes === 0 && (
             <p className="text-sm text-[var(--wc-faint)] text-center py-16">
-              Nothing to scroll yet — add chapters and scenes from the sidebar.
+              Nothing to scroll yet, add chapters and scenes from the sidebar.
             </p>
           )}
           {chapters.map((chapter) => (
@@ -316,7 +316,7 @@ function SceneBlock({
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
     e.preventDefault();
-    // posAtCoords is null when clicking past the end of a line — fall back to
+    // posAtCoords is null when clicking past the end of a line, fall back to
     // the caret so the menu always opens.
     const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
     const pos = coords?.pos ?? editor.state.selection.from;

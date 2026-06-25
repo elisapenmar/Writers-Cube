@@ -251,7 +251,7 @@ export function DrivePanel({
                             {workingId === f.id ? "Importing…" : "Import"}
                           </button>
                         ) : (
-                          <span className="shrink-0 text-[11px] text-[var(--wc-faint)]">—</span>
+                          <span className="shrink-0 text-[11px] text-[var(--wc-faint)]">·</span>
                         )}
                       </div>
                     ))}

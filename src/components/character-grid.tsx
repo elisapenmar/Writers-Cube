@@ -62,7 +62,7 @@ export function CharacterGrid({ refreshKey }: { refreshKey?: number }) {
             <tr key={r.id}>
               <td
                 className="sticky left-0 z-10 bg-[var(--wc-surface)] px-2 py-1 whitespace-nowrap text-[var(--wc-ink)] border-b border-[var(--wc-border)] max-w-[8rem] truncate"
-                title={`${r.name} — ${r.total} mention${r.total === 1 ? "" : "s"} total`}
+                title={`${r.name}, ${r.total} mention${r.total === 1 ? "" : "s"} total`}
               >
                 {r.name}
               </td>

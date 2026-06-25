@@ -187,7 +187,7 @@ export function TimelineTab() {
         )}
         {state.lanes.length === 0 ? (
           <p className="text-sm text-[var(--wc-faint)] rounded-2xl border border-dashed border-[var(--wc-border-strong)] px-4 py-6">
-            No timelines yet. Add one — then add more to track parallel threads
+            No timelines yet. Add one, then add more to track parallel threads
             (e.g. two characters, two eras) side by side.
           </p>
         ) : (

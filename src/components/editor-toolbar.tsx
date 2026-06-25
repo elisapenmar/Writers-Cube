@@ -33,7 +33,7 @@ export function EditorToolbar({
   }, [editor]);
 
   // A destroyed editor (e.g. a block that just remounted after a split) must
-  // not be touched — editor.can()/isActive() throw on a torn-down view.
+  // not be touched, editor.can()/isActive() throw on a torn-down view.
   if (!editor || editor.isDestroyed) return null;
   const chain = () => editor.chain().focus();
   const can = (fn: "undo" | "redo" | "indent" | "outdent") => {

@@ -27,7 +27,7 @@ export function BackupControls() {
           ? "Backed up to your Google Drive."
           : r.reason === "drive-not-connected"
           ? "Connect Google Drive first to back up there."
-          : "Couldn't back up to Drive — try reconnecting Drive.",
+          : "Couldn't back up to Drive, try reconnecting Drive.",
       );
     } finally {
       setBusy(false);

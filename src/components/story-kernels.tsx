@@ -79,7 +79,7 @@ export function StoryKernels({
 
       {kernels.length === 0 ? (
         <p className="text-sm text-[var(--wc-muted)] rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-6">
-          No kernels yet. Jot down a spark — a what-if, an image, a first line —
+          No kernels yet. Jot down a spark, a what-if, an image, a first line,
           before it slips away.
         </p>
       ) : (

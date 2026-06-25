@@ -91,7 +91,7 @@ export function EntityLinker({
                   }}
                   className="w-full rounded border border-[var(--wc-border)] bg-[var(--wc-surface)] px-1 py-0.5 text-[11px]"
                 >
-                  <option value="">— none —</option>
+                  <option value="">(none)</option>
                   {targets.scenes.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.chapter ? `${s.chapter} · ` : ""}

@@ -1,5 +1,5 @@
 // The kind of work a project holds. Drives vocabulary, nav layout, and
-// (later) export formatting — without changing the underlying chapter/scene model.
+// (later) export formatting, without changing the underlying chapter/scene model.
 
 export type ProjectForm = "novel" | "short_story" | "poetry" | "essay";
 

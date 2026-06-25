@@ -303,7 +303,7 @@ export function SideNav({
                     }
                     draggable={false}
                     className="flex items-center gap-1.5 truncate rounded px-2 py-1 text-sm text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)] cursor-grab active:cursor-grabbing"
-                    title={`${u.title} — drag onto a chapter to file it there`}
+                    title={`${u.title}, drag onto a chapter to file it there`}
                   >
                     <span aria-hidden className="text-[10px] text-[var(--wc-faint)]">
                       {u.kind === "exercise" ? "🎲" : "✎"}
@@ -611,7 +611,7 @@ function SortableChapter({
   );
 }
 
-/** Flat list of pieces (poetry / short story / essay) — no chapter layer. */
+/** Flat list of pieces (poetry / short story / essay), no chapter layer. */
 function FlatPieces({
   chapters,
   activeSceneId,

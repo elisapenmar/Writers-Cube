@@ -2,7 +2,7 @@ import { CubeMark } from "@/components/cube-mark";
 import type { CSSProperties } from "react";
 
 /**
- * CubeField — an ambient layer of muted cubes that slowly float and fall behind
+ * CubeField, an ambient layer of muted cubes that slowly float and fall behind
  * the page content. Decorative only (pointer-events: none, aria-hidden).
  *
  * Configs are fixed (no randomness) so server and client render identically.
@@ -11,8 +11,8 @@ import type { CSSProperties } from "react";
 const CUBES: {
   left: number; // %
   size: number; // px
-  dur: number; // s — slow = floaty
-  delay: number; // s — negative seeds mid-animation
+  dur: number; // s, slow = floaty
+  delay: number; // s, negative seeds mid-animation
   rot: number; // deg of drift-rotation
 }[] = [
   { left: 4, size: 56, dur: 34, delay: -3, rot: 34 },

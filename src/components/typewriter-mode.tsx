@@ -253,7 +253,7 @@ function ConfigScreen({
             className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
           />
           Don&apos;t allow backspace
-          <span className="text-xs text-zinc-500">— no deleting, only forward</span>
+          <span className="text-xs text-zinc-500">no deleting, only forward</span>
         </label>
 
         <div className="flex gap-2 pt-2">
@@ -336,7 +336,7 @@ function ActiveSession({
         },
         handleKeyDown: lockBackspace
           ? (_view, event) => {
-              // Hardcore mode: no deleting — only forward.
+              // Hardcore mode: no deleting, only forward.
               if (event.key === "Backspace" || event.key === "Delete") {
                 event.preventDefault();
                 return true;
@@ -371,7 +371,7 @@ function ActiveSession({
       range.collapse(true);
       let rect = range.getBoundingClientRect();
       if (rect.top === 0 && rect.bottom === 0) {
-        // Caret in empty paragraph — get the containing element instead
+        // Caret in empty paragraph, get the containing element instead
         const node = sel.anchorNode as HTMLElement | null;
         if (node) {
           const el =

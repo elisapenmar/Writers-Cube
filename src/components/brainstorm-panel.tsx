@@ -275,14 +275,14 @@ export function BrainstormPanel() {
           {isEmpty && (
             <div className="space-y-3">
               <p className="font-serif text-base text-[var(--wc-muted)] leading-relaxed">
-                Tell me your idea — out loud or in writing. I&apos;ll ask one question at a time.
+                Tell me your idea, out loud or in writing. I&apos;ll ask one question at a time.
               </p>
               <p className="text-xs text-[var(--wc-faint)]">
-                Mode: <b className="text-[var(--wc-muted)]">{BRAINSTORM_MODES[mode].name}</b> — {BRAINSTORM_MODES[mode].description}
+                Mode: <b className="text-[var(--wc-muted)]">{BRAINSTORM_MODES[mode].name}</b>, {BRAINSTORM_MODES[mode].description}
               </p>
               <ul className="space-y-1 text-xs text-[var(--wc-muted)] font-serif italic">
                 {BRAINSTORM_MODES[mode].openers.map((p) => (
-                  <li key={p}>— {p}</li>
+                  <li key={p}>· {p}</li>
                 ))}
               </ul>
             </div>

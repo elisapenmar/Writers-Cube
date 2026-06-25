@@ -12,7 +12,7 @@ type Evidence = {
 const EVIDENCE: Evidence[] = [
   {
     n: 1,
-    title: "Constraints don't limit creativity — they fuel it",
+    title: "Constraints don't limit creativity, they fuel it",
     finding:
       "A review of roughly 145 empirical studies found the relationship between constraints and creativity forms an inverted-U: a moderate amount of constraint produces the most creative output, while too little breeds complacency and too much stifles. Constraints push people off the path of least resistance, and task cues prime semantic memory to surface remote, original associations.",
     use: "Every craft exercise carries a specific rule (“no dialogue tags,” “reveal personality without naming a trait”). The rule is the engine, not decoration.",
@@ -22,7 +22,7 @@ const EVIDENCE: Evidence[] = [
     n: 2,
     title: "Timed, low-stakes prompts reduce the fear of the blank page",
     finding:
-      "Peter Elbow's freewriting — brief, timed, non-editing bursts — has a research literature showing it reduces writing apprehension, builds confidence, and increases fluency (ideas generated per fixed time). A 2025 study of secondary EFL learners found freewriting improved both writing fluency and writers' emotions and perceptions of the task.",
+      "Peter Elbow's freewriting, brief, timed, non-editing bursts, has a research literature showing it reduces writing apprehension, builds confidence, and increases fluency (ideas generated per fixed time). A 2025 study of secondary EFL learners found freewriting improved both writing fluency and writers' emotions and perceptions of the task.",
     use: "The “warm-up (~5 min)” framing and the optional typewriter mode (write without editing until you hit a word or time goal) are freewriting made into a button.",
     sources: "Sources 3, 4",
   },
@@ -30,15 +30,15 @@ const EVIDENCE: Evidence[] = [
     n: 3,
     title: "Repeated prompted practice measurably improves writing",
     finding:
-      "Education research treats prompts as serving two proven roles: quick-writes for fluency and developed prompts for process writing. Meta-analyses of writing instruction find structured, repeated practice reliably improves writing skill — partly because automaticity with the basics frees cognitive space for composition.",
-    use: "The whole tool is built to be replayable — roll another, go deeper, come back tomorrow.",
+      "Education research treats prompts as serving two proven roles: quick-writes for fluency and developed prompts for process writing. Meta-analyses of writing instruction find structured, repeated practice reliably improves writing skill, partly because automaticity with the basics frees cognitive space for composition.",
+    use: "The whole tool is built to be replayable, roll another, go deeper, come back tomorrow.",
     sources: "Source 5",
   },
   {
     n: 4,
     title: "The craft tradition behind the exercises",
     finding:
-      "The specific exercise patterns — describe a character's room when they're absent, write the scene before the story begins, render a place with only sound and smell — come from the standard creative-writing exercise canon used in MFA programs and workshops.",
+      "The specific exercise patterns, describe a character's room when they're absent, write the scene before the story begins, render a place with only sound and smell, come from the standard creative-writing exercise canon used in MFA programs and workshops.",
     use: "Authored exemplars are drawn from that canon; the engine recombines and grounds them in your work.",
     sources: "Sources 6, 7",
   },
@@ -47,27 +47,27 @@ const EVIDENCE: Evidence[] = [
 const SOURCES: { label: string; href?: string }[] = [
   {
     label:
-      "Acar, Tarakci & van Knippenberg — Creativity from constraints: Theory and applications to education. Thinking Skills & Creativity.",
+      "Acar, Tarakci & van Knippenberg, Creativity from constraints: Theory and applications to education. Thinking Skills & Creativity.",
   },
   {
     label:
-      "Sassenberg et al. — Priming creativity as a strategy to increase creative performance by facilitating the activation of remote associations. J. Experimental Social Psychology.",
+      "Sassenberg et al., Priming creativity as a strategy to increase creative performance by facilitating the activation of remote associations. J. Experimental Social Psychology.",
   },
   {
     label:
-      "Choi (2025) — Effects of Freewriting on L2 Writing Fluency, Emotions, and Perceptions. International Journal of Applied Linguistics.",
+      "Choi (2025), Effects of Freewriting on L2 Writing Fluency, Emotions, and Perceptions. International Journal of Applied Linguistics.",
   },
   {
-    label: "Using Focused Freewriting to Stimulate Ideas (ERIC) — Elbow tradition.",
+    label: "Using Focused Freewriting to Stimulate Ideas (ERIC), Elbow tradition.",
   },
   {
     label:
-      "Graham et al. — Writing instruction meta-analysis. Educational Research Review.",
+      "Graham et al., Writing instruction meta-analysis. Educational Research Review.",
   },
   {
-    label: "Bernays & Painter — What If? Writing Exercises for Fiction Writers.",
+    label: "Bernays & Painter, What If? Writing Exercises for Fiction Writers.",
   },
-  { label: "Kiteley — The 3 A.M. Epiphany." },
+  { label: "Kiteley, The 3 A.M. Epiphany." },
 ];
 
 export default function WhyThisWorks() {
@@ -116,7 +116,7 @@ export default function WhyThisWorks() {
           </div>
           <p className="text-sm text-[var(--wc-muted)] leading-relaxed">
             Most of this evidence comes from composition studies, education
-            research, and creativity psychology — not from controlled trials on
+            research, and creativity psychology, not from controlled trials on
             novelists revising long manuscripts. The &ldquo;help me deepen my
             existing draft&rdquo; use case rests on a strong craft tradition
             rather than experimental proof. We think that&apos;s worth saying out
