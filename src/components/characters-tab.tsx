@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   listCharacters,
@@ -8,6 +9,7 @@ import {
   deleteCharacter,
   pullCharactersFromBrainstorm,
   pullCharactersFromProject,
+  citeCharacter,
   type Character,
 } from "@/server/characters";
 import { AiSourceMenu } from "@/components/ai-source-menu";
@@ -211,7 +213,20 @@ function CharacterCard({
   const [savingDescription, setSavingDescription] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [citing, setCiting] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function cite() {
+    setCiting(true);
+    try {
+      const bullets = await citeCharacter(character.id);
+      onPatch({ bullets });
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Citation failed");
+    } finally {
+      setCiting(false);
+    }
+  }
 
   useEffect(() => {
     setName(character.name);
@@ -340,25 +355,52 @@ function CharacterCard({
           placeholder="• A trait, fact, or arc beat per line…"
         />
       ) : (
-        <div
-          onClick={() => {
-            setEditingDescription(true);
-            if (!description.trim()) setDescription("• ");
-          }}
-          className="mt-1 cursor-text text-sm text-[var(--wc-muted)] font-serif leading-relaxed min-h-[1.2em] hover:bg-[var(--wc-canvas)] rounded px-1 -mx-1"
-        >
-          {bulletLines(description).length > 0 ? (
-            <ul className="list-disc pl-5 space-y-0.5">
-              {bulletLines(description).map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ul>
-          ) : (
-            <span className="italic text-[var(--wc-faint)]">
-              Traits, arc, voice — one bullet per line…
-            </span>
+        <>
+          <div
+            onClick={() => {
+              setEditingDescription(true);
+              if (!description.trim()) setDescription("• ");
+            }}
+            className="mt-1 cursor-text text-sm text-[var(--wc-muted)] font-serif leading-relaxed min-h-[1.2em] hover:bg-[var(--wc-canvas)] rounded px-1 -mx-1"
+          >
+            {bulletLines(description).length > 0 ? (
+              <ul className="list-disc pl-5 space-y-0.5">
+                {bulletLines(description).map((line, i) => {
+                  const c = (character.bullets ?? []).find((b) => b.text === line);
+                  return (
+                    <li key={i}>
+                      {line}
+                      {c?.sceneId && (
+                        <Link
+                          href={`/app/scene/${c.sceneId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="ml-1.5 align-baseline text-[10px] text-[var(--wc-slate)] hover:underline"
+                          title="Where this shows in the manuscript"
+                        >
+                          {c.label ?? "source"} ↗
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <span className="italic text-[var(--wc-faint)]">
+                Traits, arc, voice — one bullet per line…
+              </span>
+            )}
+          </div>
+          {bulletLines(description).length > 0 && (
+            <button
+              onClick={cite}
+              disabled={citing}
+              className="mt-1.5 text-[10px] text-[var(--wc-slate)] hover:underline disabled:opacity-50"
+              title="Find the scene that supports each bullet and link it"
+            >
+              {citing ? "Citing…" : "⌖ Cite from manuscript"}
+            </button>
           )}
-        </div>
+        </>
       )}
 
       {savingDescription && (

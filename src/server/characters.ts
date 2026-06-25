@@ -7,11 +7,19 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 
+export type CharacterBullet = {
+  text: string;
+  sceneId: string | null;
+  chapterId: string | null;
+  label?: string | null; // e.g. "Ch 3" — display text for the citation link
+};
+
 export type Character = {
   id: string;
   name: string;
   role: string | null;
   description: string;
+  bullets?: CharacterBullet[] | null;
   position: number;
   updated_at: string;
 };
@@ -113,6 +121,147 @@ export async function characterChapterMatrix(): Promise<CharacterMatrix> {
   };
 }
 
+function splitBullets(text: string): string[] {
+  return (text ?? "")
+    .split("\n")
+    .map((l) => l.replace(/^\s*[•\-*]\s*/, "").trim())
+    .filter(Boolean);
+}
+
+/**
+ * Attribute each of a character's description bullets to the scene that best
+ * supports it, so the expanded card can show linked (scene · chapter) citations.
+ * Stored in characters.bullets, aligned by text with the description bullets.
+ */
+export async function citeCharacter(characterId: string): Promise<CharacterBullet[]> {
+  const { supabase, user } = await requireUser();
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) throw new Error("No project found.");
+
+  const { data: character } = await supabase
+    .from("characters")
+    .select("id, name, description")
+    .eq("id", characterId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!character) throw new Error("Character not found.");
+
+  const bulletTexts = splitBullets(String(character.description ?? ""));
+  if (bulletTexts.length === 0) {
+    await supabase.from("characters").update({ bullets: [] }).eq("id", characterId);
+    return [];
+  }
+
+  const { data: chapters } = await supabase
+    .from("chapters")
+    .select("id, position")
+    .eq("project_id", projectId)
+    .order("position", { ascending: true });
+  const chapterList = chapters ?? [];
+  const chapterNumber = new Map<string, number>();
+  chapterList.forEach((c, i) => chapterNumber.set(c.id as string, i + 1));
+  const chapterIds = chapterList.map((c) => c.id as string);
+
+  const { data: scenes } = chapterIds.length
+    ? await supabase
+        .from("scenes")
+        .select("id, chapter_id, position, content")
+        .in("chapter_id", chapterIds)
+        .order("position", { ascending: true })
+    : { data: [] as { id: string; chapter_id: string; content: unknown }[] };
+
+  const ordered = (scenes ?? [])
+    .slice()
+    .sort(
+      (a, b) =>
+        (chapterNumber.get(a.chapter_id as string) ?? 0) -
+        (chapterNumber.get(b.chapter_id as string) ?? 0),
+    );
+
+  if (ordered.length === 0) {
+    const empty = bulletTexts.map((t) => ({ text: t, sceneId: null, chapterId: null }));
+    await supabase.from("characters").update({ bullets: empty }).eq("id", characterId);
+    return empty;
+  }
+
+  const labelMap = new Map<string, { sceneId: string; chapterId: string }>();
+  const sceneBlocks: string[] = [];
+  ordered.forEach((s, i) => {
+    const label = `S${i + 1}`;
+    labelMap.set(label, { sceneId: s.id as string, chapterId: s.chapter_id as string });
+    const text = plainTextFromDoc((s as { content?: unknown }).content).slice(0, 2000);
+    sceneBlocks.push(
+      `[${label} | Chapter ${chapterNumber.get(s.chapter_id as string) ?? "?"}] ${text}`,
+    );
+  });
+
+  const anthropic = getAnthropic();
+  const completion = await anthropic.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 800,
+    system: `You attribute factual bullet points about a character to the scene that best supports each one. You're given numbered bullets and labeled scenes (S1, S2, …). For each bullet, return the single scene label that most directly shows/supports it, or "none" if nothing does. Use only the provided labels. Call cite_bullets; no prose.`,
+    tools: [
+      {
+        name: "cite_bullets",
+        description: "Map each bullet index to a supporting scene label.",
+        input_schema: {
+          type: "object",
+          properties: {
+            citations: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  index: { type: "number" },
+                  scene: { type: "string" },
+                },
+                required: ["index", "scene"],
+              },
+            },
+          },
+          required: ["citations"],
+        },
+      },
+    ],
+    tool_choice: { type: "tool", name: "cite_bullets" },
+    messages: [
+      {
+        role: "user",
+        content: `CHARACTER: ${character.name}\n\nBULLETS:\n${bulletTexts
+          .map((t, i) => `${i}. ${t}`)
+          .join("\n")}\n\nSCENES:\n${sceneBlocks.join("\n\n")}\n\nAttribute each bullet now.`,
+      },
+    ],
+  });
+
+  const toolUse = completion.content.find(
+    (c): c is Anthropic.ToolUseBlock => c.type === "tool_use",
+  );
+  const out =
+    (toolUse?.input as { citations?: { index: number; scene: string }[] } | undefined)
+      ?.citations ?? [];
+  const byIndex = new Map<number, string>();
+  for (const c of out) byIndex.set(c.index, c.scene);
+
+  const bullets: CharacterBullet[] = bulletTexts.map((text, i) => {
+    const ref = byIndex.get(i) ? labelMap.get(byIndex.get(i) as string) : undefined;
+    const num = ref ? chapterNumber.get(ref.chapterId) : undefined;
+    return {
+      text,
+      sceneId: ref?.sceneId ?? null,
+      chapterId: ref?.chapterId ?? null,
+      label: num ? `Ch ${num}` : null,
+    };
+  });
+
+  await supabase
+    .from("characters")
+    .update({ bullets })
+    .eq("id", characterId)
+    .eq("user_id", user.id);
+  return bullets;
+}
+
 async function requireUser() {
   const supabase = await createClient();
   const {
@@ -138,7 +287,7 @@ export async function listCharacters(): Promise<Character[]> {
   if (!projectId) return [];
   const { data, error } = await supabase
     .from("characters")
-    .select("id, name, role, description, position, updated_at")
+    .select("id, name, role, description, bullets, position, updated_at")
     .eq("user_id", user.id)
     .eq("project_id", projectId)
     .order("position", { ascending: true });
@@ -177,7 +326,7 @@ export async function createCharacter(initial?: {
       description: initial?.description?.trim() || "",
       position,
     })
-    .select("id, name, role, description, position, updated_at")
+    .select("id, name, role, description, bullets, position, updated_at")
     .single();
   if (error || !data) {
     if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
