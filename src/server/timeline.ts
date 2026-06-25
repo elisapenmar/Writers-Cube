@@ -20,7 +20,10 @@ export type TimelineLane = {
   color: string;
   events: TimelineEvent[];
 };
-export type TimelineState = { lanes: TimelineLane[] };
+export type TimelineState = {
+  lanes: TimelineLane[];
+  orientation?: "horizontal" | "vertical"; // event flow direction (default horizontal)
+};
 
 async function requireUser() {
   const supabase = await createClient();
@@ -55,7 +58,10 @@ export async function getTimeline(): Promise<TimelineState> {
     throw new Error(error.message);
   }
   const raw = (data?.timeline as TimelineState | null) ?? EMPTY;
-  return { lanes: Array.isArray(raw.lanes) ? raw.lanes : [] };
+  return {
+    lanes: Array.isArray(raw.lanes) ? raw.lanes : [],
+    orientation: raw.orientation === "vertical" ? "vertical" : "horizontal",
+  };
 }
 
 export async function saveTimeline(state: TimelineState): Promise<void> {

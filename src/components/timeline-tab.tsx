@@ -142,6 +142,8 @@ export function TimelineTab() {
     });
   }
 
+  const vertical = state.orientation === "vertical";
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--wc-border)] text-xs">
@@ -159,6 +161,15 @@ export function TimelineTab() {
             ]}
             onSelect={(k) => onGenerate(k as "manuscript" | "brainstorm")}
           />
+          <button
+            onClick={() =>
+              commit({ ...state, orientation: vertical ? "horizontal" : "vertical" })
+            }
+            className="rounded-md border border-[var(--wc-border-strong)] px-2 py-1 text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+            title={vertical ? "Switch to left-to-right" : "Switch to top-to-bottom"}
+          >
+            {vertical ? "↕ Vertical" : "↔ Horizontal"}
+          </button>
           <button
             onClick={addLane}
             className="rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)]"
@@ -211,11 +222,19 @@ export function TimelineTab() {
               {lane.events.length === 0 ? (
                 <p className="px-3 py-3 text-xs text-[var(--wc-faint)]">No events yet.</p>
               ) : (
-                <div className="flex gap-2 overflow-x-auto p-3">
+                <div
+                  className={
+                    vertical
+                      ? "flex flex-col gap-2 p-3"
+                      : "flex gap-2 overflow-x-auto p-3"
+                  }
+                >
                   {lane.events.map((ev, i) => (
                     <div
                       key={ev.id}
-                      className="shrink-0 w-52 rounded-xl border border-[var(--wc-border)] bg-[var(--wc-canvas)] p-2 group"
+                      className={`rounded-xl border border-[var(--wc-border)] bg-[var(--wc-canvas)] p-2 group ${
+                        vertical ? "w-full" : "shrink-0 w-52"
+                      }`}
                     >
                       <input
                         value={ev.when}
