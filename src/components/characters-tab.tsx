@@ -143,7 +143,7 @@ export function CharactersTab() {
             ▦ Grid
           </button>
           <AiSourceMenu
-            label="Pull characters"
+            label={(characters?.length ?? 0) > 0 ? "Update characters" : "Pull characters"}
             busy={pulling || pending}
             options={[
               { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat + notes" },
