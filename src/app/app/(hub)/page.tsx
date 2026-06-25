@@ -13,9 +13,11 @@ import { StoryKernels } from "@/components/story-kernels";
 import { Inspirations } from "@/components/inspirations";
 import { ImportButton } from "@/components/import-button";
 import { ProjectExportMenu } from "@/components/project-export-menu";
+import { ProjectGoal } from "@/components/project-goal";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { CubeMark } from "@/components/cube-mark";
 import { CubeField } from "@/components/cube-field";
+import { DashboardTour } from "@/components/dashboard-tour";
 
 const PROJECTS_PREVIEW = 6;
 const KERNELS_PREVIEW = 3;
@@ -61,17 +63,29 @@ export default async function Dashboard() {
 
   const recentProjects = [...projects].reverse().slice(0, PROJECTS_PREVIEW);
 
+  // First time in: a brand-new account with nothing created yet is greeted with
+  // "Welcome!"; once there's anything to come back to, it's "Welcome back."
+  const isFirstTime =
+    projects.length === 0 &&
+    kernels.length === 0 &&
+    practice.length === 0 &&
+    inspirations.length === 0;
+
   return (
     <div className="relative flex-1 overflow-y-auto wc-cube-bg">
       <CubeField />
+      <DashboardTour />
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-10 space-y-10">
         {/* Hero */}
-        <section className="wc-raised rounded-[var(--wc-r-lg)] px-5 py-3.5 sm:px-6 sm:py-4 flex flex-row items-center justify-between gap-4">
+        <section
+          data-tour="dash-hero"
+          className="wc-raised rounded-[var(--wc-r-lg)] px-5 py-3.5 sm:px-6 sm:py-4 flex flex-row items-center justify-between gap-4"
+        >
           <div className="flex items-center gap-3 min-w-0">
             <CubeMark size={26} className="shrink-0" />
             <div className="min-w-0">
               <h1 className="font-serif text-xl sm:text-2xl text-[var(--wc-ink)] leading-tight">
-                Welcome back.
+                {isFirstTime ? "Welcome!" : "Welcome back."}
               </h1>
               <p className="text-xs sm:text-sm text-[var(--wc-muted)] truncate">
                 Pick up a project, capture a kernel, or roll a prompt.
@@ -83,6 +97,7 @@ export default async function Dashboard() {
           </div>
           <Link
             href="/app/prompts"
+            data-tour="dash-prompt"
             className="shrink-0 rounded-[var(--wc-r-md)] px-4 py-2.5 text-sm text-[var(--wc-on-accent)] font-medium text-center shadow-[var(--wc-shadow-sm)] transition hover:brightness-105"
             style={{ background: "var(--wc-clay)" }}
           >
@@ -91,7 +106,7 @@ export default async function Dashboard() {
         </section>
 
         {/* Projects */}
-        <section>
+        <section data-tour="dash-projects">
           <div className="flex items-baseline justify-between mb-3">
             <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
               <span className="wc-facet" aria-hidden />
@@ -128,6 +143,11 @@ export default async function Dashboard() {
                     </div>
                   </button>
                 </form>
+                <ProjectGoal
+                  projectId={p.id}
+                  wordCount={p.word_count}
+                  initialGoal={p.word_goal}
+                />
                 <div className="absolute top-3 right-3">
                   <ProjectExportMenu projectId={p.id} />
                 </div>
@@ -170,13 +190,17 @@ export default async function Dashboard() {
         </section>
 
         {/* Story kernels */}
-        <StoryKernels initial={kernels} limit={KERNELS_PREVIEW} />
+        <div data-tour="dash-kernels">
+          <StoryKernels initial={kernels} limit={KERNELS_PREVIEW} />
+        </div>
 
         {/* Inspiration */}
-        <Inspirations initial={inspirations} limit={INSPIRATIONS_PREVIEW} />
+        <div data-tour="dash-inspirations">
+          <Inspirations initial={inspirations} limit={INSPIRATIONS_PREVIEW} />
+        </div>
 
         {/* Practice library */}
-        <section>
+        <section data-tour="dash-practice">
           <div className="flex items-baseline justify-between mb-3">
             <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
               <span className="wc-facet" aria-hidden />

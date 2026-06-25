@@ -13,6 +13,7 @@ export type ProjectSummary = {
   author_name: string | null;
   word_count: number;
   chapter_count: number;
+  word_goal: number | null;
   updated_at: string;
   created_at: string;
   archived_at: string | null;
@@ -47,7 +48,7 @@ async function fetchProjects(archived: boolean): Promise<ProjectSummary[]> {
   const { supabase, user } = await requireUser();
   let query = supabase
     .from("projects")
-    .select("id, title, author_name, created_at, updated_at, archived_at")
+    .select("id, title, author_name, word_goal, created_at, updated_at, archived_at")
     .eq("user_id", user.id);
   query = archived
     ? query.not("archived_at", "is", null)
@@ -93,6 +94,7 @@ async function fetchProjects(archived: boolean): Promise<ProjectSummary[]> {
     author_name: (p.author_name as string | null) ?? null,
     word_count: counts.get(p.id as string)?.words ?? 0,
     chapter_count: counts.get(p.id as string)?.chapters ?? 0,
+    word_goal: (p.word_goal as number | null) ?? null,
     created_at: p.created_at as string,
     updated_at: p.updated_at as string,
     archived_at: (p.archived_at as string | null) ?? null,
@@ -107,6 +109,22 @@ export async function listProjects(): Promise<ProjectSummary[]> {
 /** Archived projects. */
 export async function listArchivedProjects(): Promise<ProjectSummary[]> {
   return fetchProjects(true);
+}
+
+/** Set (or clear, with null) the project's target word count. */
+export async function setProjectWordGoal(
+  projectId: string,
+  goal: number | null,
+): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const value = goal && goal > 0 ? Math.round(goal) : null;
+  const { error } = await supabase
+    .from("projects")
+    .update({ word_goal: value })
+    .eq("id", projectId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
 }
 
 export async function archiveProject(id: string): Promise<void> {
