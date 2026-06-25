@@ -108,6 +108,12 @@ export function WelcomeModal({ hasProjects }: { hasProjects: boolean }) {
     setStep(0);
   }
 
+  function startTour() {
+    dismiss();
+    // Let the modal unmount, then launch the dashboard spotlight tour.
+    setTimeout(() => window.dispatchEvent(new Event("wc:start-dashboard-tour")), 60);
+  }
+
   function createFirstProject() {
     startCreate(async () => {
       try {
@@ -157,15 +163,23 @@ export function WelcomeModal({ hasProjects }: { hasProjects: boolean }) {
             </div>
 
             <div className="mt-6 flex items-center justify-between">
-              <div className="flex gap-1.5">
-                {STEPS.map((_, i) => (
-                  <span
-                    key={i}
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      i === step ? "bg-[var(--wc-slate)]" : "bg-[var(--wc-border-strong)]"
-                    }`}
-                  />
-                ))}
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  {STEPS.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        i === step ? "bg-[var(--wc-slate)]" : "bg-[var(--wc-border-strong)]"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={startTour}
+                  className="text-xs text-[var(--wc-slate)] hover:underline"
+                >
+                  Take a tour
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 {step > 0 && (

@@ -31,6 +31,7 @@ export function AccountMenu({ email }: { email: string | null }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Account and appearance"
+        data-tour="dash-account"
         className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-[var(--wc-on-accent)] shadow-[var(--wc-shadow-sm)] transition hover:brightness-105"
         style={{ background: "var(--wc-slate)" }}
       >
