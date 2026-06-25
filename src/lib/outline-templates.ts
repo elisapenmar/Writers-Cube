@@ -2,6 +2,9 @@ export type OutlineNode = {
   id: string;
   title: string;
   notes?: string;
+  // Optional links to a story moment (scene) and characters.
+  scene?: { id: string; title: string } | null;
+  characters?: { id: string; name: string }[];
   children: OutlineNode[];
 };
 

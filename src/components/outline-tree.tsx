@@ -17,6 +17,7 @@ import {
   fillOutlineFromManuscript,
 } from "@/server/outline";
 import { AiSourceMenu } from "@/components/ai-source-menu";
+import { EntityLinker } from "@/components/entity-linker";
 
 type Loaded = { tree: OutlineNode; template: OutlineTemplateKey } | null;
 
@@ -303,6 +304,16 @@ function OutlineNodeView({
               onStopEdit={() => setEditingNotes(false)}
             />
           )}
+          <EntityLinker
+            value={{ scene: node.scene, characters: node.characters }}
+            onChange={(next) =>
+              updateThisNode((n) => ({
+                ...n,
+                scene: next.scene,
+                characters: next.characters,
+              }))
+            }
+          />
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0 pt-0.5">
           {!editingNotes && !node.notes && (

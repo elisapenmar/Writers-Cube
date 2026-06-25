@@ -14,6 +14,7 @@ import {
 } from "@/server/characters";
 import { AiSourceMenu } from "@/components/ai-source-menu";
 import { CharacterGrid } from "@/components/character-grid";
+import { useOrganize } from "@/store/organize-store";
 
 /** Split a description into clean bullet strings (leading •/-/* removed). */
 function bulletLines(text: string): string[] {
@@ -38,10 +39,24 @@ export function CharactersTab() {
   const [pending, startTransition] = useTransition();
   const [showGrid, setShowGrid] = useState(false);
   const [gridKey, setGridKey] = useState(0);
+  const focusCharacterId = useOrganize((s) => s.focusCharacterId);
+  const setFocusCharacterId = useOrganize((s) => s.setFocusCharacterId);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (!focusCharacterId || characters === null) return;
+    const el = document.getElementById(`wc-char-${focusCharacterId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightId(focusCharacterId);
+      setTimeout(() => setHighlightId(null), 2200);
+    }
+    setFocusCharacterId(null);
+  }, [focusCharacterId, characters, setFocusCharacterId]);
 
   async function load() {
     try {
@@ -182,13 +197,22 @@ export function CharactersTab() {
           </p>
         ) : (
           (characters ?? []).map((c) => (
-            <CharacterCard
+            <div
               key={c.id}
-              character={c}
-              onPatch={(patch) => applyPatch(c.id, patch)}
-              onDelete={() => removeLocal(c.id)}
-              onError={setError}
-            />
+              id={`wc-char-${c.id}`}
+              className={
+                highlightId === c.id
+                  ? "rounded-md ring-2 ring-[var(--wc-slate)] ring-offset-1 transition"
+                  : "transition"
+              }
+            >
+              <CharacterCard
+                character={c}
+                onPatch={(patch) => applyPatch(c.id, patch)}
+                onDelete={() => removeLocal(c.id)}
+                onError={setError}
+              />
+            </div>
           ))
         )}
       </div>

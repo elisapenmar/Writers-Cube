@@ -10,6 +10,9 @@ export type TimelineEvent = {
   title: string;
   when: string; // free-text time label ("Day 1", "Spring 1887", …)
   notes: string;
+  // Optional links to a story moment (scene) and characters.
+  scene?: { id: string; title: string } | null;
+  characters?: { id: string; name: string }[];
 };
 export type TimelineLane = {
   id: string;

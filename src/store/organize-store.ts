@@ -55,6 +55,11 @@ type OrganizeState = {
   /** Which entry the right panel was opened as. */
   panelGroup: PanelGroup;
   openGroup: (group: PanelGroup) => void;
+  /** When set, the Characters tab scrolls to & highlights this card, then clears it. */
+  focusCharacterId: string | null;
+  setFocusCharacterId: (id: string | null) => void;
+  /** Open Story Bible → Characters and focus a specific card. */
+  openCharacter: (id: string) => void;
   open: boolean;
   pinned: boolean;
   /** Selected brainstorm id for the brainstorm side panel. null → load the latest. */
@@ -115,6 +120,15 @@ export const useOrganize = create<OrganizeState>()(
           panelGroup: group,
           format: GROUP_TABS[group][0],
           open: true,
+        }),
+      focusCharacterId: null,
+      setFocusCharacterId: (id) => set({ focusCharacterId: id }),
+      openCharacter: (id) =>
+        set({
+          panelGroup: "bible",
+          format: "characters",
+          open: true,
+          focusCharacterId: id,
         }),
       open: false,
       pinned: false,

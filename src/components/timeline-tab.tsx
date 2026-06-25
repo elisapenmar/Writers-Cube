@@ -10,6 +10,7 @@ import {
 } from "@/server/timeline";
 import { SquareArrow, AiDiamond } from "@/components/icons";
 import { generateTimelineFromManuscript } from "@/server/ai-generate";
+import { EntityLinker } from "@/components/entity-linker";
 
 const LANE_COLORS = ["#8a7a96", "#5d7384", "#8aa791", "#c07a63", "#cdab6b", "#7f8aa6"];
 
@@ -225,6 +226,15 @@ export function TimelineTab() {
                         placeholder="Notes…"
                         rows={2}
                         className="w-full bg-transparent text-xs text-[var(--wc-muted)] resize-none outline-none"
+                      />
+                      <EntityLinker
+                        value={{ scene: ev.scene, characters: ev.characters }}
+                        onChange={(next) =>
+                          patchEvent(lane.id, ev.id, {
+                            scene: next.scene,
+                            characters: next.characters,
+                          })
+                        }
                       />
                       <div className="flex items-center justify-between mt-1 opacity-0 group-hover:opacity-100 transition">
                         <div className="flex gap-1">
