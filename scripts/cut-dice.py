@@ -17,6 +17,7 @@ object. So we key on colour warmth (R-B) + chroma rather than texture, which giv
 clean edges on both backdrop types, then keep the largest warm region that does
 NOT touch the image border (the die is always centred with a margin).
 """
+from __future__ import annotations
 import glob, os, warnings
 warnings.filterwarnings("ignore")
 from PIL import Image, ImageFilter
@@ -28,6 +29,25 @@ SRC = os.path.join(ROOT, "images")
 OUT = os.path.join(ROOT, "public", "focus")
 FOCUSES = ["character", "setting", "plot", "voice", "dialogue", "sensory", "scenario", "random"]
 SIZE = 512
+
+# Each set's sources vary slightly in tone (generated separately), so we
+# white-balance every die to one target per material — they read as a matched set.
+TARGET = {
+    "cream": np.array([224.0, 216.0, 196.0]),
+    "wood": np.array([202.0, 171.0, 133.0]),
+}
+
+
+def white_balance(im: Image.Image, target: np.ndarray) -> Image.Image:
+    arr = np.asarray(im, dtype=np.float64)
+    rgb, a = arr[..., :3], arr[..., 3]
+    op = a > 180
+    if op.sum() < 50:
+        return im
+    med = np.array([np.median(rgb[..., c][op]) for c in range(3)])
+    scale = np.clip(target / np.maximum(med, 1.0), 0.7, 1.4)
+    rgb = np.clip(rgb * scale, 0, 255)
+    return Image.fromarray(np.dstack([rgb, a]).astype("uint8"), "RGBA")
 
 
 def _candidate_fg(im: Image.Image) -> np.ndarray:
@@ -64,7 +84,7 @@ def alpha_mask(im: Image.Image) -> np.ndarray:
     return ndimage.binary_fill_holes(fg)
 
 
-def cut(path: str) -> Image.Image:
+def cut(path: str, target: np.ndarray | None = None) -> Image.Image:
     im = Image.open(path).convert("RGBA")
     W, H = im.size
     alpha = np.asarray(im.getchannel("A"))
@@ -76,6 +96,8 @@ def cut(path: str) -> Image.Image:
         fg = alpha_mask(im.convert("RGB"))
         mask = Image.fromarray((fg * 255).astype("uint8")).resize((W, H)).filter(ImageFilter.GaussianBlur(1.2))
         res = im.copy(); res.putalpha(mask)
+    if target is not None:
+        res = white_balance(res, target)
     bbox = res.getchannel("A").getbbox()
     if bbox:
         res = res.crop(bbox)
@@ -103,7 +125,7 @@ def main():
         out_dir = os.path.join(OUT, style)
         os.makedirs(out_dir, exist_ok=True)
         out = os.path.join(out_dir, f"{focus}.png")
-        cut(path).save(out, optimize=True)
+        cut(path, TARGET.get(style)).save(out, optimize=True)
         print(f"  {os.path.basename(path)} -> public/focus/{style}/{focus}.png")
         done += 1
     print(f"done: {done} dice")
