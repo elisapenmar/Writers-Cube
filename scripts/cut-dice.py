@@ -26,7 +26,7 @@ from scipy import ndimage
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "images")
 OUT = os.path.join(ROOT, "public", "focus")
-FOCUSES = ["character", "setting", "plot", "voice", "dialogue", "sensory", "scenario"]
+FOCUSES = ["character", "setting", "plot", "voice", "dialogue", "sensory", "scenario", "random"]
 SIZE = 512
 
 
