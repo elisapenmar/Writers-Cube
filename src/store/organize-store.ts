@@ -11,20 +11,23 @@ export type OrganizeFormat =
   | "characters"
   | "canvas"
   | "timeline"
-  | "tags";
+  | "tags"
+  | "prompts";
 
-export type PanelGroup = "organize" | "bible" | "tags";
+export type PanelGroup = "organize" | "bible" | "tags" | "prompts";
 
 export const GROUP_TABS: Record<PanelGroup, OrganizeFormat[]> = {
   organize: ["notes", "canvas"],
   bible: ["mindmap", "outline", "characters", "timeline"],
   tags: ["tags"],
+  prompts: ["prompts"],
 };
 
 export const GROUP_LABEL: Record<PanelGroup, string> = {
   organize: "Organize",
   bible: "Story Bible",
   tags: "Tags",
+  prompts: "Prompts",
 };
 
 const DEFAULT_PINNED_WIDTH = 480;

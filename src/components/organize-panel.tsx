@@ -64,11 +64,13 @@ const TAB_LABEL: Record<OrganizeFormat, string> = {
   canvas: "Canvas",
   timeline: "Timeline",
   tags: "Tags",
+  prompts: "Prompts",
 };
 import { MindMap } from "@/components/mind-map";
 import { OutlineTab } from "@/components/outline-tree";
 import { CharactersTab } from "@/components/characters-tab";
 import { TagsTab } from "@/components/tags-tab";
+import { PromptsTab } from "@/components/prompts-tab";
 import { CanvasTab } from "@/components/canvas-tab";
 import { TimelineTab } from "@/components/timeline-tab";
 import {
@@ -205,7 +207,8 @@ export function OrganizePanel() {
       format === "characters" ||
       format === "canvas" ||
       format === "timeline" ||
-      format === "tags"
+      format === "tags" ||
+      format === "prompts"
     )
       return;
     setOrganizing(true);
@@ -396,6 +399,8 @@ export function OrganizePanel() {
           <TimelineTab />
         ) : format === "tags" ? (
           <TagsTab />
+        ) : format === "prompts" ? (
+          <PromptsTab />
         ) : format === "canvas" ? (
           <CanvasTab />
         ) : format === "characters" ? (

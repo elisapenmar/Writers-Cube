@@ -76,11 +76,16 @@ function Segments({ segs }: { segs: Segment[] | undefined }) {
 export function PromptTool({
   projects,
   activeProjectId,
+  defaultMode = "new",
 }: {
   projects: { id: string; title: string }[];
   activeProjectId: string | null;
+  defaultMode?: Mode;
 }) {
-  const [mode, setMode] = useState<Mode>("new");
+  const [mode, setMode] = useState<Mode>(
+    // "existing" only makes sense if there's a project to ground in.
+    defaultMode === "existing" && (activeProjectId ?? projects[0]?.id) ? "existing" : defaultMode,
+  );
   const [projectId, setProjectId] = useState<string | null>(
     activeProjectId ?? projects[0]?.id ?? null,
   );
@@ -287,15 +292,12 @@ export function PromptTool({
               selected={scenarioSeed}
               onClick={() => setScenarioSeed((v) => !v)}
             />
-            <button
+            <RandomizerDie
+              key={`random:${dieStyle}`}
+              image={`/focus/${dieStyle}/random.png`}
+              tumbling={tumbling}
               onClick={rollDie}
-              className={`wc-randomizer rounded-2xl aspect-square grid place-items-center text-[var(--wc-ink)] font-semibold ${
-                tumbling ? "wc-tumbling" : ""
-              }`}
-              title="Roll 1–3 random faces"
-            >
-              <span className="text-2xl">🎲</span>
-            </button>
+            />
           </div>
           {scenarioSeed && (
             <p className="mt-2 text-xs text-[var(--wc-plum)]">
@@ -678,6 +680,55 @@ function ModeCard({
     >
       <div className="font-serif text-base text-[var(--wc-ink)]">{title}</div>
       <div className="text-xs text-[var(--wc-muted)] mt-1 leading-relaxed">{blurb}</div>
+    </button>
+  );
+}
+
+// The "roll" die: an image cube with a caption, mirroring DieFace but acting as a
+// one-shot action (it tumbles) rather than a toggle. Falls back to the gold die.
+function RandomizerDie({
+  image,
+  tumbling,
+  onClick,
+}: {
+  image: string;
+  tumbling: boolean;
+  onClick: () => void;
+}) {
+  const [imgOk, setImgOk] = useState(true);
+  if (imgOk) {
+    return (
+      <button
+        onClick={onClick}
+        title="Roll 1–3 random faces"
+        className="group flex flex-col items-center gap-1 rounded-[var(--wc-r-md)] p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wc-slate)]"
+      >
+        <span className="relative aspect-square w-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            onError={() => setImgOk(false)}
+            className={`h-full w-full object-contain transition group-hover:scale-[1.04] ${
+              tumbling ? "wc-tumbling" : ""
+            }`}
+          />
+        </span>
+        <span className="text-[11px] font-medium leading-tight text-center text-[var(--wc-ink)]">
+          Surprise me
+        </span>
+      </button>
+    );
+  }
+  return (
+    <button
+      onClick={onClick}
+      title="Roll 1–3 random faces"
+      className={`wc-randomizer rounded-2xl aspect-square grid place-items-center text-[var(--wc-ink)] font-semibold ${
+        tumbling ? "wc-tumbling" : ""
+      }`}
+    >
+      <span className="text-2xl">🎲</span>
     </button>
   );
 }
