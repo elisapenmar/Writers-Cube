@@ -314,7 +314,7 @@ Reference her material through these placeholder slots so the app fills them wit
 - {{object}} for a charged object
 Use {{character}} and at least one of {{place}}/{{thread}} so the prompt is anchored in her world. Build the sentence naturally around the slots; lean on the actual threads/relationships you're given to make it pointed.
 
-"deeper" = one escalation. "source" = a few-word craft lineage. Call author_prompt; no prose.`,
+"deeper" = one escalation. "source" = a few-word craft lineage. Never use em dashes; use commas or periods. Call author_prompt; no prose.`,
     tools: [
       {
         name: "author_prompt",
@@ -434,7 +434,7 @@ ${focusList !== "open" ? `Lean into this craft focus: ${focusList}. ` : ""}Depth
 
 ${formatGuidance}
 
-Do NOT use placeholder slots — write it out fully. "deeper" = one escalation. "source" = a few words naming which fragments you blended. Call author_prompt; no prose.`,
+Do NOT use placeholder slots, write it out fully. "deeper" = one escalation. "source" = a few words naming which fragments you blended. Never use em dashes; use commas or periods. Call author_prompt; no prose.`,
     tools: [
       {
         name: "author_prompt",
@@ -502,7 +502,7 @@ Use these placeholder slots so the app can fill them with the writer's own chara
 - {{object}} for a charged object
 Use {{character}} and {{place}} at minimum. Write naturally around the slots.
 
-Return via author_seed. The "text" is the situation (with slots). The "question" is the open craft question (it may include slots). The "deeper" is one escalation. "source" names the blended craft lineage in a few words.`,
+Return via author_seed. The "text" is the situation (with slots). The "question" is the open craft question (it may include slots). The "deeper" is one escalation. "source" names the blended craft lineage in a few words. Never use em dashes; use commas or periods.`,
     tools: [
       {
         name: "author_seed",

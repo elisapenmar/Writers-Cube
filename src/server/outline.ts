@@ -211,7 +211,7 @@ async function runFill(
   const completion = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: 2500,
-    system: `You are filling in sections of a novelist's story outline using her ${sourceLabel}.
+    system: `You are filling in sections of a novelist's story outline using her ${sourceLabel}. Never use em dashes; use commas or periods.
 
 For each outline section listed below, return 2–4 short bullet points (NOT prose) of what happens there — one beat, fact, or turn per line, each line starting with "• ". Keep each bullet to a single clause where possible. Ground every bullet ONLY in the source material, using her own words and details.
 

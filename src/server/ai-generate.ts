@@ -176,7 +176,7 @@ async function buildAndSaveTimeline(
 - Group them into 1–3 lanes ("tracks") only if the story clearly has parallel threads (e.g. two POVs, two timeframes). Otherwise use a single lane.
 - Each event: a short title, a "when" label using whatever time cues the text gives ("Day 1", "That night", "Twenty years earlier", "Chapter 3"), and a one-sentence note.
 - Only include events actually present in the material. Don't invent.
-Call build_timeline. No prose.`,
+Never use em dashes; use commas or periods. Call build_timeline. No prose.`,
     tools: [
       {
         name: "build_timeline",
