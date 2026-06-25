@@ -21,6 +21,12 @@ import { EntityLinker } from "@/components/entity-linker";
 
 type Loaded = { tree: OutlineNode; template: OutlineTemplateKey } | null;
 
+/** True once any node has notes — so the AI button can read "Update" vs "Generate". */
+function outlineHasNotes(node: OutlineNode): boolean {
+  if (node.notes && node.notes.trim()) return true;
+  return node.children.some(outlineHasNotes);
+}
+
 export function OutlineTab() {
   const [loaded, setLoaded] = useState<Loaded>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -147,7 +153,7 @@ export function OutlineTab() {
         </div>
         <div className="flex items-center gap-2">
           <AiSourceMenu
-            label="Fill"
+            label={outlineHasNotes(loaded.tree) ? "Update" : "Generate"}
             busy={filling || pending}
             options={[
               { key: "notes", label: "From notes", hint: "Your working notes" },

@@ -319,7 +319,7 @@ export function OrganizePanel() {
               }
             >
               <AiDiamond className="text-[var(--wc-on-accent)]" />
-              {organizing ? "…" : hasCurrent ? "Add from chat" : "Generate"}
+              {organizing ? "…" : hasCurrent ? "Update" : "Generate"}
             </button>
           )}
           {format === "mindmap" && (
@@ -331,7 +331,7 @@ export function OrganizePanel() {
                 title="Generate a thought map"
               >
                 <AiDiamond className="text-[var(--wc-on-accent)]" />
-                {organizing ? "…" : "Generate"}
+                {organizing ? "…" : hasCurrent ? "Update" : "Generate"}
               </button>
               {mapGenOpen && !organizing && (
                 <>

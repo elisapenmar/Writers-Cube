@@ -148,7 +148,7 @@ export function TimelineTab() {
             title="Build a timeline from your manuscript & notes"
           >
             <AiDiamond />
-            {generating ? "Reading…" : "Generate from story"}
+            {generating ? "Reading…" : state.lanes.length > 0 ? "Update" : "Generate"}
           </button>
           <button
             onClick={addLane}
