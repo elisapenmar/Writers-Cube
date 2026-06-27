@@ -13,6 +13,7 @@ import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorViewOptions } from "@/components/editor-view-options";
 import { useEditorView } from "@/store/editor-view-store";
+import { lookupMisspelling, acceptWord, type SpellHit } from "@/lib/spellcheck";
 import { AiDiamond } from "@/components/icons";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -27,7 +28,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitting, setSplitting] = useState(false);
   const [splitMsg, setSplitMsg] = useState<string | null>(null);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number; pos: number; spell?: SpellHit | null } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // CAS version token: the `updated_at` we last persisted/loaded. Sent as the
   // base on each save so concurrent writers are detected, not silently clobbered.
@@ -104,7 +105,17 @@ export function Editor({ scene }: { scene: Scene }) {
     const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
     const pos = coords?.pos ?? editor.state.selection.from;
     const index = editor.state.doc.resolve(pos).index(0);
-    setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex: index });
+    const spell = lookupMisspelling(editor, pos);
+    setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex: index, pos, spell });
+  }
+
+  function applySuggestion(hit: SpellHit, word: string) {
+    setCtxMenu(null);
+    editor?.chain().focus().insertContentAt({ from: hit.from, to: hit.to }, word).run();
+  }
+  function addToDictionary(word: string) {
+    setCtxMenu(null);
+    void acceptWord(word);
   }
 
   function openMenuFromButton(e: React.MouseEvent) {
@@ -112,7 +123,16 @@ export function Editor({ scene }: { scene: Scene }) {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const pos = editor.state.selection.from;
     const index = editor.state.doc.resolve(pos).index(0);
-    setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex: index });
+    setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex: index, pos });
+  }
+
+  function insertFootnoteHere() {
+    const pos = ctxMenu?.pos;
+    setCtxMenu(null);
+    if (!editor) return;
+    const chain = editor.chain().focus();
+    if (typeof pos === "number") chain.setTextSelection(pos);
+    chain.addFootnote().run();
   }
 
   // Standard editing commands so the right-click menu feels complete.
@@ -373,12 +393,30 @@ export function Editor({ scene }: { scene: Scene }) {
             className="fixed z-50 w-60 max-h-[80vh] overflow-y-auto rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
             style={{ left: Math.min(ctxMenu.x, window.innerWidth - 250), top: Math.min(ctxMenu.y, Math.max(8, window.innerHeight - 360)) }}
           >
+            {ctxMenu.spell && (
+              <>
+                {ctxMenu.spell.suggestions.length > 0 ? (
+                  ctxMenu.spell.suggestions.map((s) => (
+                    <MenuItem key={s} onClick={() => applySuggestion(ctxMenu.spell!, s)}>
+                      <span className="font-medium text-[var(--wc-ink)]">{s}</span>
+                    </MenuItem>
+                  ))
+                ) : (
+                  <div className="px-3 py-1.5 text-xs text-[var(--wc-faint)]">No suggestions</div>
+                )}
+                <MenuItem onClick={() => addToDictionary(ctxMenu.spell!.word)}>
+                  ＋ Add “{ctxMenu.spell.word}” to dictionary
+                </MenuItem>
+                <div className="my-1 border-t border-[var(--wc-border)]" />
+              </>
+            )}
             <MenuItem onClick={doCut} shortcut="⌘X">Cut</MenuItem>
             <MenuItem onClick={doCopy} shortcut="⌘C">Copy</MenuItem>
             <MenuItem onClick={doPaste} shortcut="⌘V">Paste</MenuItem>
             <MenuItem onClick={selectAll} shortcut="⌘A">Select all</MenuItem>
             <div className="my-1 border-t border-[var(--wc-border)]" />
             <MenuItem onClick={editLink} shortcut="⌘K">Insert / edit link</MenuItem>
+            <MenuItem onClick={insertFootnoteHere}>Insert footnote here</MenuItem>
             <MenuItem onClick={clearFormatting}>Clear formatting</MenuItem>
             <div className="my-1 border-t border-[var(--wc-border)]" />
             <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">

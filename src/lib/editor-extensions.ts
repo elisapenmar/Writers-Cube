@@ -13,6 +13,8 @@ import { Link } from "@tiptap/extension-link";
 import { Indent } from "@/lib/indent";
 import { FontSize } from "@/lib/font-size";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
+import { FOOTNOTE_NODES } from "@/lib/footnotes";
+import { SpellCheck } from "@/lib/spellcheck-extension";
 
 /**
  * The shared rich-text extension set used by every editor in the app, so any
@@ -40,4 +42,6 @@ export const RTE_EXTENSIONS = [
   TableHeader,
   TableCell,
   ...ALL_TAG_MARKS,
+  ...FOOTNOTE_NODES,
+  SpellCheck,
 ];

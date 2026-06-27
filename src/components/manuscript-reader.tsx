@@ -24,6 +24,7 @@ import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { useEditorView } from "@/store/editor-view-store";
 import { termsFor } from "@/lib/project-forms";
+import { lookupMisspelling, acceptWord, type SpellHit } from "@/lib/spellcheck";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -371,7 +372,7 @@ function SceneBlock({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // CAS version token for scene/loose blocks (see editor.tsx).
   const baseUpdatedAt = useRef<string | null>(scene.updated_at ?? null);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number; pos: number; spell?: SpellHit | null } | null>(null);
   const isScene = !scene.kind;
 
   const editor = useEditor(
@@ -453,8 +454,28 @@ function SceneBlock({
     const coords = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
     const pos = coords?.pos ?? editor.state.selection.from;
     const blockIndex = editor.state.doc.resolve(pos).index(0);
+    const spell = lookupMisspelling(editor, pos);
     onActivate(editor);
-    setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex });
+    setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex, pos, spell });
+  }
+
+  function applySuggestion(hit: SpellHit, word: string) {
+    setCtxMenu(null);
+    editor?.chain().focus().insertContentAt({ from: hit.from, to: hit.to }, word).run();
+  }
+  function addToDictionary(word: string) {
+    setCtxMenu(null);
+    void acceptWord(word);
+  }
+
+  function insertFootnoteHere() {
+    const pos = ctxMenu?.pos;
+    setCtxMenu(null);
+    if (!editor) return;
+    onActivate(editor);
+    const chain = editor.chain().focus();
+    if (typeof pos === "number") chain.setTextSelection(pos);
+    chain.addFootnote().run();
   }
 
   // Standard editing commands so the right-click menu feels complete.
@@ -509,7 +530,7 @@ function SceneBlock({
     const pos = editor.state.selection.from;
     const blockIndex = editor.state.doc.resolve(pos).index(0);
     onActivate(editor);
-    setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex });
+    setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex, pos });
   }
 
   async function splitHere(into: "scenes" | "chapters") {
@@ -598,12 +619,30 @@ function SceneBlock({
               top: Math.min(ctxMenu.y, Math.max(8, window.innerHeight - 430)),
             }}
           >
+            {ctxMenu.spell && (
+              <>
+                {ctxMenu.spell.suggestions.length > 0 ? (
+                  ctxMenu.spell.suggestions.map((s) => (
+                    <CtxItem key={s} onClick={() => applySuggestion(ctxMenu.spell!, s)}>
+                      <span className="font-medium text-[var(--wc-ink)]">{s}</span>
+                    </CtxItem>
+                  ))
+                ) : (
+                  <div className="px-3 py-1.5 text-xs text-[var(--wc-faint)]">No suggestions</div>
+                )}
+                <CtxItem onClick={() => addToDictionary(ctxMenu.spell!.word)}>
+                  ＋ Add “{ctxMenu.spell.word}” to dictionary
+                </CtxItem>
+                <CtxDivider />
+              </>
+            )}
             <CtxItem onClick={doCut} shortcut="⌘X">Cut</CtxItem>
             <CtxItem onClick={doCopy} shortcut="⌘C">Copy</CtxItem>
             <CtxItem onClick={doPaste} shortcut="⌘V">Paste</CtxItem>
             <CtxItem onClick={selectAll} shortcut="⌘A">Select all</CtxItem>
             <CtxDivider />
             <CtxItem onClick={editLink} shortcut="⌘K">Insert / edit link</CtxItem>
+            <CtxItem onClick={insertFootnoteHere}>Insert footnote here</CtxItem>
             <CtxItem onClick={clearFormatting}>Clear formatting</CtxItem>
             <CtxDivider />
             <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">

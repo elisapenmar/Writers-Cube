@@ -560,17 +560,78 @@ body {
 /* Pageless = responsive full width (comfortable reading max on huge screens). */
 .wc-doc-pageless { max-width: min(100%, 60rem); margin: 0 auto; }
 
-/* Paged = a fixed 8.5in "sheet" with margins and a soft shadow. */
+/* Paged = stacked 8.5x11in sheets with visible page divisions, like print.
+   One continuous white column whose background paints a desk-coloured gap (with
+   soft shadow edges) every 11in, so the writer sees where each printed page ends.
+   Works the same in the single-scene editor and the multi-scene Scroll view. */
 .wc-doc-paged {
+  --wc-page-h: 11in;
   max-width: 8.5in;
   margin: 0 auto;
-  background: var(--wc-surface);
-  box-shadow: var(--wc-shadow-md);
-  border: 1px solid var(--wc-border);
-  border-radius: 2px;
   padding: 1in;
+  border-radius: 2px;
+  box-shadow: var(--wc-shadow-md);
+  background-color: var(--wc-surface);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--wc-surface) 0,
+    var(--wc-surface) calc(var(--wc-page-h) - 26px),
+    rgba(51, 48, 58, 0.13) calc(var(--wc-page-h) - 26px),
+    var(--wc-page) calc(var(--wc-page-h) - 24px),
+    var(--wc-page) calc(var(--wc-page-h) - 2px),
+    rgba(51, 48, 58, 0.06) calc(var(--wc-page-h) - 2px),
+    var(--wc-surface) var(--wc-page-h)
+  );
 }
 
 /* Paragraph spacing toggles. */
 .wc-doc[data-space-before="true"] .ProseMirror p { margin-top: 0.85em; }
 .wc-doc[data-space-after="true"] .ProseMirror p { margin-bottom: 0.85em; }
+
+/* ---- Footnotes ---- */
+/* Superscript markers auto-number by document order via a CSS counter, so the
+   numbers stay correct as references are added, reordered, or removed. */
+.wc-doc .ProseMirror { counter-reset: wc-footnote; }
+.wc-doc .ProseMirror sup[data-footnote-ref] {
+  counter-increment: wc-footnote;
+  font-size: 0.7em;
+  line-height: 0;
+  vertical-align: super;
+}
+.wc-doc .ProseMirror sup[data-footnote-ref] a {
+  color: var(--wc-slate);
+  text-decoration: none;
+  cursor: pointer;
+}
+.wc-doc .ProseMirror sup[data-footnote-ref] a::before {
+  content: counter(wc-footnote);
+}
+/* The collected notes list at the end of the document. */
+.wc-doc .ProseMirror ol[data-footnotes] {
+  counter-reset: wc-footnote-note;
+  list-style: none;
+  margin-top: 2.5em;
+  padding: 0.75em 0 0 0;
+  border-top: 1px solid var(--wc-border);
+  font-size: 0.9em;
+  color: var(--wc-muted);
+}
+.wc-doc .ProseMirror ol[data-footnotes] > li[data-footnote] {
+  counter-increment: wc-footnote-note;
+  position: relative;
+  padding-left: 1.8em;
+  margin: 0.4em 0;
+}
+.wc-doc .ProseMirror ol[data-footnotes] > li[data-footnote]::before {
+  content: counter(wc-footnote-note) ".";
+  position: absolute;
+  left: 0.2em;
+  color: var(--wc-slate);
+}
+
+/* Spell-check: red wavy underline on words flagged by the in-app dictionary. */
+.wc-misspelled {
+  text-decoration: underline wavy var(--wc-rust, #c0392b);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 2px;
+}
