@@ -35,6 +35,7 @@ import {
 } from "@/server/scenes";
 import { termsFor } from "@/lib/project-forms";
 import { EditableTitle } from "@/components/editable-title";
+import { ProjectFormPill } from "@/components/project-form-pill";
 import { createLooseScene } from "@/server/loose";
 import { useOrganize } from "@/store/organize-store";
 import { SidebarToggle, CubeMark } from "@/components/icons";
@@ -465,6 +466,9 @@ function ProjectMetadata({ project }: { project: ProjectTree }) {
         className="font-serif text-lg text-[var(--wc-ink)] block"
         inputClassName="font-serif text-lg w-full"
       />
+      <div className="pt-1">
+        <ProjectFormPill projectId={project.id} form={project.form} />
+      </div>
       {/* Author/agent live in Prepare for publication now. */}
     </div>
   );

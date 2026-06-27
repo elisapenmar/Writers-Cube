@@ -153,6 +153,19 @@ export async function updateProjectMetadata(
   revalidatePath("/app", "layout");
 }
 
+/** Change a project's form (novel / short_story / poetry / essay). */
+export async function updateProjectForm(projectId: string, form: string): Promise<void> {
+  const { supabase } = await requireUser();
+  const allowed = ["novel", "short_story", "poetry", "essay"];
+  const f = allowed.includes(form) ? form : "novel";
+  const { error } = await supabase
+    .from("projects")
+    .update({ form: f, updated_at: new Date().toISOString() })
+    .eq("id", projectId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+}
+
 export async function createChapter(projectId: string) {
   const { supabase } = await requireUser();
   const { data: last } = await supabase

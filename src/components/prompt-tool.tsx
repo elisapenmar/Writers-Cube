@@ -44,6 +44,10 @@ const FOCUS_ORDER: PromptFocus[] = [
   "sensory",
 ];
 
+// Beyond ~3 topics a single prompt starts to dilute and stops honoring each
+// one — cap the selection so generated prompts stay true to the chosen topics.
+const MAX_TOPICS = 3;
+
 function countWords(doc: unknown): number {
   let text = "";
   const walk = (n: unknown) => {
@@ -117,7 +121,8 @@ export function PromptTool({
     setFocuses((prev) => {
       const next = new Set(prev);
       if (next.has(f)) next.delete(f);
-      else next.add(f);
+      else if (next.size < MAX_TOPICS) next.add(f);
+      // At the cap, ignore additional picks — keeps the prompt coherent.
       return next;
     });
   }
@@ -272,18 +277,22 @@ export function PromptTool({
         </Section>
 
         {/* Step 2, What to work on */}
-        <Section n={2} title="What to work on" hint="Pick any number, or roll the die.">
+        <Section n={2} title="What to work on" hint={`Choose up to ${MAX_TOPICS} topics, or roll the die.`}>
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
-            {FOCUS_ORDER.map((f) => (
-              <DieFace
-                key={`${f}:${dieStyle}`}
-                label={FOCUS_META[f].label}
-                pips={FOCUS_META[f].pips}
-                image={`/focus/${dieStyle}/${f}.png`}
-                selected={focuses.has(f)}
-                onClick={() => toggleFocus(f)}
-              />
-            ))}
+            {FOCUS_ORDER.map((f) => {
+              const atCap = !focuses.has(f) && focuses.size >= MAX_TOPICS;
+              return (
+                <DieFace
+                  key={`${f}:${dieStyle}`}
+                  label={FOCUS_META[f].label}
+                  pips={FOCUS_META[f].pips}
+                  image={`/focus/${dieStyle}/${f}.png`}
+                  selected={focuses.has(f)}
+                  disabled={atCap}
+                  onClick={() => toggleFocus(f)}
+                />
+              );
+            })}
             <DieFace
               key={`seed:${dieStyle}`}
               label="Scenario seed"
@@ -740,6 +749,7 @@ function DieFace({
   selected,
   onClick,
   image,
+  disabled,
 }: {
   label: string;
   pips?: number;
@@ -747,6 +757,7 @@ function DieFace({
   selected: boolean;
   onClick: () => void;
   image?: string;
+  disabled?: boolean;
 }) {
   // If a carved-wood cutout exists for this face, the image *is* the die and the
   // label sits underneath. If the file is missing (404), fall back to pips.
@@ -755,8 +766,10 @@ function DieFace({
     return (
       <button
         onClick={onClick}
+        disabled={disabled}
         aria-pressed={selected}
-        className="group flex flex-col items-center gap-1 rounded-[var(--wc-r-md)] p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wc-slate)]"
+        title={disabled ? `Up to ${MAX_TOPICS} topics` : undefined}
+        className="group flex flex-col items-center gap-1 rounded-[var(--wc-r-md)] p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wc-slate)] disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <span className="relative aspect-square w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -786,9 +799,11 @@ function DieFace({
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       data-selected={selected}
       data-seed={seed ? "true" : undefined}
-      className="wc-die aspect-square p-2 grid place-items-center"
+      title={disabled ? `Up to ${MAX_TOPICS} topics` : undefined}
+      className="wc-die aspect-square p-2 grid place-items-center disabled:opacity-40 disabled:cursor-not-allowed"
     >
       <div className="flex flex-col items-center gap-1.5">
         <PipPattern n={seed ? 0 : pips ?? 0} selected={selected} seed={seed} />
