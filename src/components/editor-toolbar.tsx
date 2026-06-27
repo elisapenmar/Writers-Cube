@@ -50,9 +50,34 @@ export function EditorToolbar({
   const hasColor = typeof cmds.setColor === "function";
   const hasTable = typeof cmds.insertTable === "function";
   const hasImage = typeof cmds.setImage === "function";
+  const hasFontSize = typeof cmds.setFontSize === "function";
+  const hasAlign = typeof cmds.setTextAlign === "function";
+  const hasHighlight = typeof cmds.toggleHighlight === "function";
+  const hasLink = typeof cmds.setLink === "function";
   const currentFont = (editor.getAttributes("textStyle").fontFamily as string) || "";
   const currentColor = (editor.getAttributes("textStyle").color as string) || "#111111";
+  const currentSize = parseInt(
+    (editor.getAttributes("textStyle").fontSize as string) || "",
+    10,
+  );
+  const sizePx = Number.isFinite(currentSize) ? currentSize : 18;
   const inTable = editor.isActive("table");
+
+  function stepFontSize(delta: number) {
+    const next = Math.min(96, Math.max(8, sizePx + delta));
+    chain().setFontSize(`${next}px`).run();
+  }
+  function editLink() {
+    const prev = (editor!.getAttributes("link").href as string) || "";
+    const url = window.prompt("Link URL (leave blank to remove):", prev);
+    if (url === null) return;
+    if (url.trim() === "") {
+      chain().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    chain().extendMarkRange("link").setLink({ href }).run();
+  }
 
   async function pickImage(file: File) {
     setUploading(true);
@@ -97,6 +122,32 @@ export function EditorToolbar({
           <Divider />
         </>
       )}
+      {hasFontSize && (
+        <>
+          <div className="flex shrink-0 items-center rounded border border-[var(--wc-border-strong)]">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => stepFontSize(-1)}
+              title="Decrease font size"
+              className="h-7 w-6 grid place-items-center text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+            >
+              −
+            </button>
+            <span className="w-7 text-center text-xs tabular-nums text-[var(--wc-ink)]">{sizePx}</span>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => stepFontSize(1)}
+              title="Increase font size"
+              className="h-7 w-6 grid place-items-center text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+            >
+              +
+            </button>
+          </div>
+          <Divider />
+        </>
+      )}
       <Btn label="B" title="Bold (⌘B)" active={editor.isActive("bold")} bold onClick={() => chain().toggleBold().run()} />
       <Btn label="I" title="Italic (⌘I)" active={editor.isActive("italic")} italic onClick={() => chain().toggleItalic().run()} />
       <Btn label="U" title="Underline (⌘U)" active={editor.isActive("underline")} underline onClick={() => chain().toggleUnderline().run()} />
@@ -114,6 +165,16 @@ export function EditorToolbar({
           <Divider />
           <Btn label={<OutdentIcon />} title="Decrease indent (⇧Tab)" active={false} disabled={!can("outdent")} onClick={() => chain().outdent().run()} />
           <Btn label={<IndentIcon />} title="Increase indent (Tab)" active={false} onClick={() => chain().indent().run()} />
+        </>
+      )}
+
+      {hasAlign && (
+        <>
+          <Divider />
+          <Btn label={<AlignIcon kind="left" />} title="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => chain().setTextAlign("left").run()} />
+          <Btn label={<AlignIcon kind="center" />} title="Align center" active={editor.isActive({ textAlign: "center" })} onClick={() => chain().setTextAlign("center").run()} />
+          <Btn label={<AlignIcon kind="right" />} title="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => chain().setTextAlign("right").run()} />
+          <Btn label={<AlignIcon kind="justify" />} title="Justify" active={editor.isActive({ textAlign: "justify" })} onClick={() => chain().setTextAlign("justify").run()} />
         </>
       )}
 
@@ -164,6 +225,24 @@ export function EditorToolbar({
           </div>
         </>
       )}
+
+      {hasHighlight && (
+        <Btn
+          label={<span className="rounded-sm bg-[#fde68a] px-0.5 text-[var(--wc-ink)]">H</span>}
+          title="Highlight"
+          active={editor.isActive("highlight")}
+          onClick={() => chain().toggleHighlight().run()}
+        />
+      )}
+      {hasLink && (
+        <Btn
+          label={<LinkIcon />}
+          title="Insert / edit link"
+          active={editor.isActive("link")}
+          onClick={editLink}
+        />
+      )}
+      {(hasHighlight || hasLink) && <Divider />}
 
       {hasImage && (
         <>
@@ -240,6 +319,46 @@ function RedoIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M15 14l5-5-5-5" />
       <path d="M20 9H9a5 5 0 0 0 0 10h1" />
+    </svg>
+  );
+}
+function AlignIcon({ kind }: { kind: "left" | "center" | "right" | "justify" }) {
+  // Second line is shortened/positioned to hint at the alignment.
+  const lines: Record<typeof kind, { y: number; x1: number; x2: number }[]> = {
+    left: [
+      { y: 6, x1: 3, x2: 21 },
+      { y: 12, x1: 3, x2: 14 },
+      { y: 18, x1: 3, x2: 18 },
+    ],
+    center: [
+      { y: 6, x1: 3, x2: 21 },
+      { y: 12, x1: 7, x2: 17 },
+      { y: 18, x1: 5, x2: 19 },
+    ],
+    right: [
+      { y: 6, x1: 3, x2: 21 },
+      { y: 12, x1: 10, x2: 21 },
+      { y: 18, x1: 6, x2: 21 },
+    ],
+    justify: [
+      { y: 6, x1: 3, x2: 21 },
+      { y: 12, x1: 3, x2: 21 },
+      { y: 18, x1: 3, x2: 21 },
+    ],
+  };
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+      {lines[kind].map((l, i) => (
+        <line key={i} x1={l.x1} y1={l.y} x2={l.x2} y2={l.y} />
+      ))}
+    </svg>
+  );
+}
+function LinkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
   );
 }

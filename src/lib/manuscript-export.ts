@@ -91,8 +91,17 @@ function renderInlineHtml(node: unknown): string {
       else if (mk.type === "italic") t = `<em>${t}</em>`;
       else if (mk.type === "underline") t = `<u>${t}</u>`;
       else if (mk.type === "strike") t = `<s>${t}</s>`;
-      else if (mk.type === "textStyle" && mk.attrs?.color)
-        t = `<span style="color:${escHtml(String(mk.attrs.color))}">${t}</span>`;
+      else if (mk.type === "highlight") {
+        const c = mk.attrs?.color ? String(mk.attrs.color) : "#fde68a";
+        t = `<mark style="background:${escHtml(c)}">${t}</mark>`;
+      } else if (mk.type === "link" && mk.attrs?.href)
+        t = `<a href="${escHtml(String(mk.attrs.href))}">${t}</a>`;
+      else if (mk.type === "textStyle") {
+        const style: string[] = [];
+        if (mk.attrs?.color) style.push(`color:${escHtml(String(mk.attrs.color))}`);
+        if (mk.attrs?.fontSize) style.push(`font-size:${escHtml(String(mk.attrs.fontSize))}`);
+        if (style.length) t = `<span style="${style.join(";")}">${t}</span>`;
+      }
     }
     return t;
   }
@@ -104,13 +113,17 @@ function renderBlockHtml(block: unknown): string {
   const b = block as RNode;
   const kids = () => (b.content ?? []).map(renderBlockHtml).join("");
   const inline = () => (b.content ?? []).map(renderInlineHtml).join("");
+  const align = b.attrs?.textAlign ? String(b.attrs.textAlign) : "";
+  const alignAttr = align && align !== "left" ? ` style="text-align:${escHtml(align)}"` : "";
   switch (b.type) {
     case "paragraph": {
       const t = inline();
-      return `<p>${t || "&nbsp;"}</p>`;
+      return `<p${alignAttr}>${t || "&nbsp;"}</p>`;
     }
-    case "heading":
-      return `<h${Math.min(6, Number(b.attrs?.level) || 2)}>${inline()}</h${Math.min(6, Number(b.attrs?.level) || 2)}>`;
+    case "heading": {
+      const lvl = Math.min(6, Number(b.attrs?.level) || 2);
+      return `<h${lvl}${alignAttr}>${inline()}</h${lvl}>`;
+    }
     case "blockquote":
       return `<blockquote>${kids()}</blockquote>`;
     case "bulletList":
@@ -349,6 +362,23 @@ type DocxOpts = {
   italics?: boolean;
 };
 
+function alignFor(
+  v: unknown,
+): (typeof AlignmentType)[keyof typeof AlignmentType] | undefined {
+  switch (v) {
+    case "center":
+      return AlignmentType.CENTER;
+    case "right":
+      return AlignmentType.RIGHT;
+    case "justify":
+      return AlignmentType.JUSTIFIED;
+    case "left":
+      return AlignmentType.LEFT;
+    default:
+      return undefined;
+  }
+}
+
 function runsFromInline(content: unknown[] | undefined, o: DocxOpts): TextRun[] {
   const runs: TextRun[] = [];
   for (const c of content ?? []) {
@@ -356,6 +386,10 @@ function runsFromInline(content: unknown[] | undefined, o: DocxOpts): TextRun[] 
     if (n.type === "text") {
       const marks = n.marks ?? [];
       const colorMark = marks.find((mk) => mk.type === "textStyle" && mk.attrs?.color);
+      const sizeMark = marks.find((mk) => mk.type === "textStyle" && mk.attrs?.fontSize);
+      const hasHighlight = marks.some((mk) => mk.type === "highlight");
+      // px → half-points (docx size unit is half-points; px≈pt here).
+      const pxSize = sizeMark ? parseInt(String(sizeMark.attrs!.fontSize), 10) : NaN;
       runs.push(
         new TextRun({
           text: n.text ?? "",
@@ -364,7 +398,8 @@ function runsFromInline(content: unknown[] | undefined, o: DocxOpts): TextRun[] 
           strike: marks.some((mk) => mk.type === "strike"),
           underline: marks.some((mk) => mk.type === "underline") ? {} : undefined,
           color: colorMark ? String(colorMark.attrs!.color).replace(/^#/, "") : undefined,
-          size: o.size,
+          highlight: hasHighlight ? "yellow" : undefined,
+          size: Number.isFinite(pxSize) ? pxSize * 2 : o.size,
           font: o.font,
         }),
       );
@@ -405,7 +440,7 @@ async function docxBlocks(nodes: unknown[] | undefined, o: DocxOpts): Promise<(P
     if (b.type === "paragraph") {
       out.push(
         new Paragraph({
-          alignment: o.align,
+          alignment: alignFor(b.attrs?.textAlign) ?? o.align,
           spacing: { line: o.lineSpacing, after: o.afterPara },
           indent: o.firstLine ? { firstLine: o.firstLine } : undefined,
           children: runsFromInline(b.content, o),
@@ -415,6 +450,7 @@ async function docxBlocks(nodes: unknown[] | undefined, o: DocxOpts): Promise<(P
       out.push(
         new Paragraph({
           heading: HeadingLevel.HEADING_2,
+          alignment: alignFor(b.attrs?.textAlign),
           spacing: { before: 240, after: 120 },
           children: runsFromInline(b.content, o),
         }),

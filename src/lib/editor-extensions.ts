@@ -7,7 +7,11 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Highlight } from "@tiptap/extension-highlight";
+import { Link } from "@tiptap/extension-link";
 import { Indent } from "@/lib/indent";
+import { FontSize } from "@/lib/font-size";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 
 /**
@@ -21,7 +25,15 @@ export const RTE_EXTENSIONS = [
   Indent,
   TextStyle,
   FontFamily,
+  FontSize,
   Color,
+  Highlight.configure({ multicolor: true }),
+  Link.configure({
+    openOnClick: false,
+    autolink: true,
+    HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" },
+  }),
+  TextAlign.configure({ types: ["heading", "paragraph"] }),
   Image.configure({ allowBase64: true }),
   Table.configure({ resizable: true }),
   TableRow,
