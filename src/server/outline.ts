@@ -5,12 +5,22 @@ import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
+import { guardAndSnapshot } from "@/server/versions";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 import {
   type OutlineNode,
   type OutlineTemplateKey,
   getTemplate,
 } from "@/lib/outline-templates";
+
+/** Count content-bearing nodes (any title/notes text) — for shrink detection. */
+function countOutlineNodes(node: OutlineNode | null | undefined): number {
+  if (!node) return 0;
+  const hasText = Boolean(node.title?.trim()) || Boolean(node.notes?.trim());
+  let n = hasText ? 1 : 0;
+  for (const child of node.children ?? []) n += countOutlineNodes(child);
+  return n;
+}
 
 async function requireUser() {
   const supabase = await createClient();
@@ -105,11 +115,20 @@ export async function saveOutline(tree: OutlineNode): Promise<void> {
   if (!projectId) throw new Error("No project found");
   const { data: existing } = await supabase
     .from("outlines")
-    .select("id")
+    .select("id, tree")
     .eq("user_id", user.id)
     .eq("project_id", projectId)
     .maybeSingle();
   if (existing) {
+    // Write-safety: snapshot the prior tree before an emptying/shrinking save.
+    const priorTree = existing.tree as OutlineNode | null;
+    await guardAndSnapshot(
+      "outline",
+      existing.id as string,
+      priorTree,
+      countOutlineNodes(priorTree),
+      countOutlineNodes(tree),
+    );
     const { error } = await supabase
       .from("outlines")
       .update({ tree, updated_at: new Date().toISOString() })

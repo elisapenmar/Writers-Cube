@@ -17,6 +17,21 @@ import {
   type EntityBag,
   type RenderedPrompt,
 } from "@/lib/prompt-fill";
+import { guardAndSnapshot } from "@/server/versions";
+
+/** Word count of a Tiptap doc or plain string (for shrink detection). */
+function exerciseWords(doc: unknown): number {
+  if (typeof doc === "string") return doc.trim().split(/\s+/).filter(Boolean).length;
+  let text = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc);
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
 
 async function requireUser() {
   const supabase = await createClient();
@@ -669,6 +684,18 @@ export async function updateExercise(
   if (typeof patch.title === "string") update.title = patch.title.slice(0, 200);
   if (patch.content !== undefined) update.content = patch.content;
   if (typeof patch.wordCount === "number") update.word_count = patch.wordCount;
+  if (patch.content !== undefined) {
+    // Write-safety: snapshot prior content before an emptying/shrinking save.
+    const { data: cur } = await supabase
+      .from("prompt_exercises")
+      .select("content, word_count")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const curWords = (cur?.word_count as number) ?? 0;
+    const incomingWords = typeof patch.wordCount === "number" ? patch.wordCount : exerciseWords(patch.content);
+    await guardAndSnapshot("exercise", id, cur?.content, curWords, incomingWords);
+  }
   const { error } = await supabase
     .from("prompt_exercises")
     .update(update)

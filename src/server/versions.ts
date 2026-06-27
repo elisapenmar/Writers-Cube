@@ -73,6 +73,28 @@ export async function snapshotContent(
   }
 }
 
+/**
+ * Layer-1 write-safety: before a save that empties or sharply shrinks content,
+ * force a version snapshot of the CURRENT content so prior work is always
+ * recoverable from History — even if a bug or stray autosave caused it.
+ * `currentSize`/`incomingSize` are word counts (or item counts for arrays).
+ * No-op when the save grows or barely changes the content.
+ */
+export async function guardAndSnapshot(
+  entityType: string,
+  entityId: string,
+  currentContent: unknown,
+  currentSize: number,
+  incomingSize: number,
+): Promise<void> {
+  if (currentContent == null || currentContent === "") return;
+  const emptiesIt = incomingSize === 0 && currentSize > 0;
+  const bigShrink = currentSize >= 40 && incomingSize < currentSize * 0.5;
+  if (emptiesIt || bigShrink) {
+    await snapshotContent(entityType, entityId, currentContent, { force: true });
+  }
+}
+
 export async function listContentVersions(
   entityType: string,
   entityId: string,

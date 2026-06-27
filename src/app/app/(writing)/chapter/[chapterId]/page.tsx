@@ -22,7 +22,7 @@ export default async function ChapterPage({
 
   const { data: scenes } = await supabase
     .from("scenes")
-    .select("id, title, content, position")
+    .select("id, title, content, position, updated_at")
     .eq("chapter_id", chapter.id)
     .order("position", { ascending: true });
 
@@ -35,6 +35,7 @@ export default async function ChapterPage({
         title: s.title as string,
         content: s.content,
         chapterId: chapter.id as string,
+        updated_at: s.updated_at as string | undefined,
       })),
     },
   ];

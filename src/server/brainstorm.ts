@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
-import { snapshotContent } from "@/server/versions";
+import { snapshotContent, guardAndSnapshot } from "@/server/versions";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 import { htmlToPlainText } from "@/lib/html-text";
 import type { BrainstormMode } from "@/lib/brainstorm-modes";
@@ -283,6 +283,13 @@ export async function sendBrainstormMessage(
   if (messages.length >= 2) {
     summary = await generateBrainstormSummary(messages).catch(() => summary);
   }
+
+  // Write-safety: snapshot the prior transcript before replacing the array.
+  // Forced when the new array is somehow shorter (concurrent write / truncation),
+  // throttled otherwise so brainstorm history is covered without flooding.
+  const priorMessages = (existing.messages as BrainstormMessage[] | undefined) ?? [];
+  await guardAndSnapshot("brainstorm", brainstormId, priorMessages, priorMessages.length, messages.length);
+  await snapshotContent("brainstorm", brainstormId, priorMessages);
 
   const { error: updateErr } = await supabase
     .from("brainstorms")

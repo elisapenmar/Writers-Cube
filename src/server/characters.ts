@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
+import { guardAndSnapshot } from "@/server/versions";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
 
 export type CharacterBullet = {
@@ -352,6 +353,15 @@ export async function updateCharacter(
   }
   if (typeof patch.description === "string") {
     update.description = patch.description;
+    // Write-safety: snapshot the prior description before an emptying/shrinking save.
+    const { data: cur } = await supabase
+      .from("characters")
+      .select("description")
+      .eq("id", id)
+      .maybeSingle();
+    const prior = (cur?.description as string | null) ?? "";
+    const words = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+    await guardAndSnapshot("character", id, prior, words(prior), words(patch.description));
   }
   const { error } = await supabase
     .from("characters")
