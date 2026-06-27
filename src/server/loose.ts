@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { snapshotContent } from "@/server/versions";
+import { casUpdate } from "@/server/cas";
+import { recordConflict, contentEqual } from "@/server/conflicts-store";
 
 export type LooseScene = {
   id: string;
@@ -101,33 +103,48 @@ function countWords(doc: unknown): number {
 export async function updateLooseSceneContent(
   id: string,
   content: unknown,
+  baseUpdatedAt?: string | null,
 ): Promise<{ word_count: number; savedAt: string }> {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const word_count = countWords(content);
-  const savedAt = new Date().toISOString();
 
-  // Write-safety: snapshot prior content before an emptying/shrinking save.
-  const { data: cur } = await supabase
-    .from("loose_scenes")
-    .select("content, word_count")
-    .eq("id", id)
-    .maybeSingle();
-  const curWords = (cur?.word_count as number) ?? 0;
-  const shrink = (word_count === 0 && curWords > 0) || (curWords >= 40 && word_count < curWords * 0.5);
-  if (cur?.content && shrink) {
-    await snapshotContent("loose_scene", id, cur.content, { force: true });
+  // Compare-and-swap on `updated_at`: concurrent saves are serialized through
+  // the resolver instead of clobbering each other.
+  let updatedAt: string;
+  try {
+    ({ updatedAt } = await casUpdate(supabase, {
+      table: "loose_scenes",
+      id,
+      base: baseUpdatedAt ?? null,
+      selectCols: "content, word_count",
+      resolve: async ({ current, conflicted }) => {
+        const curContent = current?.content;
+        const curWords = (current?.word_count as number) ?? 0;
+
+        // L1 write-safety: snapshot prior content before an emptying/shrinking save.
+        const shrink =
+          (word_count === 0 && curWords > 0) ||
+          (curWords >= 40 && word_count < curWords * 0.5);
+        if (curContent && shrink) {
+          await snapshotContent("loose_scene", id, curContent, { force: true });
+        }
+
+        // L4 conflict preservation: stash a concurrent writer's value.
+        if (conflicted && curContent && !contentEqual(curContent, content)) {
+          await recordConflict(supabase, user.id, "loose_scene", id, curContent);
+        }
+
+        return { content, word_count };
+      },
+    }));
+  } catch (e) {
+    const err = e as { message?: string };
+    if (isMissingTable(err)) throw new Error(MIGRATION_REMINDER);
+    throw e;
   }
 
-  const { error } = await supabase
-    .from("loose_scenes")
-    .update({ content, word_count, updated_at: savedAt })
-    .eq("id", id);
-  if (error) {
-    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
-    throw new Error(error.message);
-  }
   await snapshotContent("loose_scene", id, content);
-  return { word_count, savedAt };
+  return { word_count, savedAt: updatedAt };
 }
 
 export async function renameLooseScene(id: string, title: string): Promise<void> {

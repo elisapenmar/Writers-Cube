@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { snapshotScene } from "@/server/versions";
+import { casUpdate } from "@/server/cas";
+import { recordConflict, contentEqual } from "@/server/conflicts-store";
 import { asForm, FORM_TERMS } from "@/lib/project-forms";
 import type { ProjectTree, Chapter, Scene } from "@/lib/types";
 
@@ -746,33 +748,47 @@ export async function mergeScene(
   return { sceneId: earlier.id as string };
 }
 
-export async function updateSceneContent(sceneId: string, content: unknown) {
-  const { supabase } = await requireUser();
+export async function updateSceneContent(
+  sceneId: string,
+  content: unknown,
+  baseUpdatedAt?: string | null,
+) {
+  const { supabase, user } = await requireUser();
   const word_count = countWordsInDoc(content);
 
-  // Write-safety guard: if this save empties or sharply shrinks the scene,
-  // force-snapshot the CURRENT content first so the prior words are always
-  // recoverable from History — even if a bug or a stray autosave caused it.
-  const { data: cur } = await supabase
-    .from("scenes")
-    .select("content, word_count")
-    .eq("id", sceneId)
-    .maybeSingle();
-  const curWords = (cur?.word_count as number) ?? 0;
-  const emptiesIt = word_count === 0 && curWords > 0;
-  const bigShrink = curWords >= 40 && word_count < curWords * 0.5;
-  if (cur?.content && (emptiesIt || bigShrink)) {
-    await snapshotScene(sceneId, cur.content, { force: true });
-  }
+  // Compare-and-swap on `updated_at` so two concurrent saves can never silently
+  // overwrite one another. The resolver runs the write-safety + conflict-
+  // preservation layers against the row state the swap is about to replace.
+  const { updatedAt } = await casUpdate(supabase, {
+    table: "scenes",
+    id: sceneId,
+    base: baseUpdatedAt ?? null,
+    selectCols: "content, word_count",
+    resolve: async ({ current, conflicted }) => {
+      const curContent = current?.content;
+      const curWords = (current?.word_count as number) ?? 0;
 
-  const { error } = await supabase
-    .from("scenes")
-    .update({ content, word_count, updated_at: new Date().toISOString() })
-    .eq("id", sceneId);
-  if (error) throw new Error(error.message);
+      // L1 write-safety: empties or sharply shrinks => snapshot prior content
+      // first so the words are always recoverable from History.
+      const emptiesIt = word_count === 0 && curWords > 0;
+      const bigShrink = curWords >= 40 && word_count < curWords * 0.5;
+      if (curContent && (emptiesIt || bigShrink)) {
+        await snapshotScene(sceneId, curContent, { force: true });
+      }
+
+      // L4 conflict preservation: a concurrent writer's value is about to be
+      // overwritten by this prose save — stash it so it is never lost.
+      if (conflicted && curContent && !contentEqual(curContent, content)) {
+        await recordConflict(supabase, user.id, "scene", sceneId, curContent);
+      }
+
+      return { content, word_count };
+    },
+  });
+
   // Throttled version snapshot for the history timeline (best-effort).
   await snapshotScene(sceneId, content);
-  return { word_count, savedAt: new Date().toISOString() };
+  return { word_count, savedAt: updatedAt };
 }
 
 export async function renameChapter(chapterId: string, title: string) {

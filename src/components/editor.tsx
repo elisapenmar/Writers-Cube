@@ -29,6 +29,9 @@ export function Editor({ scene }: { scene: Scene }) {
   const [splitMsg, setSplitMsg] = useState<string | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // CAS version token: the `updated_at` we last persisted/loaded. Sent as the
+  // base on each save so concurrent writers are detected, not silently clobbered.
+  const baseUpdatedAt = useRef<string | null>(scene.updated_at);
   const router = useRouter();
   const view = useEditorView();
 
@@ -60,7 +63,8 @@ export function Editor({ scene }: { scene: Scene }) {
 
   async function save(doc: unknown) {
     try {
-      const result = await updateSceneContent(scene.id, doc);
+      const result = await updateSceneContent(scene.id, doc, baseUpdatedAt.current);
+      baseUpdatedAt.current = result.savedAt;
       setSavedAt(result.savedAt);
       setWordCount(result.word_count);
       setStatus("saved");
@@ -94,6 +98,10 @@ export function Editor({ scene }: { scene: Scene }) {
 
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
+    // Leave a plain right-click to the browser so spell-check suggestions,
+    // cut/copy/paste and Look Up appear as expected. Hold Option/Alt (or use
+    // the ⋯ button) for the split/merge menu.
+    if (!e.altKey) return;
     e.preventDefault();
     // posAtCoords is null when clicking past the end of a line, fall back to
     // the caret position so the menu always opens.
@@ -101,6 +109,14 @@ export function Editor({ scene }: { scene: Scene }) {
     const pos = coords?.pos ?? editor.state.selection.from;
     const index = editor.state.doc.resolve(pos).index(0);
     setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex: index });
+  }
+
+  function openMenuFromButton(e: React.MouseEvent) {
+    if (!editor) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const pos = editor.state.selection.from;
+    const index = editor.state.doc.resolve(pos).index(0);
+    setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex: index });
   }
 
   async function doMerge(direction: "previous" | "next") {
@@ -144,6 +160,8 @@ export function Editor({ scene }: { scene: Scene }) {
 
   // Flush on unmount / scene switch.
   useEffect(() => {
+    // New scene loaded: reset the CAS token to this scene's version.
+    baseUpdatedAt.current = scene.updated_at;
     return () => {
       if (saveTimer.current && editor) {
         clearTimeout(saveTimer.current);
@@ -238,6 +256,13 @@ export function Editor({ scene }: { scene: Scene }) {
             title="Version history"
           >
             History
+          </button>
+          <button
+            onClick={openMenuFromButton}
+            className="rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-ink)]"
+            title="Scene actions: split here, merge, scene break — or Option-right-click"
+          >
+            ⋯
           </button>
           <EditorViewOptions view={view} />
           <button

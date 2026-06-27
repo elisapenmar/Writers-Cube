@@ -13,7 +13,7 @@ async function uncategorizedScenes(projectId: string): Promise<ManuscriptScene[]
   try {
     const loose = await listLooseScenes(projectId);
     for (const l of loose) {
-      out.push({ id: l.id, title: l.title, content: l.content, kind: "loose" });
+      out.push({ id: l.id, title: l.title, content: l.content, kind: "loose", updated_at: l.updated_at });
     }
   } catch {
     /* table may be missing */
@@ -44,6 +44,7 @@ export default async function ManuscriptPage() {
       title: s.title,
       content: s.content,
       chapterId: c.id,
+      updated_at: s.updated_at,
     })),
   }));
   const looseScenes = await uncategorizedScenes(project.id);

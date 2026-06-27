@@ -47,6 +47,8 @@ export type ManuscriptScene = {
   kind?: "loose" | "exercise";
   /** The owning chapter id (for chapter scenes only). */
   chapterId?: string;
+  /** CAS version token at load time (scene/loose only). */
+  updated_at?: string;
 };
 export type ManuscriptChapter = {
   id: string;
@@ -439,6 +441,10 @@ function SceneBlock({
 
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
+    // A plain right-click is left alone so the browser's native menu — spell
+    // check suggestions, cut/copy/paste, Look Up — shows as expected. Hold
+    // Option/Alt (or use the ⋯ button) to open the scene-structure menu.
+    if (!e.altKey) return;
     e.preventDefault();
     // posAtCoords is null when clicking past the end of a line, fall back to
     // the caret so the menu always opens.
@@ -447,6 +453,17 @@ function SceneBlock({
     const blockIndex = editor.state.doc.resolve(pos).index(0);
     onActivate(editor);
     setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex });
+  }
+
+  // Open the scene-structure menu from the ⋯ button, anchored under it, using
+  // the current caret position as the split point.
+  function openMenuFromButton(e: React.MouseEvent) {
+    if (!editor) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const pos = editor.state.selection.from;
+    const blockIndex = editor.state.doc.resolve(pos).index(0);
+    onActivate(editor);
+    setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex });
   }
 
   async function splitHere(into: "scenes" | "chapters") {
@@ -501,8 +518,19 @@ function SceneBlock({
 
   return (
     <div className="wc-scene-block mb-6 group" onContextMenu={onContextMenu}>
-      <div className="text-[11px] uppercase tracking-wider text-[var(--wc-faint)] mb-1">
-        {scene.title}
+      <div className="flex items-center gap-2 mb-1">
+        <div className="text-[11px] uppercase tracking-wider text-[var(--wc-faint)]">
+          {scene.title}
+        </div>
+        <button
+          type="button"
+          onClick={openMenuFromButton}
+          title="Scene actions (split, merge, new) — or Option-right-click"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 rounded px-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] transition-opacity"
+          aria-label="Scene actions"
+        >
+          ⋯
+        </button>
       </div>
       {editor && <TagBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />
@@ -524,6 +552,9 @@ function SceneBlock({
               top: Math.min(ctxMenu.y, window.innerHeight - 220),
             }}
           >
+            <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
+              Scene actions
+            </div>
             {isScene && (
               <>
                 <CtxItem onClick={() => splitHere("scenes")}>✂ Split into a new scene here</CtxItem>

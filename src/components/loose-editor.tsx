@@ -38,6 +38,8 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // CAS version token (see editor.tsx) — sent as the base on each save.
+  const baseUpdatedAt = useRef<string | null>(scene.updated_at);
 
   const editor = useEditor(
     {
@@ -65,7 +67,8 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
 
   async function save(doc: unknown) {
     try {
-      const r = await updateLooseSceneContent(scene.id, doc);
+      const r = await updateLooseSceneContent(scene.id, doc, baseUpdatedAt.current);
+      baseUpdatedAt.current = r.savedAt;
       setSavedAt(r.savedAt);
       setWordCount(r.word_count);
       setStatus("saved");
@@ -73,6 +76,12 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
       setStatus("error");
     }
   }
+
+  useEffect(() => {
+    // New scene loaded: reset the CAS token to this scene's version.
+    baseUpdatedAt.current = scene.updated_at;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene.id]);
 
   useEffect(() => {
     const handler = () => {
