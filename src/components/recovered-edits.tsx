@@ -7,24 +7,49 @@ import {
   dismissAllRecoveredEdits,
   type RecoveredEdit,
 } from "@/server/conflicts";
+import { toPlainText, wordDiff } from "@/lib/text-diff";
 
-/** Extract readable plain text from Tiptap JSON (or a plain string) for preview. */
-function toPlainText(value: unknown): string {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  const parts: string[] = [];
-  const walk = (n: unknown) => {
-    if (!n || typeof n !== "object") return;
-    const node = n as { type?: string; text?: string; content?: unknown[]; role?: string };
-    if (node.type === "text" && typeof node.text === "string") parts.push(node.text);
-    if (typeof node.role === "string" && typeof node.text === "string") {
-      parts.push(`${node.role}: ${node.text}`);
-    }
-    if (Array.isArray(node.content)) node.content.forEach(walk);
-  };
-  if (Array.isArray(value)) value.forEach(walk);
-  else walk(value);
-  return parts.join(" ").trim();
+/** Redline diff of the recovered (losing) text against the live version:
+ *  highlighted = only in the recovered edit, struck = currently in place. */
+function DiffView({ current, value }: { current: unknown; value: unknown }) {
+  const recovered = toPlainText(value);
+  // No live version to compare against (entity deleted) — show it all as new.
+  if (current == null) {
+    return (
+      <p className="max-h-32 overflow-y-auto whitespace-pre-wrap text-sm">
+        {recovered ? (
+          <span className="rounded-sm bg-emerald-100 text-emerald-900">{recovered}</span>
+        ) : (
+          "(no preview)"
+        )}
+      </p>
+    );
+  }
+  const segments = wordDiff(toPlainText(current), recovered);
+  if (!segments.some((s) => s.type !== "equal")) {
+    return <p className="text-xs text-[var(--wc-faint)]">(no textual difference)</p>;
+  }
+  return (
+    <p className="max-h-32 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
+      {segments.map((s, i) => {
+        if (s.type === "insert") {
+          return (
+            <span key={i} className="rounded-sm bg-emerald-100 text-emerald-900">
+              {s.text}
+            </span>
+          );
+        }
+        if (s.type === "delete") {
+          return (
+            <span key={i} className="rounded-sm bg-rose-100 text-rose-700 line-through">
+              {s.text}
+            </span>
+          );
+        }
+        return <span key={i}>{s.text}</span>;
+      })}
+    </p>
+  );
 }
 
 function label(entityType: string): string {
@@ -104,10 +129,20 @@ export function RecoveredEdits() {
                 Close
               </button>
             </div>
-            <p className="mb-4 text-sm text-[var(--wc-faint,#666)]">
+            <p className="mb-2 text-sm text-[var(--wc-faint,#666)]">
               These edits were preserved when two changes to the same text arrived
               at once. Nothing was lost. Copy anything you want to keep back into
               place, then dismiss it.
+            </p>
+            <p className="mb-4 text-xs text-[var(--wc-faint,#888)]">
+              <span className="rounded-sm bg-emerald-100 px-1 text-emerald-900">
+                Highlighted
+              </span>{" "}
+              = in the recovered edit ·{" "}
+              <span className="rounded-sm bg-rose-100 px-1 text-rose-700 line-through">
+                struck
+              </span>{" "}
+              = currently in place
             </p>
             <ul className="space-y-3">
               {edits.map((e) => {
@@ -121,9 +156,7 @@ export function RecoveredEdits() {
                         {new Date(e.created_at).toLocaleString()}
                       </span>
                     </div>
-                    <p className="max-h-32 overflow-y-auto whitespace-pre-wrap text-sm">
-                      {text || "(no preview)"}
-                    </p>
+                    <DiffView current={e.current} value={e.value} />
                     <div className="mt-2 flex gap-3 text-xs">
                       <button
                         onClick={() => navigator.clipboard?.writeText(text)}

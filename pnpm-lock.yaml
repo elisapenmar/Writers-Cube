@@ -92,6 +92,9 @@ importers:
       docx:
         specifier: ^9.7.1
         version: 9.7.1
+      double-metaphone:
+        specifier: ^2.0.1
+        version: 2.0.1
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -1438,6 +1441,10 @@ packages:
   docx@9.7.1:
     resolution: {integrity: sha512-ilXFf9Moz47ABjFpDiA5s1w9lpb4EFSp7+5iiJSbfyYDM+bpZdAgLlSr7fW4aXhVe/E+F6QCv0EvRVFEd5CsWg==}
     engines: {node: '>=10'}
+
+  double-metaphone@2.0.1:
+    resolution: {integrity: sha512-oHqGfNo2bG/VTZSGFz98TWpyv3WD+d9TDOxwAY8L+zqwm4sGawNvEynegjPU+4HowE4HnIXSYAq0lst2YJgfzA==}
+    hasBin: true
 
   duck@0.1.12:
     resolution: {integrity: sha512-wkctla1O6VfP89gQ+J/yDesM0S7B7XLXjKGzXxMDVFg7uEn706niAtyYovKbyq1oT9YwDcly721/iUWoc8MVRg==}
@@ -3974,6 +3981,8 @@ snapshots:
       nanoid: 5.1.15
       xml: 1.0.1
       xml-js: 1.6.11
+
+  double-metaphone@2.0.1: {}
 
   duck@0.1.12:
     dependencies:

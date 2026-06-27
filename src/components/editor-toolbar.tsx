@@ -14,9 +14,13 @@ const COLOR_SWATCHES = ["#111111", "#b91c1c", "#1d4ed8", "#15803d", "#b45309", "
 export function EditorToolbar({
   editor,
   className = "",
+  trailing,
 }: {
   editor: Editor | null;
   className?: string;
+  /** Right-aligned actions (Find, History, …) folded into the same flex-wrap so
+   *  the whole bar wraps as one set and rows fill evenly on narrow widths. */
+  trailing?: React.ReactNode;
 }) {
   const [, force] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -33,8 +37,15 @@ export function EditorToolbar({
   }, [editor]);
 
   // A destroyed editor (e.g. a block that just remounted after a split) must
-  // not be touched, editor.can()/isActive() throw on a torn-down view.
-  if (!editor || editor.isDestroyed) return null;
+  // not be touched, editor.can()/isActive() throw on a torn-down view. Still
+  // render the trailing actions so they don't vanish before a block is focused.
+  if (!editor || editor.isDestroyed) {
+    return trailing ? (
+      <div className={`flex flex-wrap items-center gap-0.5 ${className}`}>
+        <div className="ml-auto flex items-center gap-2 shrink-0">{trailing}</div>
+      </div>
+    ) : null;
+  }
   const chain = () => editor.chain().focus();
   const can = (fn: "undo" | "redo" | "indent" | "outdent") => {
     try {
@@ -298,6 +309,10 @@ export function EditorToolbar({
             </div>
           )}
         </div>
+      )}
+
+      {trailing && (
+        <div className="ml-auto flex items-center gap-2 shrink-0">{trailing}</div>
       )}
     </div>
   );

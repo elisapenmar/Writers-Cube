@@ -26,6 +26,7 @@ import { TypewriterMode } from "@/components/typewriter-mode";
 import { useEditorView } from "@/store/editor-view-store";
 import { termsFor } from "@/lib/project-forms";
 import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
+import { useClampedMenuPosition } from "@/lib/menu-position";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -151,38 +152,42 @@ export function ManuscriptReader({
         <FindReplace editor={activeEditor} onClose={() => setFindOpen(false)} />
       )}
       {/* Sticky toolbar, operates on whichever block is focused */}
-      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
-        <div className="flex-1 min-w-0">
-          <EditorToolbar editor={activeEditor} />
-        </div>
-        <button
-          onClick={() => setFindOpen(true)}
-          disabled={!activeScene}
-          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-          title="Find & replace in the focused scene (⌘F)"
-        >
-          Find
-        </button>
-        <button
-          onClick={() => activeScene && setHistoryScene(activeScene)}
-          disabled={!activeScene}
-          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-          title="Version history of the focused scene"
-        >
-          History
-        </button>
-        <button
-          onClick={() => setFocusScene(activeScene)}
-          disabled={!activeScene}
-          className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
-          title="Write the focused scene in distraction-free focus mode"
-        >
-          ✶ Focus
-        </button>
-        <EditorViewOptions view={view} />
-        <span className="shrink-0 text-xs text-[var(--wc-faint)]">
-          <SaveLabel status={status} savedAt={savedAt} />
-        </span>
+      <div className="sticky top-0 z-20 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
+        <EditorToolbar
+          editor={activeEditor}
+          trailing={
+            <>
+              <button
+                onClick={() => setFindOpen(true)}
+                disabled={!activeScene}
+                className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+                title="Find & replace in the focused scene (⌘F)"
+              >
+                Find
+              </button>
+              <button
+                onClick={() => activeScene && setHistoryScene(activeScene)}
+                disabled={!activeScene}
+                className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+                title="Version history of the focused scene"
+              >
+                History
+              </button>
+              <button
+                onClick={() => setFocusScene(activeScene)}
+                disabled={!activeScene}
+                className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+                title="Write the focused scene in distraction-free focus mode"
+              >
+                ✶ Focus
+              </button>
+              <EditorViewOptions view={view} />
+              <span className="shrink-0 text-xs text-[var(--wc-faint)]">
+                <SaveLabel status={status} savedAt={savedAt} />
+              </span>
+            </>
+          }
+        />
       </div>
 
       <div className="flex-1 overflow-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]">
@@ -382,6 +387,7 @@ function SceneBlock({
   // CAS version token for scene/loose blocks (see editor.tsx).
   const baseUpdatedAt = useRef<string | null>(scene.updated_at ?? null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number; pos: number; spell?: SpellHit | null } | null>(null);
+  const menuRef = useClampedMenuPosition(ctxMenu?.x ?? null, ctxMenu?.y ?? null);
   const isScene = !scene.kind;
 
   // Live co-editing per block (flag-gated). Exercises have no CRDT store, so
@@ -656,11 +662,8 @@ function SceneBlock({
             }}
           />
           <div
+            ref={menuRef}
             className="fixed z-50 w-60 max-h-[80vh] overflow-y-auto rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
-            style={{
-              left: Math.min(ctxMenu.x, window.innerWidth - 250),
-              top: Math.min(ctxMenu.y, Math.max(8, window.innerHeight - 430)),
-            }}
           >
             {ctxMenu.spell && (
               <>

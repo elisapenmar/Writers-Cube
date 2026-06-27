@@ -15,6 +15,7 @@ import { FindReplace } from "@/components/find-replace";
 import { EditorViewOptions } from "@/components/editor-view-options";
 import { useEditorView } from "@/store/editor-view-store";
 import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
+import { useClampedMenuPosition } from "@/lib/menu-position";
 import { AiDiamond } from "@/components/icons";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -30,6 +31,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [splitting, setSplitting] = useState(false);
   const [splitMsg, setSplitMsg] = useState<string | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number; pos: number; spell?: SpellHit | null } | null>(null);
+  const menuRef = useClampedMenuPosition(ctxMenu?.x ?? null, ctxMenu?.y ?? null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // CAS version token: the `updated_at` we last persisted/loaded. Sent as the
   // base on each save so concurrent writers are detected, not silently clobbered.
@@ -420,8 +422,8 @@ export function Editor({ scene }: { scene: Scene }) {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
           <div
+            ref={menuRef}
             className="fixed z-50 w-60 max-h-[80vh] overflow-y-auto rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
-            style={{ left: Math.min(ctxMenu.x, window.innerWidth - 250), top: Math.min(ctxMenu.y, Math.max(8, window.innerHeight - 360)) }}
           >
             {ctxMenu.spell && (
               <>
