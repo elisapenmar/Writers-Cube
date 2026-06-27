@@ -550,3 +550,27 @@ body {
   color: #41603f;
   border: 1px solid rgba(122,158,126,0.4);
 }
+
+/* ---- Document page setup (pageless/paged, line spacing, columns) ---- */
+.wc-doc { line-height: var(--wc-line, 1.5); }
+.wc-doc .ProseMirror p,
+.wc-doc .ProseMirror li,
+.wc-doc .ProseMirror blockquote { line-height: var(--wc-line, 1.5); }
+
+/* Pageless = responsive full width (comfortable reading max on huge screens). */
+.wc-doc-pageless { max-width: min(100%, 60rem); margin: 0 auto; }
+
+/* Paged = a fixed 8.5in "sheet" with margins and a soft shadow. */
+.wc-doc-paged {
+  max-width: 8.5in;
+  margin: 0 auto;
+  background: var(--wc-surface);
+  box-shadow: var(--wc-shadow-md);
+  border: 1px solid var(--wc-border);
+  border-radius: 2px;
+  padding: 1in;
+}
+
+/* Paragraph spacing toggles. */
+.wc-doc[data-space-before="true"] .ProseMirror p { margin-top: 0.85em; }
+.wc-doc[data-space-after="true"] .ProseMirror p { margin-bottom: 0.85em; }

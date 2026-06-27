@@ -11,6 +11,8 @@ import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
+import { EditorViewOptions } from "@/components/editor-view-options";
+import { useEditorView } from "@/store/editor-view-store";
 import { AiDiamond } from "@/components/icons";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -28,6 +30,7 @@ export function Editor({ scene }: { scene: Scene }) {
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+  const view = useEditorView();
 
   const editor = useEditor(
     {
@@ -39,8 +42,8 @@ export function Editor({ scene }: { scene: Scene }) {
       immediatelyRender: false,
       editorProps: {
         attributes: {
-          class:
-            "prose prose-zinc max-w-3xl mx-auto min-h-[60vh] focus:outline-none font-serif text-lg leading-relaxed",
+          // Width / line-spacing / columns are controlled by the page wrapper.
+          class: "prose prose-zinc max-w-none min-h-[60vh] focus:outline-none font-serif text-lg",
         },
       },
       onUpdate: ({ editor }) => {
@@ -236,6 +239,7 @@ export function Editor({ scene }: { scene: Scene }) {
           >
             History
           </button>
+          <EditorViewOptions />
           <button
             onClick={() => setTypewriterOpen(true)}
             className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
@@ -277,11 +281,24 @@ export function Editor({ scene }: { scene: Scene }) {
         />
       )}
       <div
-        className="flex-1 overflow-y-auto px-6 py-12 bg-[var(--wc-page)]"
+        className="flex-1 overflow-y-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]"
         onContextMenu={onContextMenu}
       >
         {editor && <TagBubbleMenu editor={editor} />}
-        <EditorContent editor={editor} />
+        <div
+          className={`wc-doc ${view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"}`}
+          data-space-before={view.spaceBefore}
+          data-space-after={view.spaceAfter}
+          style={
+            {
+              "--wc-line": String(view.lineSpacing),
+              columnCount: view.columns > 1 ? view.columns : undefined,
+              columnGap: view.columns > 1 ? "2.75rem" : undefined,
+            } as React.CSSProperties
+          }
+        >
+          <EditorContent editor={editor} />
+        </div>
       </div>
 
       {ctxMenu && (
