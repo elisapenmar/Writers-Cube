@@ -10,7 +10,9 @@ import {
   createScene,
   createChapter,
   mergeScene,
+  renameChapter,
 } from "@/server/scenes";
+import { EditableTitle } from "@/components/editable-title";
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
 import { SceneHistory } from "@/components/scene-history";
@@ -175,7 +177,15 @@ export function ManuscriptReader({
           {chapters.map((chapter) => (
             <section key={chapter.id} className="mb-10">
               <h2 className="font-serif text-2xl text-[var(--wc-ink)] mb-4 pb-1 border-b border-[var(--wc-border)]">
-                {chapter.title}
+                <EditableTitle
+                  initial={chapter.title}
+                  onSave={async (next) => {
+                    await renameChapter(chapter.id, next);
+                    router.refresh();
+                  }}
+                  className="block"
+                  inputClassName="font-serif text-2xl w-full"
+                />
               </h2>
               {chapter.scenes.length === 0 ? (
                 <p className="text-sm text-[var(--wc-faint)] italic">No scenes yet.</p>
