@@ -24,7 +24,7 @@ import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { useEditorView } from "@/store/editor-view-store";
 import { termsFor } from "@/lib/project-forms";
-import { lookupMisspelling, acceptWord, type SpellHit } from "@/lib/spellcheck";
+import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -467,6 +467,10 @@ function SceneBlock({
     setCtxMenu(null);
     void acceptWord(word);
   }
+  function toggleSpelling() {
+    setCtxMenu(null);
+    setSpellEnabled(!spellEnabled());
+  }
 
   function insertFootnoteHere() {
     const pos = ctxMenu?.pos;
@@ -644,6 +648,9 @@ function SceneBlock({
             <CtxItem onClick={editLink} shortcut="⌘K">Insert / edit link</CtxItem>
             <CtxItem onClick={insertFootnoteHere}>Insert footnote here</CtxItem>
             <CtxItem onClick={clearFormatting}>Clear formatting</CtxItem>
+            <CtxItem onClick={toggleSpelling}>
+              {spellEnabled() ? "✓ " : ""}Check spelling
+            </CtxItem>
             <CtxDivider />
             <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
               Scene actions

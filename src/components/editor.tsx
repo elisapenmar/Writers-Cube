@@ -14,7 +14,7 @@ import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorViewOptions } from "@/components/editor-view-options";
 import { useEditorView } from "@/store/editor-view-store";
-import { lookupMisspelling, acceptWord, type SpellHit } from "@/lib/spellcheck";
+import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
 import { AiDiamond } from "@/components/icons";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -141,6 +141,10 @@ export function Editor({ scene }: { scene: Scene }) {
   function addToDictionary(word: string) {
     setCtxMenu(null);
     void acceptWord(word);
+  }
+  function toggleSpelling() {
+    setCtxMenu(null);
+    setSpellEnabled(!spellEnabled());
   }
 
   function openMenuFromButton(e: React.MouseEvent) {
@@ -443,6 +447,9 @@ export function Editor({ scene }: { scene: Scene }) {
             <MenuItem onClick={editLink} shortcut="⌘K">Insert / edit link</MenuItem>
             <MenuItem onClick={insertFootnoteHere}>Insert footnote here</MenuItem>
             <MenuItem onClick={clearFormatting}>Clear formatting</MenuItem>
+            <MenuItem onClick={toggleSpelling}>
+              {spellEnabled() ? "✓ " : ""}Check spelling
+            </MenuItem>
             <div className="my-1 border-t border-[var(--wc-border)]" />
             <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
               Scene actions
