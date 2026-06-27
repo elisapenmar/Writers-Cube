@@ -42,10 +42,11 @@ export function Editor({ scene }: { scene: Scene }) {
   const collab = useSceneCollab(scene.id);
   const collabReady = collab.mode === "ready";
 
-  // Seed a fresh (never-edited) shared doc from the existing scene blob, exactly
-  // once, guarded by a meta flag that converges across clients.
+  // Seed a fresh (never-edited) shared doc from the existing scene blob. Only the
+  // client that won the server seed-claim does this, so a simultaneous cold open
+  // can't duplicate the content.
   function seedCollabDoc(ed: TiptapEditor) {
-    if (collab.mode !== "ready") return;
+    if (collab.mode !== "ready" || !collab.shouldSeed) return;
     const doc = collab.provider.doc;
     const meta = doc.getMap("meta");
     if (meta.get("seeded")) return;
@@ -395,7 +396,7 @@ export function Editor({ scene }: { scene: Scene }) {
         />
       )}
       <div
-        className="flex-1 overflow-y-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]"
+        className="flex-1 overflow-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]"
         onContextMenu={onContextMenu}
       >
         {editor && <TagBubbleMenu editor={editor} />}

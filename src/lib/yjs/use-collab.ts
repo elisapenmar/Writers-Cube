@@ -29,7 +29,14 @@ function pickColor(seed: string): string {
 type CollabState =
   | { mode: "off" }
   | { mode: "loading" }
-  | { mode: "ready"; extensions: Extensions; provider: SupabaseYjsProvider; user: CollabUser };
+  | {
+      mode: "ready";
+      extensions: Extensions;
+      provider: SupabaseYjsProvider;
+      user: CollabUser;
+      /** True for the single client that should seed the doc from the blob. */
+      shouldSeed: boolean;
+    };
 
 /**
  * Sets up a Yjs co-editing session for one entity (a scene or loose scene) when
@@ -37,11 +44,13 @@ type CollabState =
  * collaboration is off. Returns the collab extension set + provider once
  * connected; the editor binds to these.
  */
-export function useCollab(kind: CrdtKind, id: string): CollabState {
-  const [state, setState] = useState<CollabState>(() => (yjsEnabled() ? { mode: "loading" } : { mode: "off" }));
+export function useCollab(kind: CrdtKind | null, id: string): CollabState {
+  const [state, setState] = useState<CollabState>(() =>
+    yjsEnabled() && kind ? { mode: "loading" } : { mode: "off" },
+  );
 
   useEffect(() => {
-    if (!yjsEnabled()) {
+    if (!yjsEnabled() || !kind) {
       setState({ mode: "off" });
       return;
     }
@@ -68,6 +77,12 @@ export function useCollab(kind: CrdtKind, id: string): CollabState {
       await provider.whenLoaded;
       if (cancelled) return;
 
+      // Exactly one client seeds the doc from the blob (atomic server claim),
+      // so a simultaneous cold open can't duplicate the content.
+      const { claimCrdtSeed } = await import("@/server/crdt");
+      const shouldSeed = await claimCrdtSeed(kind, id).catch(() => false);
+      if (cancelled) return;
+
       // Presence identity from the signed-in user.
       let name = "Writer";
       try {
@@ -81,7 +96,7 @@ export function useCollab(kind: CrdtKind, id: string): CollabState {
 
       const user: CollabUser = { name, color: pickColor(String(doc.clientID)) };
       const extensions = extMod.buildCollabExtensions(provider, user);
-      setState({ mode: "ready", extensions, provider, user });
+      setState({ mode: "ready", extensions, provider, user, shouldSeed });
     })();
 
     return () => {

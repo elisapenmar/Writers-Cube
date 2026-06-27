@@ -45,3 +45,22 @@ export async function saveCrdt(kind: CrdtKind, id: string, state: string): Promi
     .from(table)
     .upsert({ [key]: id, state, updated_at: new Date().toISOString() }, { onConflict: key });
 }
+
+/**
+ * Atomically decide which client seeds a fresh shared doc from the JSONB blob.
+ * Inserts an empty placeholder row only if none exists; the caller that wins the
+ * insert (true) seeds, everyone else (false) waits for the seed to sync. This
+ * prevents duplicated content when two clients open a cold scene at once.
+ */
+export async function claimCrdtSeed(kind: CrdtKind, id: string): Promise<boolean> {
+  const { supabase } = await requireUser();
+  const { table, key } = TABLES[kind];
+  const { data } = await supabase
+    .from(table)
+    .upsert(
+      { [key]: id, state: "", updated_at: new Date().toISOString() },
+      { onConflict: key, ignoreDuplicates: true },
+    )
+    .select(key);
+  return (data?.length ?? 0) > 0; // a row returned => we inserted it => we seed
+}

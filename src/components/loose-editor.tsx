@@ -47,7 +47,7 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
   const collabReady = collab.mode === "ready";
 
   function seedCollabDoc(ed: TiptapEditor) {
-    if (collab.mode !== "ready") return;
+    if (collab.mode !== "ready" || !collab.shouldSeed) return;
     const doc = collab.provider.doc;
     const meta = doc.getMap("meta");
     if (meta.get("seeded")) return;

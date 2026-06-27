@@ -16,6 +16,7 @@ import {
 import { EditableTitle } from "@/components/editable-title";
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
+import { useCollab } from "@/lib/yjs/use-collab";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorToolbar } from "@/components/editor-toolbar";
@@ -116,12 +117,18 @@ export function ManuscriptReader({
     };
   }
 
+  // The first scene's editor becomes active on load, so the toolbar is live
+  // before the writer clicks into the manuscript.
+  const firstSceneId =
+    chapters.find((c) => c.scenes.length)?.scenes[0]?.id ?? looseScenes[0]?.id;
+
   const renderScene = (scene: ManuscriptScene) => (
     <SceneBlock
       key={`${scene.id}:${version[scene.id] ?? 0}`}
       scene={scene}
       projectId={projectId}
       contentOverride={override[scene.id]}
+      defaultActive={scene.id === firstSceneId}
       onStatus={bumpStatus}
       onActivate={(editor) => {
         setActiveEditor(editor);
@@ -145,7 +152,7 @@ export function ManuscriptReader({
       )}
       {/* Sticky toolbar, operates on whichever block is focused */}
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
-        <div className="flex-1 min-w-0 overflow-x-auto">
+        <div className="flex-1 min-w-0">
           <EditorToolbar editor={activeEditor} />
         </div>
         <button
@@ -178,7 +185,7 @@ export function ManuscriptReader({
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]">
+      <div className="flex-1 overflow-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]">
         <div
           className={`wc-doc mx-auto ${
             view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"
@@ -360,6 +367,7 @@ function SceneBlock({
   onActivate,
   onSplitResult,
   onStructureChange,
+  defaultActive = false,
 }: {
   scene: ManuscriptScene;
   projectId: string;
@@ -368,6 +376,7 @@ function SceneBlock({
   onActivate: (editor: Editor) => void;
   onSplitResult: (firstContent: unknown) => void;
   onStructureChange: () => void;
+  defaultActive?: boolean;
 }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // CAS version token for scene/loose blocks (see editor.tsx).
@@ -375,14 +384,36 @@ function SceneBlock({
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number; pos: number; spell?: SpellHit | null } | null>(null);
   const isScene = !scene.kind;
 
+  // Live co-editing per block (flag-gated). Exercises have no CRDT store, so
+  // they stay on the classic blob path (kind = null).
+  const collabKind = scene.kind === "loose" ? "loose_scene" : scene.kind === "exercise" ? null : "scene";
+  const collab = useCollab(collabKind, scene.id);
+  const collabReady = collab.mode === "ready";
+
+  function seedCollabDoc(ed: Editor) {
+    if (collab.mode !== "ready" || !collab.shouldSeed) return;
+    const doc = collab.provider.doc;
+    const meta = doc.getMap("meta");
+    if (meta.get("seeded")) return;
+    const frag = doc.getXmlFragment("default");
+    const blob = (contentOverride as object | null) ?? (scene.content as object | null);
+    if (frag.length === 0 && blob && countWords(blob) > 0) {
+      ed.commands.setContent(blob, { emitUpdate: true });
+    }
+    meta.set("seeded", true);
+  }
+
   const editor = useEditor(
     {
-      extensions: RTE_EXTENSIONS,
-      content: (contentOverride as object | null) ??
-        (scene.content as object | null) ?? {
-        type: "doc",
-        content: [{ type: "paragraph" }],
-      },
+      extensions: collabReady ? collab.extensions : RTE_EXTENSIONS,
+      content: collabReady
+        ? undefined
+        : (contentOverride as object | null) ??
+          (scene.content as object | null) ?? {
+            type: "doc",
+            content: [{ type: "paragraph" }],
+          },
+      editable: collab.mode !== "loading",
       immediatelyRender: false,
       editorProps: {
         attributes: {
@@ -390,6 +421,7 @@ function SceneBlock({
             "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed",
         },
       },
+      onCreate: collabReady ? ({ editor }) => seedCollabDoc(editor) : undefined,
       onFocus: ({ editor }) => onActivate(editor),
       onUpdate: ({ editor }) => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -400,8 +432,15 @@ function SceneBlock({
         }, 800);
       },
     },
-    [scene.id],
+    [scene.id, collabReady],
   );
+
+  // Make the first block active on load so the shared toolbar is live before the
+  // writer clicks into the manuscript.
+  useEffect(() => {
+    if (defaultActive && editor) onActivate(editor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultActive, editor]);
 
   async function save(doc: unknown) {
     try {
