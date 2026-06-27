@@ -584,6 +584,18 @@ body {
   );
 }
 
+/* Margin guides: a dashed rule at the 1in text boundary of the paged sheet, so
+   the writer can see the printable area. Only meaningful in paged mode. */
+.wc-doc-paged[data-show-margins="true"] { position: relative; }
+.wc-doc-paged[data-show-margins="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 1in;
+  border: 1px dashed rgba(51, 48, 58, 0.28);
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Paragraph spacing toggles. */
 .wc-doc[data-space-before="true"] .ProseMirror p { margin-top: 0.85em; }
 .wc-doc[data-space-after="true"] .ProseMirror p { margin-bottom: 0.85em; }

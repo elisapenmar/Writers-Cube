@@ -46,6 +46,22 @@ export function EditorViewOptions({ view }: { view: EditorView }) {
                 ))}
               </div>
               <label className="mt-1.5 flex items-center gap-2 text-xs text-[var(--wc-muted)]">
+                Custom
+                <input
+                  type="number"
+                  min={1}
+                  max={4}
+                  step={0.05}
+                  value={v.lineSpacing}
+                  onChange={(e) => {
+                    const n = parseFloat(e.target.value);
+                    if (Number.isFinite(n)) v.setLineSpacing(Math.min(4, Math.max(1, n)));
+                  }}
+                  className="w-16 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 py-0.5 text-xs text-[var(--wc-ink)] focus:outline-none"
+                />
+                <span className="text-[var(--wc-faint)]">×</span>
+              </label>
+              <label className="mt-1.5 flex items-center gap-2 text-xs text-[var(--wc-muted)]">
                 <input
                   type="checkbox"
                   checked={v.spaceBefore}
@@ -73,6 +89,20 @@ export function EditorViewOptions({ view }: { view: EditorView }) {
                 value={String(v.columns)}
                 onChange={(val) => v.setColumns(Number(val))}
               />
+            </Group>
+
+            <Group label="Margins">
+              <label className="flex items-center gap-2 text-xs text-[var(--wc-muted)]">
+                <input
+                  type="checkbox"
+                  checked={v.showMargins}
+                  onChange={(e) => v.setShowMargins(e.target.checked)}
+                />
+                Show margin guides
+              </label>
+              <p className="mt-1 text-[10px] text-[var(--wc-faint)]">
+                Dashed 1in boundary, shown in Paged view.
+              </p>
             </Group>
 
             <Group label="Spelling">

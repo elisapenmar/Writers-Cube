@@ -406,6 +406,7 @@ export function Editor({ scene }: { scene: Scene }) {
           className={`wc-doc ${view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"}`}
           data-space-before={view.spaceBefore}
           data-space-after={view.spaceAfter}
+          data-show-margins={view.showMargins}
           style={
             {
               "--wc-line": String(view.lineSpacing),

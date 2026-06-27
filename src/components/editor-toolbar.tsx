@@ -74,6 +74,21 @@ export function EditorToolbar({
   );
   const sizePx = Number.isFinite(currentSize) ? currentSize : 18;
   const inTable = editor.isActive("table");
+  const hasHeading = typeof cmds.toggleHeading === "function";
+  const headingLevel = editor.isActive("heading", { level: 1 })
+    ? 1
+    : editor.isActive("heading", { level: 2 })
+      ? 2
+      : editor.isActive("heading", { level: 3 })
+        ? 3
+        : 0;
+  const align: "left" | "center" | "right" | "justify" = editor.isActive({ textAlign: "center" })
+    ? "center"
+    : editor.isActive({ textAlign: "right" })
+      ? "right"
+      : editor.isActive({ textAlign: "justify" })
+        ? "justify"
+        : "left";
 
   function stepFontSize(delta: number) {
     const next = Math.min(96, Math.max(8, sizePx + delta));
@@ -165,10 +180,27 @@ export function EditorToolbar({
       <Btn label="U" title="Underline (⌘U)" active={editor.isActive("underline")} underline onClick={() => chain().toggleUnderline().run()} />
       <Btn label="S" title="Strikethrough" active={editor.isActive("strike")} strike onClick={() => chain().toggleStrike().run()} />
       <Divider />
-      <Btn label="H1" title="Heading 1" active={editor.isActive("heading", { level: 1 })} onClick={() => chain().toggleHeading({ level: 1 }).run()} />
-      <Btn label="H2" title="Heading 2" active={editor.isActive("heading", { level: 2 })} onClick={() => chain().toggleHeading({ level: 2 }).run()} />
-      <Btn label="H3" title="Heading 3" active={editor.isActive("heading", { level: 3 })} onClick={() => chain().toggleHeading({ level: 3 }).run()} />
-      <Divider />
+      {hasHeading && (
+        <>
+          <select
+            value={headingLevel}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const lvl = Number(e.target.value);
+              if (lvl === 0) chain().setParagraph().run();
+              else chain().toggleHeading({ level: lvl as 1 | 2 | 3 }).run();
+            }}
+            title="Paragraph style"
+            className="h-7 shrink-0 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 text-xs text-[var(--wc-ink)] focus:outline-none"
+          >
+            <option value={0}>Normal</option>
+            <option value={1}>Heading 1</option>
+            <option value={2}>Heading 2</option>
+            <option value={3}>Heading 3</option>
+          </select>
+          <Divider />
+        </>
+      )}
       <Btn label="•" title="Bullet list" active={editor.isActive("bulletList")} onClick={() => chain().toggleBulletList().run()} />
       <Btn label="1." title="Numbered list" active={editor.isActive("orderedList")} onClick={() => chain().toggleOrderedList().run()} />
       <Btn label="❝" title="Blockquote" active={editor.isActive("blockquote")} onClick={() => chain().toggleBlockquote().run()} />
@@ -183,10 +215,28 @@ export function EditorToolbar({
       {hasAlign && (
         <>
           <Divider />
-          <Btn label={<AlignIcon kind="left" />} title="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => chain().setTextAlign("left").run()} />
-          <Btn label={<AlignIcon kind="center" />} title="Align center" active={editor.isActive({ textAlign: "center" })} onClick={() => chain().setTextAlign("center").run()} />
-          <Btn label={<AlignIcon kind="right" />} title="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => chain().setTextAlign("right").run()} />
-          <Btn label={<AlignIcon kind="justify" />} title="Justify" active={editor.isActive({ textAlign: "justify" })} onClick={() => chain().setTextAlign("justify").run()} />
+          <div className="relative group/align shrink-0">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              title="Text alignment"
+              className="h-7 px-1.5 rounded inline-flex items-center gap-0.5 text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+            >
+              <AlignIcon kind={align} />
+              <Caret />
+            </button>
+            <div className="absolute left-0 top-full z-50 hidden group-hover/align:flex gap-0.5 rounded-md border border-[var(--wc-border)] bg-[var(--wc-surface)] p-0.5 shadow-lg">
+              {(["left", "center", "right", "justify"] as const).map((kind) => (
+                <Btn
+                  key={kind}
+                  label={<AlignIcon kind={kind} />}
+                  title={kind === "justify" ? "Justify" : `Align ${kind}`}
+                  active={align === kind}
+                  onClick={() => chain().setTextAlign(kind).run()}
+                />
+              ))}
+            </div>
+          </div>
         </>
       )}
 
@@ -452,4 +502,8 @@ function Btn({
 
 function Divider() {
   return <span className="w-px h-5 bg-[var(--wc-stone)] mx-1 shrink-0" />;
+}
+
+function Caret() {
+  return <span className="text-[8px] leading-none text-[var(--wc-faint)]">▼</span>;
 }
