@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
 import {
@@ -11,6 +11,7 @@ import {
   createChapter,
   mergeScene,
   renameChapter,
+  startFirstElement,
 } from "@/server/scenes";
 import { EditableTitle } from "@/components/editable-title";
 import { updateLooseSceneContent } from "@/server/loose";
@@ -18,8 +19,11 @@ import { updateExercise } from "@/server/prompts";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorToolbar } from "@/components/editor-toolbar";
+import { EditorViewOptions } from "@/components/editor-view-options";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { TypewriterMode } from "@/components/typewriter-mode";
+import { useEditorView } from "@/store/editor-view-store";
+import { termsFor } from "@/lib/project-forms";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -53,15 +57,18 @@ export type ManuscriptChapter = {
 export function ManuscriptReader({
   projectId,
   projectTitle,
+  form,
   chapters,
   looseScenes = [],
 }: {
   projectId: string;
   projectTitle: string;
+  form?: string;
   chapters: ManuscriptChapter[];
   looseScenes?: ManuscriptScene[];
 }) {
   const router = useRouter();
+  const view = useEditorView(projectId, form);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
@@ -162,17 +169,34 @@ export function ManuscriptReader({
         >
           ✶ Focus
         </button>
+        <EditorViewOptions view={view} />
         <span className="shrink-0 text-xs text-[var(--wc-faint)]">
           <SaveLabel status={status} savedAt={savedAt} />
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto py-10 px-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]">
+        <div
+          className={`wc-doc mx-auto ${
+            view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"
+          }`}
+          data-space-before={view.spaceBefore}
+          data-space-after={view.spaceAfter}
+          style={
+            {
+              "--wc-line": String(view.lineSpacing),
+              columnCount: view.columns > 1 ? view.columns : undefined,
+              columnGap: view.columns > 1 ? "2.75rem" : undefined,
+            } as CSSProperties
+          }
+        >
           {totalScenes === 0 && (
-            <p className="text-sm text-[var(--wc-faint)] text-center py-16">
-              Nothing to scroll yet, add chapters and scenes from the sidebar.
-            </p>
+            <DraftBlock
+              projectId={projectId}
+              form={form}
+              onEditor={setActiveEditor}
+              onCreated={() => router.refresh()}
+            />
           )}
           {chapters.map((chapter) => (
             <section key={chapter.id} className="mb-10">
@@ -231,6 +255,96 @@ export function ManuscriptReader({
           onRestore={(content) => remount(historyScene.id, content)}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * The blank writing surface shown for a brand-new, empty project. The writer can
+ * just start typing — the first real element is created on the fly once there are
+ * actual words, and the structure is synced into the sidebar when they click away.
+ */
+function DraftBlock({
+  projectId,
+  form,
+  onEditor,
+  onCreated,
+}: {
+  projectId: string;
+  form?: string;
+  onEditor: (editor: Editor | null) => void;
+  onCreated: () => void;
+}) {
+  const createdRef = useRef<string | null>(null);
+  const creatingRef = useRef(false);
+  const syncedRef = useRef(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hasText, setHasText] = useState(false);
+  const pieceLabel = termsFor(form).pieceSingular.toLowerCase();
+
+  const editor = useEditor(
+    {
+      extensions: RTE_EXTENSIONS,
+      content: { type: "doc", content: [{ type: "paragraph" }] },
+      immediatelyRender: false,
+      editorProps: {
+        attributes: {
+          class:
+            "prose prose-zinc max-w-none focus:outline-none font-serif text-lg leading-relaxed min-h-[45vh]",
+        },
+      },
+      onFocus: ({ editor }) => onEditor(editor),
+      onUpdate: ({ editor }) => {
+        const doc = editor.getJSON();
+        setHasText(countWords(doc) > 0);
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => void persist(doc), 700);
+      },
+    },
+    [],
+  );
+
+  async function persist(doc: unknown) {
+    if (!createdRef.current) {
+      if (creatingRef.current || countWords(doc) === 0) return;
+      creatingRef.current = true;
+      try {
+        const { sceneId } = await startFirstElement(projectId, doc);
+        createdRef.current = sceneId;
+      } catch {
+        creatingRef.current = false;
+      }
+      return;
+    }
+    await updateSceneContent(createdRef.current, doc).catch(() => {});
+  }
+
+  // Once a real element exists, flush any pending save and sync the structure
+  // (sidebar + scroll) when the writer moves focus away from the draft.
+  function handleBlur() {
+    if (!createdRef.current || !editor || syncedRef.current) return;
+    syncedRef.current = true;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    void updateSceneContent(createdRef.current, editor.getJSON())
+      .catch(() => {})
+      .finally(() => onCreated());
+  }
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  return (
+    <div className="relative" onBlur={handleBlur}>
+      {!hasText && (
+        <div className="pointer-events-none absolute left-0 top-0 select-none font-serif text-lg text-[var(--wc-faint)]">
+          Start typing to begin your {pieceLabel}…
+        </div>
+      )}
+      {editor && <TagBubbleMenu editor={editor} />}
+      <EditorContent editor={editor} />
     </div>
   );
 }

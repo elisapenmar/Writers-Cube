@@ -5,7 +5,20 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { snapshotScene } from "@/server/versions";
+import { asForm, FORM_TERMS } from "@/lib/project-forms";
 import type { ProjectTree, Chapter, Scene } from "@/lib/types";
+
+function docWords(doc: unknown): number {
+  let text = "";
+  const walk = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const node = n as { type?: string; text?: string; content?: unknown[] };
+    if (node.type === "text" && typeof node.text === "string") text += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc);
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
 
 const ACTIVE_PROJECT_COOKIE = "wc_active_project";
 
@@ -238,6 +251,63 @@ export async function createScene(chapterId: string) {
   if (error || !data) throw new Error(error?.message ?? "create scene failed");
   revalidatePath("/app", "layout");
   return data.id;
+}
+
+/**
+ * Type-to-create: the writer started typing in a brand-new (empty) project, so
+ * spin up the first element on the fly — a holding container plus the first
+ * piece carrying what they've typed — instead of making them click "add" first.
+ * Novels get "Chapter 1 / Scene 1"; flat forms get one piece (Poem/Story/…).
+ */
+export async function startFirstElement(
+  projectId: string,
+  doc: unknown,
+): Promise<{ sceneId: string }> {
+  const { supabase } = await requireUser();
+
+  const { data: proj } = await supabase
+    .from("projects")
+    .select("form")
+    .eq("id", projectId)
+    .maybeSingle();
+  const form = asForm(proj?.form);
+  const terms = FORM_TERMS[form];
+
+  // Reuse an existing container if one somehow exists; otherwise make it.
+  let { data: chapter } = await supabase
+    .from("chapters")
+    .select("id")
+    .eq("project_id", projectId)
+    .order("position", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!chapter) {
+    const chapterTitle = form === "novel" ? "Chapter 1" : "Pieces";
+    const { data: created, error } = await supabase
+      .from("chapters")
+      .insert({ project_id: projectId, title: chapterTitle, position: 0 })
+      .select("id")
+      .single();
+    if (error || !created) throw new Error(error?.message ?? "create container failed");
+    chapter = created;
+  }
+
+  const sceneTitle = form === "novel" ? "Scene 1" : `${terms.pieceSingular} 1`;
+  const { data: scene, error: sErr } = await supabase
+    .from("scenes")
+    .insert({
+      chapter_id: chapter.id as string,
+      title: sceneTitle,
+      position: 0,
+      content: doc ?? { type: "doc", content: [{ type: "paragraph" }] },
+      word_count: docWords(doc),
+    })
+    .select("id")
+    .single();
+  if (sErr || !scene) throw new Error(sErr?.message ?? "create first element failed");
+
+  revalidatePath("/app", "layout");
+  return { sceneId: scene.id as string };
 }
 
 /** Move an uncategorized item (loose scene or exercise) into a chapter as a scene. */

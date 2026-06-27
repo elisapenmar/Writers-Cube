@@ -51,6 +51,7 @@ export default async function ManuscriptPage() {
     <ManuscriptReader
       projectId={project.id}
       projectTitle={project.title}
+      form={project.form}
       chapters={chapters}
       looseScenes={looseScenes}
     />

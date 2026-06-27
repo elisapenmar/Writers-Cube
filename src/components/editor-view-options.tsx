@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useEditorView } from "@/store/editor-view-store";
+import type { EditorView } from "@/store/editor-view-store";
 
 const SPACINGS: { label: string; value: number }[] = [
   { label: "Single", value: 1 },
@@ -11,9 +11,9 @@ const SPACINGS: { label: string; value: number }[] = [
 ];
 
 /** Page format · line spacing · columns — the document-level view controls. */
-export function EditorViewOptions() {
+export function EditorViewOptions({ view }: { view: EditorView }) {
   const [open, setOpen] = useState(false);
-  const v = useEditorView();
+  const v = view;
 
   return (
     <div className="relative">

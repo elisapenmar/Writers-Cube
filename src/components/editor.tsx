@@ -239,7 +239,7 @@ export function Editor({ scene }: { scene: Scene }) {
           >
             History
           </button>
-          <EditorViewOptions />
+          <EditorViewOptions view={view} />
           <button
             onClick={() => setTypewriterOpen(true)}
             className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
