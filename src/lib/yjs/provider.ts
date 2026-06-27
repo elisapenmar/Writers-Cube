@@ -7,7 +7,7 @@ import {
 } from "y-protocols/awareness";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { loadSceneCrdt, saveSceneCrdt } from "@/server/crdt";
+import { loadCrdt, saveCrdt, type CrdtKind } from "@/server/crdt";
 
 function toB64(u8: Uint8Array): string {
   let s = "";
@@ -43,19 +43,21 @@ export class SupabaseYjsProvider {
 
   private channel: RealtimeChannel;
   private readonly remote = {}; // private origin marker for remote-applied updates
-  private readonly sceneId: string;
+  private readonly kind: CrdtKind;
+  private readonly id: string;
   private persistTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
   private resolveLoaded!: () => void;
 
-  constructor(sceneId: string, doc: Y.Doc, awareness: Awareness) {
-    this.sceneId = sceneId;
+  constructor(kind: CrdtKind, id: string, doc: Y.Doc, awareness: Awareness) {
+    this.kind = kind;
+    this.id = id;
     this.doc = doc;
     this.awareness = awareness;
     this.whenLoaded = new Promise((resolve) => (this.resolveLoaded = resolve));
 
     const supabase = createClient();
-    this.channel = supabase.channel(`crdt:${sceneId}`, {
+    this.channel = supabase.channel(`crdt:${kind}:${id}`, {
       config: { broadcast: { self: false } },
     });
 
@@ -86,7 +88,7 @@ export class SupabaseYjsProvider {
 
   private async init() {
     try {
-      const state = await loadSceneCrdt(this.sceneId);
+      const state = await loadCrdt(this.kind, this.id);
       if (state && !this.destroyed) Y.applyUpdate(this.doc, fromB64(state), this.remote);
     } catch {
       /* fall back to the JSONB blob the editor already loaded */
@@ -133,7 +135,7 @@ export class SupabaseYjsProvider {
 
   private async persist() {
     try {
-      await saveSceneCrdt(this.sceneId, toB64(Y.encodeStateAsUpdate(this.doc)));
+      await saveCrdt(this.kind, this.id, toB64(Y.encodeStateAsUpdate(this.doc)));
     } catch {
       /* snapshot is best-effort; the live channel + JSONB blob still hold state */
     }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Extensions } from "@tiptap/react";
 import type { SupabaseYjsProvider } from "./provider";
 import type { CollabUser } from "./collab-extensions";
+import type { CrdtKind } from "@/server/crdt";
 
 /** Live co-editing is opt-in: `?yjs=1` in the URL or localStorage.yjs_enabled. */
 export function yjsEnabled(): boolean {
@@ -31,11 +32,12 @@ type CollabState =
   | { mode: "ready"; extensions: Extensions; provider: SupabaseYjsProvider; user: CollabUser };
 
 /**
- * Sets up a Yjs co-editing session for one scene when the flag is on. Dynamically
- * imports the Yjs bundle so nothing loads when collaboration is off. Returns the
- * collab extension set + provider once connected; the editor binds to these.
+ * Sets up a Yjs co-editing session for one entity (a scene or loose scene) when
+ * the flag is on. Dynamically imports the Yjs bundle so nothing loads when
+ * collaboration is off. Returns the collab extension set + provider once
+ * connected; the editor binds to these.
  */
-export function useSceneCollab(sceneId: string): CollabState {
+export function useCollab(kind: CrdtKind, id: string): CollabState {
   const [state, setState] = useState<CollabState>(() => (yjsEnabled() ? { mode: "loading" } : { mode: "off" }));
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function useSceneCollab(sceneId: string): CollabState {
 
       doc = new Doc();
       const awareness = new Awareness(doc);
-      provider = new providerMod.SupabaseYjsProvider(sceneId, doc, awareness);
+      provider = new providerMod.SupabaseYjsProvider(kind, id, doc, awareness);
       // Wait for the durable snapshot to load before the editor mounts, so the
       // seed-if-empty check sees the real state (not a transient empty doc).
       await provider.whenLoaded;
@@ -87,7 +89,12 @@ export function useSceneCollab(sceneId: string): CollabState {
       provider?.destroy();
       doc?.destroy();
     };
-  }, [sceneId]);
+  }, [kind, id]);
 
   return state;
+}
+
+/** Convenience wrapper for the chapter-scene editors. */
+export function useSceneCollab(sceneId: string): CollabState {
+  return useCollab("scene", sceneId);
 }

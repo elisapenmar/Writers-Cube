@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Editor as TiptapEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
+import { useCollab } from "@/lib/yjs/use-collab";
 import {
   updateLooseSceneContent,
   renameLooseScene,
@@ -41,13 +42,33 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
   // CAS version token (see editor.tsx) — sent as the base on each save.
   const baseUpdatedAt = useRef<string | null>(scene.updated_at);
 
+  // Live co-editing (flag-gated); the Y.Doc is the source of truth when ready.
+  const collab = useCollab("loose_scene", scene.id);
+  const collabReady = collab.mode === "ready";
+
+  function seedCollabDoc(ed: TiptapEditor) {
+    if (collab.mode !== "ready") return;
+    const doc = collab.provider.doc;
+    const meta = doc.getMap("meta");
+    if (meta.get("seeded")) return;
+    const frag = doc.getXmlFragment("default");
+    const blob = scene.content as object | null;
+    if (frag.length === 0 && blob && countWords(blob) > 0) {
+      ed.commands.setContent(blob, { emitUpdate: true });
+    }
+    meta.set("seeded", true);
+  }
+
   const editor = useEditor(
     {
-      extensions: RTE_EXTENSIONS,
-      content: (scene.content as object | null) ?? {
-        type: "doc",
-        content: [{ type: "paragraph" }],
-      },
+      extensions: collabReady ? collab.extensions : RTE_EXTENSIONS,
+      content: collabReady
+        ? undefined
+        : (scene.content as object | null) ?? {
+            type: "doc",
+            content: [{ type: "paragraph" }],
+          },
+      editable: collab.mode !== "loading",
       immediatelyRender: false,
       editorProps: {
         attributes: {
@@ -55,6 +76,7 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
             "prose prose-zinc max-w-3xl mx-auto min-h-[60vh] focus:outline-none font-serif text-lg leading-relaxed",
         },
       },
+      onCreate: collabReady ? ({ editor }) => seedCollabDoc(editor) : undefined,
       onUpdate: ({ editor }) => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         setStatus("saving");
@@ -62,7 +84,7 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
         saveTimer.current = setTimeout(() => void save(doc), 800);
       },
     },
-    [scene.id],
+    [scene.id, collabReady],
   );
 
   async function save(doc: unknown) {

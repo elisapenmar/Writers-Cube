@@ -3,6 +3,14 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+/** Which durable CRDT store a doc lives in. Each kind has its own RLS. */
+export type CrdtKind = "scene" | "loose_scene";
+
+const TABLES: Record<CrdtKind, { table: string; key: string }> = {
+  scene: { table: "scene_crdt", key: "scene_id" },
+  loose_scene: { table: "loose_scene_crdt", key: "loose_scene_id" },
+};
+
 async function requireUser() {
   const supabase = await createClient();
   const {
@@ -12,29 +20,28 @@ async function requireUser() {
   return { supabase, user };
 }
 
-/** Load the latest encoded Y.Doc snapshot for a scene (base64), or null. */
-export async function loadSceneCrdt(sceneId: string): Promise<string | null> {
+/** Load the latest encoded Y.Doc snapshot (base64) for an entity, or null. */
+export async function loadCrdt(kind: CrdtKind, id: string): Promise<string | null> {
   const { supabase } = await requireUser();
+  const { table, key } = TABLES[kind];
   const { data, error } = await supabase
-    .from("scene_crdt")
+    .from(table)
     .select("state")
-    .eq("scene_id", sceneId)
+    .eq(key, id)
     .maybeSingle();
-  if (error) return null; // table missing / no access — fall back to blob
+  if (error) return null; // table missing / no access — fall back to the blob
   return (data?.state as string | undefined) ?? null;
 }
 
 /**
- * Persist a full-state Y.Doc snapshot for a scene. Last-write-wins is correct:
- * any client's snapshot is convergent, so applying any of them yields the merged
- * document. The scenes JSONB row remains the durable source of truth.
+ * Persist a full-state Y.Doc snapshot. Last-write-wins is correct: any client's
+ * snapshot is convergent, so applying any of them yields the merged document.
+ * The entity's JSONB content row remains the durable source of truth.
  */
-export async function saveSceneCrdt(sceneId: string, state: string): Promise<void> {
+export async function saveCrdt(kind: CrdtKind, id: string, state: string): Promise<void> {
   const { supabase } = await requireUser();
+  const { table, key } = TABLES[kind];
   await supabase
-    .from("scene_crdt")
-    .upsert(
-      { scene_id: sceneId, state, updated_at: new Date().toISOString() },
-      { onConflict: "scene_id" },
-    );
+    .from(table)
+    .upsert({ [key]: id, state, updated_at: new Date().toISOString() }, { onConflict: key });
 }
