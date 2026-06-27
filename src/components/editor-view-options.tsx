@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EditorView } from "@/store/editor-view-store";
+import { SpellingControls } from "@/components/spelling-controls";
 
 const SPACINGS: { label: string; value: number }[] = [
   { label: "Single", value: 1 },
@@ -72,6 +73,10 @@ export function EditorViewOptions({ view }: { view: EditorView }) {
                 value={String(v.columns)}
                 onChange={(val) => v.setColumns(Number(val))}
               />
+            </Group>
+
+            <Group label="Spelling">
+              <SpellingControls />
             </Group>
           </div>
         </>

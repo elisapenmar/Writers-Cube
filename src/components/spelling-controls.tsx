@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   onSpellChange,
   spellEnabled,
@@ -44,9 +44,15 @@ function DictionaryManager({ onClose }: { onClose: () => void }) {
   const [words, setWords] = useState<string[] | null>(null);
 
   // Make sure the account dictionary is loaded before listing it.
-  if (words === null) {
-    void ensureSpeller().finally(() => setWords(personalWords()));
-  }
+  useEffect(() => {
+    let alive = true;
+    void ensureSpeller().finally(() => {
+      if (alive) setWords(personalWords());
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function remove(word: string) {
     setWords((w) => (w ?? []).filter((x) => x !== word));
