@@ -155,7 +155,8 @@ export function ManuscriptReader({
       <div className="sticky top-0 z-20 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
         <EditorToolbar
           editor={activeEditor}
-          trailing={
+          view={view}
+          leading={
             <>
               <button
                 onClick={() => setFindOpen(true)}
@@ -182,10 +183,12 @@ export function ManuscriptReader({
                 ✶ Focus
               </button>
               <EditorViewOptions view={view} />
-              <span className="shrink-0 text-xs text-[var(--wc-faint)]">
-                <SaveLabel status={status} savedAt={savedAt} />
-              </span>
             </>
+          }
+          trailing={
+            <span className="shrink-0 text-xs text-[var(--wc-faint)]">
+              <SaveLabel status={status} savedAt={savedAt} />
+            </span>
           }
         />
       </div>

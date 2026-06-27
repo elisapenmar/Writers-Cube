@@ -4,8 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { RTE_FONTS } from "@/lib/rte-fonts";
 import { uploadRteImage } from "@/server/uploads";
+import type { EditorView } from "@/store/editor-view-store";
 
 const COLOR_SWATCHES = ["#111111", "#b91c1c", "#1d4ed8", "#15803d", "#b45309", "#7c3aed"];
+const LINE_SPACINGS: { label: string; value: number }[] = [
+  { label: "Single", value: 1 },
+  { label: "1.15", value: 1.15 },
+  { label: "1.5", value: 1.5 },
+  { label: "Double", value: 2 },
+];
 
 /**
  * Formatting toolbar bound to a TipTap editor. Re-renders on every editor
@@ -14,13 +21,19 @@ const COLOR_SWATCHES = ["#111111", "#b91c1c", "#1d4ed8", "#15803d", "#b45309", "
 export function EditorToolbar({
   editor,
   className = "",
+  leading,
   trailing,
+  view,
 }: {
   editor: Editor | null;
   className?: string;
-  /** Right-aligned actions (Find, History, …) folded into the same flex-wrap so
-   *  the whole bar wraps as one set and rows fill evenly on narrow widths. */
+  /** Actions placed right after undo/redo (Find, History, Focus, Page setup). */
+  leading?: React.ReactNode;
+  /** Right-aligned trailing slot (e.g. the save indicator), folded into the same
+   *  flex-wrap so the whole bar wraps as one set on narrow widths. */
   trailing?: React.ReactNode;
+  /** Document view settings; when present, a line-spacing dropdown is shown. */
+  view?: EditorView;
 }) {
   const [, force] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -40,9 +53,10 @@ export function EditorToolbar({
   // not be touched, editor.can()/isActive() throw on a torn-down view. Still
   // render the trailing actions so they don't vanish before a block is focused.
   if (!editor || editor.isDestroyed) {
-    return trailing ? (
+    return leading || trailing ? (
       <div className={`flex flex-wrap items-center gap-0.5 ${className}`}>
-        <div className="ml-auto flex items-center gap-2 shrink-0">{trailing}</div>
+        {leading && <div className="flex items-center gap-2 shrink-0">{leading}</div>}
+        {trailing && <div className="ml-auto flex items-center gap-2 shrink-0">{trailing}</div>}
       </div>
     ) : null;
   }
@@ -126,6 +140,12 @@ export function EditorToolbar({
     >
       <Btn label={<UndoIcon />} title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
       <Btn label={<RedoIcon />} title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
+      {leading && (
+        <>
+          <Divider />
+          <div className="flex items-center gap-2 shrink-0">{leading}</div>
+        </>
+      )}
       <Divider />
       {hasFont && (
         <>
@@ -193,7 +213,7 @@ export function EditorToolbar({
             title="Paragraph style"
             className="h-7 shrink-0 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 text-xs text-[var(--wc-ink)] focus:outline-none"
           >
-            <option value={0}>Normal</option>
+            <option value={0}>Paragraph</option>
             <option value={1}>Heading 1</option>
             <option value={2}>Heading 2</option>
             <option value={3}>Heading 3</option>
@@ -237,6 +257,13 @@ export function EditorToolbar({
               ))}
             </div>
           </div>
+        </>
+      )}
+
+      {view && (
+        <>
+          <Divider />
+          <LineSpacingMenu view={view} />
         </>
       )}
 
@@ -506,4 +533,64 @@ function Divider() {
 
 function Caret() {
   return <span className="text-[8px] leading-none text-[var(--wc-faint)]">▼</span>;
+}
+
+function LineSpacingMenu({ view }: { view: EditorView }) {
+  return (
+    <div className="relative group/ls shrink-0">
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        title="Line spacing"
+        className="h-7 px-1.5 rounded inline-flex items-center gap-0.5 text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+      >
+        <LineSpacingIcon />
+        <Caret />
+      </button>
+      <div className="absolute left-0 top-full z-50 hidden group-hover/ls:flex flex-col gap-1.5 rounded-md border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1.5 shadow-lg w-44">
+        <div className="grid grid-cols-4 gap-1">
+          {LINE_SPACINGS.map((sp) => (
+            <button
+              key={sp.value}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => view.setLineSpacing(sp.value)}
+              className={`rounded px-1 py-1 text-xs ${
+                view.lineSpacing === sp.value
+                  ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
+                  : "text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+              }`}
+            >
+              {sp.label}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-1.5 text-xs text-[var(--wc-muted)]">
+          Custom
+          <input
+            type="number"
+            min={1}
+            max={4}
+            step={0.05}
+            value={view.lineSpacing}
+            onChange={(e) => {
+              const n = parseFloat(e.target.value);
+              if (Number.isFinite(n)) view.setLineSpacing(Math.min(4, Math.max(1, n)));
+            }}
+            className="w-14 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 py-0.5 text-xs text-[var(--wc-ink)] focus:outline-none"
+          />
+          <span className="text-[var(--wc-faint)]">×</span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function LineSpacingIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 6h12M9 12h12M9 18h12" />
+      <path d="M4 4v16M4 4 2 6M4 4l2 2M4 20l-2-2M4 20l2-2" />
+    </svg>
+  );
 }

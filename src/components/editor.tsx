@@ -373,7 +373,7 @@ export function Editor({ scene }: { scene: Scene }) {
       )}
 
       <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
-        <EditorToolbar editor={editor} />
+        <EditorToolbar editor={editor} view={view} />
       </div>
 
       {typewriterOpen && (
