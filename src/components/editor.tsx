@@ -1,11 +1,12 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Editor as TiptapEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Scene } from "@/lib/types";
 import { updateSceneContent, splitScene, splitSceneAt, mergeScene } from "@/server/scenes";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
+import { useSceneCollab } from "@/lib/yjs/use-collab";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
@@ -36,13 +37,36 @@ export function Editor({ scene }: { scene: Scene }) {
   const router = useRouter();
   const view = useEditorView();
 
+  // Live co-editing (flag-gated). When ready, the Y.Doc is the source of truth
+  // and Collaboration owns content/history; otherwise the classic blob editor.
+  const collab = useSceneCollab(scene.id);
+  const collabReady = collab.mode === "ready";
+
+  // Seed a fresh (never-edited) shared doc from the existing scene blob, exactly
+  // once, guarded by a meta flag that converges across clients.
+  function seedCollabDoc(ed: TiptapEditor) {
+    if (collab.mode !== "ready") return;
+    const doc = collab.provider.doc;
+    const meta = doc.getMap("meta");
+    if (meta.get("seeded")) return;
+    const frag = doc.getXmlFragment("default");
+    const blob = scene.content as object | null;
+    if (frag.length === 0 && blob && countWords(blob) > 0) {
+      ed.commands.setContent(blob, { emitUpdate: true });
+    }
+    meta.set("seeded", true);
+  }
+
   const editor = useEditor(
     {
-      extensions: RTE_EXTENSIONS,
-      content: (scene.content as object | null) ?? {
-        type: "doc",
-        content: [{ type: "paragraph" }],
-      },
+      extensions: collabReady ? collab.extensions : RTE_EXTENSIONS,
+      content: collabReady
+        ? undefined
+        : (scene.content as object | null) ?? {
+            type: "doc",
+            content: [{ type: "paragraph" }],
+          },
+      editable: collab.mode !== "loading",
       immediatelyRender: false,
       editorProps: {
         attributes: {
@@ -50,6 +74,7 @@ export function Editor({ scene }: { scene: Scene }) {
           class: "prose prose-zinc max-w-none min-h-[60vh] focus:outline-none font-serif text-lg",
         },
       },
+      onCreate: collabReady ? ({ editor }) => seedCollabDoc(editor) : undefined,
       onUpdate: ({ editor }) => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         setStatus("saving");
@@ -59,7 +84,7 @@ export function Editor({ scene }: { scene: Scene }) {
         }, 800);
       },
     },
-    [scene.id],
+    [scene.id, collabReady],
   );
 
   async function save(doc: unknown) {
