@@ -281,6 +281,25 @@ export function EditorToolbar({
         </>
       )}
 
+      {view?.pageFormat === "paged" && (
+        <>
+          <Divider />
+          <select
+            value={view.pageZoom}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => view.setPageZoom(Number(e.target.value))}
+            title="Page zoom"
+            className="h-7 shrink-0 rounded border border-[var(--wc-border-strong)] bg-[var(--wc-surface)] px-1.5 text-xs text-[var(--wc-ink)] focus:outline-none"
+          >
+            {[0.5, 0.75, 0.9, 1, 1.25, 1.5, 2].map((z) => (
+              <option key={z} value={z}>
+                {Math.round(z * 100)}%
+              </option>
+            ))}
+          </select>
+        </>
+      )}
+
       {hasColumns && (
         <div className="relative group/cols shrink-0">
           <button

@@ -566,9 +566,11 @@ body {
    Works the same in the single-scene editor and the multi-scene Scroll view. */
 .wc-doc-paged {
   --wc-page-h: 11in;
-  width: min(8.5in, 100%);
+  --wc-margin-l: 1in;
+  --wc-margin-r: 1in;
+  width: 8.5in;
   margin: 0 auto;
-  padding: 1in;
+  padding: 1in var(--wc-margin-r) 1in var(--wc-margin-l);
   border-radius: 2px;
   box-shadow: var(--wc-shadow-md);
   background-color: var(--wc-surface);
@@ -584,17 +586,50 @@ body {
   );
 }
 
-/* Margin guides: a dashed rule at the 1in text boundary of the paged sheet, so
-   the writer can see the printable area. Only meaningful in paged mode. */
-.wc-doc-paged[data-show-margins="true"] { position: relative; }
-.wc-doc-paged[data-show-margins="true"]::before {
-  content: "";
-  position: absolute;
-  inset: 1in;
-  border: 1px dashed rgba(51, 48, 58, 0.28);
-  pointer-events: none;
-  z-index: 0;
+/* Page zoom wrapper: CSS `zoom` scales the ruler + sheet together and reflows so
+   the scroll area stays correct. Width is the page so it centres in the scroll. */
+.wc-page-zoom { width: max-content; margin: 0 auto; }
+
+/* Ruler: a horizontal inch scale above the paged sheet with draggable margin
+   markers. Matches the 8.5in page width so marker positions map to real inches. */
+.wc-ruler {
+  position: relative;
+  width: 8.5in;
+  height: 22px;
+  margin: 0 auto 6px;
+  background: var(--wc-surface);
+  border-radius: 2px;
+  box-shadow: var(--wc-shadow-md);
+  user-select: none;
 }
+.wc-ruler-track {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(1in - 1px),
+    rgba(51, 48, 58, 0.25) calc(1in - 1px),
+    rgba(51, 48, 58, 0.25) 1in
+  );
+}
+/* The printable area (inside the margins) reads lighter than the margins. */
+.wc-ruler-page {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(51, 48, 58, 0.06);
+}
+.wc-ruler-marker {
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 18px;
+  margin-left: -8px;
+  cursor: ew-resize;
+  color: var(--wc-slate);
+}
+.wc-ruler-marker svg { display: block; }
 
 /* Columns applied to a selection of text (the `columns` node). column-count is
    set inline per node; this adds the gap + a little breathing room. */

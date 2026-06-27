@@ -10,6 +10,7 @@ import { useSceneCollab } from "@/lib/yjs/use-collab";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
+import { PageRuler } from "@/components/page-ruler";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorViewOptions } from "@/components/editor-view-options";
@@ -402,19 +403,34 @@ export function Editor({ scene }: { scene: Scene }) {
         onContextMenu={onContextMenu}
       >
         {editor && <TagBubbleMenu editor={editor} />}
-        <div
-          className={`wc-doc ${view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"}`}
-          data-space-before={view.spaceBefore}
-          data-space-after={view.spaceAfter}
-          data-show-margins={view.showMargins}
-          style={
-            {
-              "--wc-line": String(view.lineSpacing),
-            } as React.CSSProperties
-          }
-        >
-          <EditorContent editor={editor} />
-        </div>
+        {view.pageFormat === "paged" ? (
+          <div className="wc-page-zoom" style={{ zoom: view.pageZoom } as React.CSSProperties}>
+            <PageRuler view={view} />
+            <div
+              className="wc-doc wc-doc-paged"
+              data-space-before={view.spaceBefore}
+              data-space-after={view.spaceAfter}
+              style={
+                {
+                  "--wc-line": String(view.lineSpacing),
+                  "--wc-margin-l": `${view.marginLeft}in`,
+                  "--wc-margin-r": `${view.marginRight}in`,
+                } as React.CSSProperties
+              }
+            >
+              <EditorContent editor={editor} />
+            </div>
+          </div>
+        ) : (
+          <div
+            className="wc-doc wc-doc-pageless"
+            data-space-before={view.spaceBefore}
+            data-space-after={view.spaceAfter}
+            style={{ "--wc-line": String(view.lineSpacing) } as React.CSSProperties}
+          >
+            <EditorContent editor={editor} />
+          </div>
+        )}
       </div>
 
       {ctxMenu && (

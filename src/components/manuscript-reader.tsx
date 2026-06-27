@@ -21,6 +21,7 @@ import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { EditorViewOptions } from "@/components/editor-view-options";
+import { PageRuler } from "@/components/page-ruler";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { useEditorView } from "@/store/editor-view-store";
@@ -199,18 +200,28 @@ export function ManuscriptReader({
 
       <div className="flex-1 overflow-auto px-4 sm:px-8 py-10 bg-[var(--wc-page)]">
         <div
-          className={`wc-doc mx-auto ${
-            view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"
-          }`}
-          data-space-before={view.spaceBefore}
-          data-space-after={view.spaceAfter}
-          data-show-margins={view.showMargins}
+          className={view.pageFormat === "paged" ? "wc-page-zoom" : ""}
           style={
-            {
-              "--wc-line": String(view.lineSpacing),
-            } as CSSProperties
+            view.pageFormat === "paged"
+              ? ({ zoom: view.pageZoom } as CSSProperties)
+              : undefined
           }
         >
+          {view.pageFormat === "paged" && <PageRuler view={view} />}
+          <div
+            className={`wc-doc ${
+              view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"
+            }`}
+            data-space-before={view.spaceBefore}
+            data-space-after={view.spaceAfter}
+            style={
+              {
+                "--wc-line": String(view.lineSpacing),
+                "--wc-margin-l": `${view.marginLeft}in`,
+                "--wc-margin-r": `${view.marginRight}in`,
+              } as CSSProperties
+            }
+          >
           {totalScenes === 0 && (
             <DraftBlock
               projectId={projectId}
@@ -248,6 +259,7 @@ export function ManuscriptReader({
               {looseScenes.map(renderScene)}
             </section>
           )}
+          </div>
         </div>
       </div>
 

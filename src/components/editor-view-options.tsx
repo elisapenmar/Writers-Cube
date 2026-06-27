@@ -53,16 +53,9 @@ export function EditorViewOptions({
             </Group>
 
             <Group label="Margins">
-              <label className="flex items-center gap-2 text-xs text-[var(--wc-muted)]">
-                <input
-                  type="checkbox"
-                  checked={v.showMargins}
-                  onChange={(e) => v.setShowMargins(e.target.checked)}
-                />
-                Show margin guides
-              </label>
-              <p className="mt-1 text-[10px] text-[var(--wc-faint)]">
-                Dashed 1in boundary, shown in Paged view.
+              <p className="text-[11px] text-[var(--wc-muted)]">
+                In Paged view, drag the markers on the ruler above the page to set
+                the left and right margins.
               </p>
             </Group>
 

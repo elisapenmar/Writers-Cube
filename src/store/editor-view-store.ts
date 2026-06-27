@@ -13,8 +13,12 @@ type ViewValues = {
   spaceAfter: boolean;
   /** Column count: 1, 2, or 3. */
   columns: number;
-  /** Show dashed margin guides on the paged sheet. */
-  showMargins: boolean;
+  /** Page zoom multiplier for the paged sheet (1 = 100%). */
+  pageZoom: number;
+  /** Left page margin, in inches (paged view; set via the ruler). */
+  marginLeft: number;
+  /** Right page margin, in inches (paged view; set via the ruler). */
+  marginRight: number;
 };
 
 export type EditorView = ViewValues & {
@@ -23,7 +27,9 @@ export type EditorView = ViewValues & {
   setSpaceBefore: (v: boolean) => void;
   setSpaceAfter: (v: boolean) => void;
   setColumns: (v: number) => void;
-  setShowMargins: (v: boolean) => void;
+  setPageZoom: (v: number) => void;
+  setMarginLeft: (v: number) => void;
+  setMarginRight: (v: number) => void;
 };
 
 /** Per-form defaults: novels read as a continuous manuscript (pageless);
@@ -36,7 +42,9 @@ function defaultsFor(form?: string): ViewValues {
     spaceBefore: false,
     spaceAfter: false,
     columns: 1,
-    showMargins: false,
+    pageZoom: 1,
+    marginLeft: 1,
+    marginRight: 1,
   };
 }
 
@@ -77,6 +85,8 @@ export function useEditorView(projectId = "_global", form?: string): EditorView 
     setSpaceBefore: (spaceBefore) => patch(projectId, { spaceBefore }),
     setSpaceAfter: (spaceAfter) => patch(projectId, { spaceAfter }),
     setColumns: (columns) => patch(projectId, { columns }),
-    setShowMargins: (showMargins) => patch(projectId, { showMargins }),
+    setPageZoom: (pageZoom) => patch(projectId, { pageZoom }),
+    setMarginLeft: (marginLeft) => patch(projectId, { marginLeft }),
+    setMarginRight: (marginRight) => patch(projectId, { marginRight }),
   };
 }
