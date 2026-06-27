@@ -50,16 +50,18 @@ export function useCollab(kind: CrdtKind | null, id: string): CollabState {
   );
 
   useEffect(() => {
-    if (!yjsEnabled() || !kind) {
-      setState({ mode: "off" });
-      return;
-    }
-    setState({ mode: "loading" });
     let provider: SupabaseYjsProvider | null = null;
     let doc: import("yjs").Doc | null = null;
     let cancelled = false;
 
     (async () => {
+      // State transitions live inside the async setup (not the synchronous effect
+      // body) so a re-run on (kind,id) change doesn't cascade renders.
+      if (!yjsEnabled() || !kind) {
+        setState({ mode: "off" });
+        return;
+      }
+      setState({ mode: "loading" });
       const [{ Doc }, { Awareness }, providerMod, extMod, { createClient }] = await Promise.all([
         import("yjs"),
         import("y-protocols/awareness"),
