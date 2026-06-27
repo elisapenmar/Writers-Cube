@@ -50,6 +50,7 @@ export function EditorToolbar({
   const hasColor = typeof cmds.setColor === "function";
   const hasTable = typeof cmds.insertTable === "function";
   const hasImage = typeof cmds.setImage === "function";
+  const hasFootnote = typeof cmds.addFootnote === "function";
   const hasFontSize = typeof cmds.setFontSize === "function";
   const hasAlign = typeof cmds.setTextAlign === "function";
   const hasHighlight = typeof cmds.toggleHighlight === "function";
@@ -265,6 +266,15 @@ export function EditorToolbar({
             onClick={() => fileRef.current?.click()}
           />
         </>
+      )}
+
+      {hasFootnote && (
+        <Btn
+          label={<sup className="text-[10px]">fn</sup>}
+          title="Insert footnote"
+          active={false}
+          onClick={() => chain().addFootnote().run()}
+        />
       )}
 
       {hasTable && (

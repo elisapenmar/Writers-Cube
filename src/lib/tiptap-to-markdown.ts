@@ -23,10 +23,40 @@ function renderText(node: Node): string {
   return text;
 }
 
+/** Footnote id → number, in document order, for the current serialization. */
+let mdFnMap: Map<string, number> = new Map();
+
+function footnoteNumbersMd(content: Node[] | undefined): Map<string, number> {
+  const map = new Map<string, number>();
+  let n = 0;
+  const walk = (nodes: Node[] | undefined) => {
+    for (const node of nodes ?? []) {
+      if (node.type === "footnotes") continue;
+      if (node.type === "footnoteRef") {
+        const id = String(node.attrs?.id ?? "");
+        if (id && !map.has(id)) {
+          n += 1;
+          map.set(id, n);
+        }
+      } else if (node.content) {
+        walk(node.content);
+      }
+    }
+  };
+  walk(content);
+  return map;
+}
+
 function renderNode(node: Node, depth = 0): string {
   switch (node.type) {
     case "doc":
-      return (node.content ?? []).map((n) => renderNode(n)).join("\n\n").trim() + "\n";
+      return (
+        (node.content ?? [])
+          .filter((n) => n.type !== "footnotes")
+          .map((n) => renderNode(n))
+          .join("\n\n")
+          .trim() + "\n"
+      );
     case "paragraph":
       return (node.content ?? []).map(renderInline).join("");
     case "heading": {
@@ -67,10 +97,28 @@ function renderNode(node: Node, depth = 0): string {
 function renderInline(node: Node): string {
   if (node.type === "text") return renderText(node);
   if (node.type === "hardBreak") return "  \n";
+  if (node.type === "footnoteRef") {
+    const num = mdFnMap.get(String(node.attrs?.id ?? ""));
+    return num ? `[^${num}]` : "";
+  }
   return (node.content ?? []).map(renderInline).join("");
 }
 
 export function tiptapToMarkdown(doc: unknown): string {
   if (!doc || typeof doc !== "object") return "";
-  return renderNode(doc as Node);
+  const d = doc as Node;
+  mdFnMap = footnoteNumbersMd(d.content);
+  const body = renderNode(d);
+  const defs: string[] = [];
+  for (const node of d.content ?? []) {
+    if (node.type !== "footnotes") continue;
+    for (const note of node.content ?? []) {
+      const num = mdFnMap.get(String(note.attrs?.id ?? ""));
+      if (!num) continue;
+      const text = (note.content ?? []).map(renderInline).join(" ").trim();
+      defs.push(`[^${num}]: ${text}`);
+    }
+  }
+  mdFnMap = new Map();
+  return defs.length ? `${body}\n${defs.join("\n")}\n` : body;
 }

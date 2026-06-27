@@ -38,6 +38,7 @@ import { EditableTitle } from "@/components/editable-title";
 import { ProjectFormPill } from "@/components/project-form-pill";
 import { createLooseScene } from "@/server/loose";
 import { useOrganize } from "@/store/organize-store";
+import { useEditorView } from "@/store/editor-view-store";
 import { SidebarToggle, CubeMark } from "@/components/icons";
 
 export type UncategorizedItem = {
@@ -195,7 +196,11 @@ export function SideNav({
         <span className="text-[10px] uppercase tracking-widest text-[var(--wc-faint)]">
           {terms.flatHeader}
         </span>
-        <SceneScrollToggle firstSceneId={firstSceneId} />
+        <SceneScrollToggle
+          firstSceneId={firstSceneId}
+          projectId={project.id}
+          form={project.form}
+        />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
@@ -359,34 +364,83 @@ export function SideNav({
   );
 }
 
-function SceneScrollToggle({ firstSceneId }: { firstSceneId?: string }) {
+function SceneScrollToggle({
+  firstSceneId,
+  projectId,
+  form,
+}: {
+  firstSceneId?: string;
+  projectId: string;
+  form: string;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
+  const view = useEditorView(projectId, form);
+  const [open, setOpen] = useState(false);
   const scrollActive = pathname === "/app/manuscript";
   const scenesHref = firstSceneId ? `/app/scene/${firstSceneId}` : "/app/write";
+
+  function choose(fmt: "pageless" | "paged") {
+    view.setPageFormat(fmt);
+    setOpen(false);
+    if (!scrollActive) router.push("/app/manuscript");
+  }
+
   return (
-    <div data-tour="view-toggle" className="flex items-center rounded-md border border-[var(--wc-border)] overflow-hidden text-[11px]">
-      <Link
-        href={scenesHref}
-        className={`px-2 py-0.5 ${
-          !scrollActive
-            ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
-            : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
-        }`}
-        title="Edit one scene at a time"
+    <div className="relative">
+      <div
+        data-tour="view-toggle"
+        className="flex items-center rounded-md border border-[var(--wc-border)] overflow-hidden text-[11px]"
       >
-        Scenes
-      </Link>
-      <Link
-        href="/app/manuscript"
-        className={`px-2 py-0.5 border-l border-[var(--wc-border)] ${
-          scrollActive
-            ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
-            : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
-        }`}
-        title="Scroll the whole manuscript"
-      >
-        Scroll
-      </Link>
+        <Link
+          href={scenesHref}
+          className={`px-2 py-0.5 ${
+            !scrollActive
+              ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
+              : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+          }`}
+          title="Edit one scene at a time"
+        >
+          Scenes
+        </Link>
+        <button
+          type="button"
+          onClick={() => {
+            if (!scrollActive) router.push("/app/manuscript");
+            setOpen((o) => !o);
+          }}
+          className={`flex items-center gap-1 border-l border-[var(--wc-border)] px-2 py-0.5 ${
+            scrollActive
+              ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
+              : "bg-[var(--wc-surface)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+          }`}
+          title="Scroll the whole manuscript — choose paged or pageless"
+        >
+          Scroll
+          <span className="text-[8px] leading-none">▾</span>
+        </button>
+      </div>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-50 mt-1 w-36 rounded-md border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-[11px] shadow-[var(--wc-shadow-md)]">
+            {(["pageless", "paged"] as const).map((fmt) => (
+              <button
+                key={fmt}
+                onClick={() => choose(fmt)}
+                className={`flex w-full items-center justify-between rounded px-2 py-1 text-left ${
+                  view.pageFormat === fmt
+                    ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
+                    : "text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+                }`}
+              >
+                {fmt === "pageless" ? "Pageless" : "Paged"}
+                {view.pageFormat === fmt && <span>✓</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

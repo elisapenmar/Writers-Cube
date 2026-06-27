@@ -10,6 +10,7 @@ import {
   TableRow,
   TableCell,
   WidthType,
+  FootnoteReferenceRun,
 } from "docx";
 import { fetchImageBytes, imageSize } from "@/lib/image-bytes";
 import { tiptapToMarkdown } from "@/lib/tiptap-to-markdown";
@@ -43,30 +44,77 @@ export const EXPORT_FORMATS: { id: ExportFormat; label: string; ext: string; not
   { id: "html", label: "Web page (.html)", ext: "html", note: "Open in a browser, then print → PDF" },
 ];
 
-/** Pull plain-text paragraphs from a TipTap doc (paragraphs & headings). */
+/** Number every footnote reference by document order, returning id → number. The
+ *  footnotes list itself is skipped so only body references drive the numbering. */
+function footnoteNumbers(content: unknown[] | undefined): Map<string, number> {
+  const map = new Map<string, number>();
+  let n = 0;
+  const walk = (nodes: unknown[] | undefined) => {
+    for (const node of nodes ?? []) {
+      const x = node as RNode;
+      if (x.type === "footnotes") continue;
+      if (x.type === "footnoteRef") {
+        const id = String(x.attrs?.id ?? "");
+        if (id && !map.has(id)) {
+          n += 1;
+          map.set(id, n);
+        }
+      } else if (x.content) {
+        walk(x.content as unknown[]);
+      }
+    }
+  };
+  walk(content);
+  return map;
+}
+
+/** The note nodes inside a document's footnotes list (empty if there are none). */
+function footnotesList(content: unknown[] | undefined): RNode[] {
+  for (const node of content ?? []) {
+    const x = node as RNode;
+    if (x.type === "footnotes") return (x.content ?? []) as RNode[];
+  }
+  return [];
+}
+
+/** Pull plain-text paragraphs from a TipTap doc (paragraphs & headings).
+ *  Footnote references become `[n]` markers and the notes are appended at the end
+ *  so plain-text formats (md, txt, html, epub) keep them. */
 export function tiptapToParagraphs(doc: unknown): string[] {
   const out: string[] = [];
   const node = doc as { type?: string; content?: unknown[] } | null;
   if (!node?.content) return out;
+  const fns = footnoteNumbers(node.content);
   for (const block of node.content) {
     const b = block as { type?: string; content?: unknown[] };
     if (b.type === "paragraph" || b.type === "heading" || b.type === "blockquote") {
-      const text = inlineText(b);
+      const text = inlineText(b, fns);
       if (text.trim()) out.push(text);
     } else if (b.type === "bulletList" || b.type === "orderedList") {
       for (const li of b.content ?? []) {
-        const text = inlineText(li as { content?: unknown[] });
+        const text = inlineText(li as RNode, fns);
         if (text.trim()) out.push("• " + text);
       }
     }
   }
+  const notes = footnotesList(node.content);
+  for (const note of notes) {
+    const num = fns.get(String(note.attrs?.id ?? ""));
+    if (!num) continue;
+    const text = inlineText(note, fns).trim();
+    out.push(`[${num}] ${text}`);
+  }
   return out;
 }
 
-function inlineText(node: { content?: unknown[]; text?: string; type?: string }): string {
+function inlineText(node: RNode, fns?: Map<string, number>): string {
   if (node.type === "text") return node.text ?? "";
+  if (node.type === "footnoteRef") {
+    const num = fns?.get(String(node.attrs?.id ?? ""));
+    return num ? `[${num}]` : "";
+  }
   let s = "";
-  for (const c of node.content ?? []) s += inlineText(c as { content?: unknown[]; text?: string; type?: string });
+  for (const c of node.content ?? []) s += inlineText(c as RNode, fns);
   return s;
 }
 
@@ -82,8 +130,18 @@ type RNode = {
   marks?: { type?: string; attrs?: Record<string, unknown> }[];
 };
 
+/** Set by tiptapToHtml so the inline/block renderers can number footnotes
+ *  consistently within a single document. */
+let htmlFnMap: Map<string, number> = new Map();
+
 function renderInlineHtml(node: unknown): string {
   const n = node as RNode;
+  if (n.type === "footnoteRef") {
+    const id = String(n.attrs?.id ?? "");
+    const num = htmlFnMap.get(id);
+    if (!num) return "";
+    return `<sup class="wc-fn-ref"><a href="#fn-${escHtml(id)}" id="fnref-${escHtml(id)}">${num}</a></sup>`;
+  }
   if (n.type === "text") {
     let t = escHtml(n.text ?? "");
     for (const mk of n.marks ?? []) {
@@ -145,16 +203,26 @@ function renderBlockHtml(block: unknown): string {
       return `<th>${kids()}</th>`;
     case "tableCell":
       return `<td>${kids()}</td>`;
+    case "footnotes":
+      return `<section class="wc-fn"><hr/><ol>${kids()}</ol></section>`;
+    case "footnote": {
+      const id = String(b.attrs?.id ?? "");
+      return `<li id="fn-${escHtml(id)}">${kids()} <a class="wc-fn-back" href="#fnref-${escHtml(id)}">↩</a></li>`;
+    }
     default:
       return (b.content ?? []).map(renderBlockHtml).join("");
   }
 }
 
-/** Render a TipTap doc to HTML, preserving lists, images, tables, colors & marks. */
+/** Render a TipTap doc to HTML, preserving lists, images, tables, colors, marks
+ *  & footnotes. */
 export function tiptapToHtml(doc: unknown): string {
   const node = doc as { content?: unknown[] } | null;
   if (!node?.content) return "";
-  return node.content.map(renderBlockHtml).join("\n");
+  htmlFnMap = footnoteNumbers(node.content);
+  const html = node.content.map(renderBlockHtml).join("\n");
+  htmlFnMap = new Map();
+  return html;
 }
 
 export function safeName(s: string) {
@@ -325,6 +393,13 @@ export function renderPrintHtml(m: Manuscript, s: PublishSettings): string {
   th, td { border: 1px solid #999; padding: 0.35em 0.5em; text-align: left; vertical-align: top; }
   th { background: #f0eee9; font-weight: 600; }
   table p { text-indent: 0; margin: 0; }
+  sup.wc-fn-ref a { text-decoration: none; color: inherit; }
+  .wc-fn { margin-top: 2em; font-size: 0.85em; text-indent: 0; page-break-inside: avoid; }
+  .wc-fn hr { border: 0; border-top: 1px solid #bbb; width: 30%; margin: 0 0 0.6em; }
+  .wc-fn ol { margin: 0; padding-left: 1.4em; }
+  .wc-fn li { text-indent: 0; margin: 0.2em 0; }
+  .wc-fn li p { text-indent: 0; display: inline; }
+  .wc-fn-back { text-decoration: none; margin-left: 0.4em; }
   /* Screen-only helper bar; hidden when printing/saving to PDF. */
   .pdf-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 0.75rem; justify-content: center; padding: 0.6rem; background: #33303a; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.85rem; z-index: 9999; }
   .pdf-bar button { background: #fff; color: #33303a; border: 0; border-radius: 8px; padding: 0.4rem 0.9rem; font-size: 0.85rem; cursor: pointer; }
@@ -360,6 +435,8 @@ type DocxOpts = {
   afterPara?: number;
   firstLine?: number;
   italics?: boolean;
+  /** Book-wide footnote id → number, so references become real Word footnotes. */
+  fnMap?: Map<string, number>;
 };
 
 function alignFor(
@@ -379,10 +456,18 @@ function alignFor(
   }
 }
 
-function runsFromInline(content: unknown[] | undefined, o: DocxOpts): TextRun[] {
-  const runs: TextRun[] = [];
+function runsFromInline(
+  content: unknown[] | undefined,
+  o: DocxOpts,
+): (TextRun | FootnoteReferenceRun)[] {
+  const runs: (TextRun | FootnoteReferenceRun)[] = [];
   for (const c of content ?? []) {
     const n = c as RNode;
+    if (n.type === "footnoteRef") {
+      const num = o.fnMap?.get(String(n.attrs?.id ?? ""));
+      if (num) runs.push(new FootnoteReferenceRun(num));
+      continue;
+    }
     if (n.type === "text") {
       const marks = n.marks ?? [];
       const colorMark = marks.find((mk) => mk.type === "textStyle" && mk.attrs?.color);
@@ -437,6 +522,8 @@ async function docxBlocks(nodes: unknown[] | undefined, o: DocxOpts): Promise<(P
   const out: (Paragraph | Table)[] = [];
   for (const node of nodes ?? []) {
     const b = node as RNode;
+    // The notes list is emitted as real Word footnotes, not inline content.
+    if (b.type === "footnotes") continue;
     if (b.type === "paragraph") {
       out.push(
         new Paragraph({
@@ -530,6 +617,34 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
   const afterPara = s && s.paragraphStyle === "spaced" ? 160 : undefined;
   const align = s && s.justify ? AlignmentType.JUSTIFIED : undefined;
   const sceneBreak = s?.sceneBreak ?? "* * *";
+
+  // Pre-pass: number every footnote across the manuscript (book-wide, continuous)
+  // and build the Word footnote definitions, so references resolve to real
+  // foot-of-page notes.
+  const fnMap = new Map<string, number>();
+  const fnDefs: Record<number, { children: Paragraph[] }> = {};
+  const fnOpts: DocxOpts = { font: fontName, size: sizeHalfPt, lineSpacing };
+  let fnBase = 0;
+  for (const ch of m.chapters) {
+    for (const sc of ch.scenes) {
+      const content = (sc.doc as { content?: unknown[] } | null)?.content;
+      if (!content) continue;
+      const sceneMap = footnoteNumbers(content); // scene-local 1..k
+      for (const [id, local] of sceneMap) fnMap.set(id, fnBase + local);
+      for (const note of footnotesList(content)) {
+        const local = sceneMap.get(String(note.attrs?.id ?? ""));
+        if (!local) continue;
+        const paras = (note.content ?? []).map(
+          (blk) =>
+            new Paragraph({ children: runsFromInline((blk as RNode).content, fnOpts) }),
+        );
+        fnDefs[fnBase + local] = {
+          children: paras.length ? paras : [new Paragraph({})],
+        };
+      }
+      fnBase += sceneMap.size;
+    }
+  }
 
   // Title page — always included on exports.
   {
@@ -625,6 +740,7 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
           lineSpacing,
           afterPara,
           firstLine,
+          fnMap,
         });
         children.push(...blocks);
       } else {
@@ -655,6 +771,7 @@ export async function renderDocx(m: Manuscript, settings?: PublishSettings): Pro
   const doc = new Document({
     creator: author ?? "Writer's Cube",
     title,
+    footnotes: Object.keys(fnDefs).length ? fnDefs : undefined,
     sections: [{ properties: {}, children }],
   });
   return Packer.toBuffer(doc);

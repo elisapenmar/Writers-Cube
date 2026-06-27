@@ -28,17 +28,6 @@ export function EditorViewOptions({ view }: { view: EditorView }) {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 z-50 mt-1 w-60 rounded-[var(--wc-r-md)] border border-[var(--wc-border)] bg-[var(--wc-surface)] p-2 text-sm shadow-[var(--wc-shadow-md)]">
-            <Group label="Format">
-              <Seg
-                options={[
-                  { label: "Pageless", value: "pageless" },
-                  { label: "Paged", value: "paged" },
-                ]}
-                value={v.pageFormat}
-                onChange={(val) => v.setPageFormat(val as "pageless" | "paged")}
-              />
-            </Group>
-
             <Group label="Line spacing">
               <div className="grid grid-cols-4 gap-1">
                 {SPACINGS.map((sp) => (

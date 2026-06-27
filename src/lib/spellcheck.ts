@@ -3,7 +3,7 @@
 // @ts-expect-error nspell ships no type declarations
 import nspell from "nspell";
 import type { Editor } from "@tiptap/react";
-import { listDictionaryWords, addDictionaryWord } from "@/server/dictionary";
+import { listDictionaryWords, addDictionaryWord, removeDictionaryWord } from "@/server/dictionary";
 
 export type SpellHit = {
   from: number;
@@ -55,6 +55,31 @@ function saveLocalPersonal() {
   }
 }
 
+// On/off preference (persisted). Lazily read so it's only touched on the client.
+const ENABLED_KEY = "wc-spell-enabled";
+let enabled: boolean | null = null;
+function loadEnabled() {
+  if (enabled !== null) return;
+  try {
+    enabled = localStorage.getItem(ENABLED_KEY) !== "0";
+  } catch {
+    enabled = true;
+  }
+}
+export function spellEnabled(): boolean {
+  loadEnabled();
+  return enabled!;
+}
+export function setSpellEnabled(on: boolean): void {
+  enabled = on;
+  try {
+    localStorage.setItem(ENABLED_KEY, on ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  notify();
+}
+
 /** Build the checker once (idempotent). Safe to call from any editor mount. */
 export function ensureSpeller(): Promise<void> {
   if (loading) return loading;
@@ -64,9 +89,9 @@ export function ensureSpeller(): Promise<void> {
     if (!res.ok) throw new Error("dictionary fetch failed");
     const { aff, dic } = (await res.json()) as { aff: string; dic: string };
     speller = nspell(aff, dic) as Speller;
-    for (const w of personal) speller.add(w);
     notify();
-    // Pull the account dictionary (follows the writer across devices).
+    // Pull the account dictionary (follows the writer across devices). We track
+    // accepted words in `personal` (not speller.add) so they can be removed later.
     try {
       const words = await listDictionaryWords();
       let changed = false;
@@ -74,7 +99,6 @@ export function ensureSpeller(): Promise<void> {
         const lw = w.toLowerCase();
         if (!personal.has(lw)) {
           personal.add(lw);
-          speller?.add(w);
           changed = true;
         }
       }
@@ -95,7 +119,7 @@ export function spellerReady(): boolean {
 
 /** Whether a token should be flagged. Skips short tokens, numbers, and accepted words. */
 export function isMisspelled(word: string): boolean {
-  if (!speller) return false;
+  if (!speller || !spellEnabled()) return false;
   if (word.length < 2 || !WORD_OK.test(word) || HAS_DIGIT.test(word)) return false;
   const cached = checkCache.get(word);
   if (cached !== undefined) return cached;
@@ -112,7 +136,7 @@ export function suggestions(word: string): string[] {
 /** If `pos` falls inside a misspelled word, return its range, the word, and
  *  suggested corrections — for the right-click menu. Otherwise null. */
 export function lookupMisspelling(editor: Editor, pos: number): SpellHit | null {
-  if (!speller) return null;
+  if (!speller || !spellEnabled()) return null;
   const $pos = editor.state.doc.resolve(pos);
   const parent = $pos.parent;
   if (!parent.isTextblock) return null;
@@ -137,14 +161,29 @@ export function lookupMisspelling(editor: Editor, pos: number): SpellHit | null 
 
 /** Accept a word: in-memory, on this device, and (best effort) on the account. */
 export async function acceptWord(word: string): Promise<void> {
-  const lw = word.toLowerCase();
-  personal.add(lw);
-  speller?.add(word);
+  personal.add(word.toLowerCase());
   saveLocalPersonal();
   notify();
   try {
     await addDictionaryWord(word);
   } catch {
     /* stays local if the save fails */
+  }
+}
+
+/** The writer's accepted words, for the review/remove UI. */
+export function personalWords(): string[] {
+  return [...personal].sort();
+}
+
+/** Un-accept a word: it will be flagged again. */
+export async function removeWord(word: string): Promise<void> {
+  personal.delete(word.toLowerCase());
+  saveLocalPersonal();
+  notify();
+  try {
+    await removeDictionaryWord(word);
+  } catch {
+    /* stays removed locally if the save fails */
   }
 }
