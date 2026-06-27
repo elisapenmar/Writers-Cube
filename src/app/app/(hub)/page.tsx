@@ -1,9 +1,10 @@
 import Link from "next/link";
 import {
   listProjects,
+  listFolders,
   getActiveProjectId,
-  openProject,
   createProjectAndOpen,
+  type ProjectFolder,
 } from "@/server/projects";
 import { listExercises, type ExerciseSummary } from "@/server/prompts";
 import { listKernels, type StoryKernel } from "@/server/kernels";
@@ -12,8 +13,7 @@ import { ExerciseCard } from "@/components/exercise-card";
 import { StoryKernels } from "@/components/story-kernels";
 import { Inspirations } from "@/components/inspirations";
 import { ImportButton } from "@/components/import-button";
-import { ProjectExportMenu } from "@/components/project-export-menu";
-import { ProjectGoal } from "@/components/project-goal";
+import { ProjectsSection } from "@/components/projects-section";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { CubeMark } from "@/components/cube-mark";
 import { CubeField } from "@/components/cube-field";
@@ -23,20 +23,12 @@ const PROJECTS_PREVIEW = 6;
 const KERNELS_PREVIEW = 3;
 const INSPIRATIONS_PREVIEW = 3;
 
-/** Compact "when was this last touched" label for a project card. */
-function lastTouched(iso: string): string {
-  const then = new Date(iso);
-  if (Number.isNaN(then.getTime())) return "";
-  const days = Math.floor((Date.now() - then.getTime()) / 86_400_000);
-  if (days <= 0) return "Edited today";
-  if (days === 1) return "Edited yesterday";
-  if (days < 7) return `Edited ${days} days ago`;
-  const sameYear = then.getFullYear() === new Date().getFullYear();
-  return `Edited ${then.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    ...(sameYear ? {} : { year: "numeric" }),
-  })}`;
+async function safeFolders(): Promise<ProjectFolder[]> {
+  try {
+    return await listFolders();
+  } catch {
+    return [];
+  }
 }
 
 async function safeExercises(projectId: string | null): Promise<ExerciseSummary[]> {
@@ -71,13 +63,12 @@ export default async function Dashboard() {
   const active =
     projects.find((p) => p.id === activeProjectId) ?? projects[0] ?? null;
 
-  const [practice, kernels, inspirations] = await Promise.all([
+  const [practice, kernels, inspirations, folders] = await Promise.all([
     safeExercises(null),
     safeKernels(),
     safeInspirations(),
+    safeFolders(),
   ]);
-
-  const recentProjects = [...projects].reverse().slice(0, PROJECTS_PREVIEW);
 
   // First time in: a brand-new account with nothing created yet is greeted with
   // "Welcome!"; once there's anything to come back to, it's "Welcome back."
@@ -123,56 +114,12 @@ export default async function Dashboard() {
 
         {/* Projects */}
         <section data-tour="dash-projects">
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
-              <span className="wc-facet" aria-hidden />
-              Your projects
-            </h2>
-            <div className="flex items-center gap-3">
-              {projects.length > PROJECTS_PREVIEW && (
-                <Link href="/app/projects" className="text-xs text-[var(--wc-slate)] hover:underline">
-                  View all
-                </Link>
-              )}
-              <Link href="/app/archive" className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:underline">
-                🗄 Archive
-              </Link>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {recentProjects.map((p) => (
-              <div
-                key={p.id}
-                data-active={active?.id === p.id}
-                className="wc-card relative p-4"
-              >
-                <form action={openProject}>
-                  <input type="hidden" name="projectId" value={p.id} />
-                  <button type="submit" className="block w-full text-left pr-16">
-                    <div className="font-serif text-lg text-[var(--wc-ink)]">
-                      {p.title}
-                    </div>
-                    <div className="text-xs text-[var(--wc-faint)] mt-1">
-                      {p.word_count.toLocaleString()} words · {p.chapter_count}{" "}
-                      chapter{p.chapter_count === 1 ? "" : "s"}
-                      {active?.id === p.id && " · open"}
-                    </div>
-                  </button>
-                </form>
-                <ProjectGoal
-                  projectId={p.id}
-                  wordCount={p.word_count}
-                  initialGoal={p.word_goal}
-                />
-                <div className="absolute top-3 right-3">
-                  <ProjectExportMenu projectId={p.id} />
-                </div>
-                <div className="absolute bottom-4 right-4 text-[10px] text-[var(--wc-faint)] pointer-events-none">
-                  {lastTouched(p.updated_at)}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProjectsSection
+            projects={projects}
+            folders={folders}
+            activeId={active?.id ?? null}
+            previewLimit={PROJECTS_PREVIEW}
+          />
 
           {/* Compact: start a new project, or import one */}
           <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">

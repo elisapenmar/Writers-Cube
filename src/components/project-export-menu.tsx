@@ -5,12 +5,20 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EXPORT_FORMATS } from "@/lib/manuscript-export";
-import { archiveProject } from "@/server/projects";
+import { archiveProject, moveProjectToFolder, type ProjectFolder } from "@/server/projects";
 
 /** A small export/manage dropdown for a project card on the dashboard. */
-export function ProjectExportMenu({ projectId }: { projectId: string }) {
+export function ProjectExportMenu({
+  projectId,
+  folders = [],
+  currentFolderId = null,
+}: {
+  projectId: string;
+  folders?: ProjectFolder[];
+  currentFolderId?: string | null;
+}) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<"root" | "export">("root");
+  const [view, setView] = useState<"root" | "export" | "folder">("root");
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
@@ -52,6 +60,14 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
     });
   }
 
+  function moveTo(folderId: string | null) {
+    close();
+    start(async () => {
+      await moveProjectToFolder(projectId, folderId);
+      router.refresh();
+    });
+  }
+
   return (
     <>
       <button
@@ -79,6 +95,7 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
             {view === "root" ? (
               <>
                 <MenuButton onClick={() => setView("export")}>↓ Export</MenuButton>
+                <MenuButton onClick={() => setView("folder")}>🗂 Move to folder</MenuButton>
                 <Link
                   href="/app/publish"
                   onClick={close}
@@ -92,6 +109,41 @@ export function ProjectExportMenu({ projectId }: { projectId: string }) {
                 >
                   🗄 Archive project
                 </button>
+              </>
+            ) : view === "folder" ? (
+              <>
+                <button
+                  onClick={() => setView("root")}
+                  className="mb-1 flex w-full items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-[var(--wc-faint)] hover:bg-[var(--wc-canvas)]"
+                >
+                  ‹ Back
+                </button>
+                <div className="px-2.5 pb-1 text-[10px] uppercase tracking-wide text-[var(--wc-faint)]">
+                  Move to folder
+                </div>
+                <button
+                  onClick={() => moveTo(null)}
+                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+                >
+                  <span>All (no folder)</span>
+                  {currentFolderId === null && <span className="text-[var(--wc-slate)]">✓</span>}
+                </button>
+                {folders.length === 0 ? (
+                  <div className="px-2.5 py-1.5 text-xs text-[var(--wc-faint)]">
+                    Create a folder from the “＋ Folder” button first.
+                  </div>
+                ) : (
+                  folders.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => moveTo(f.id)}
+                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+                    >
+                      <span className="truncate">{f.name}</span>
+                      {currentFolderId === f.id && <span className="text-[var(--wc-slate)]">✓</span>}
+                    </button>
+                  ))
+                )}
               </>
             ) : (
               <>

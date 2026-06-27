@@ -17,6 +17,13 @@ export type ProjectSummary = {
   updated_at: string;
   created_at: string;
   archived_at: string | null;
+  folder_id: string | null;
+};
+
+export type ProjectFolder = {
+  id: string;
+  name: string;
+  position: number;
 };
 
 async function requireUser() {
@@ -48,7 +55,7 @@ async function fetchProjects(archived: boolean): Promise<ProjectSummary[]> {
   const { supabase, user } = await requireUser();
   let query = supabase
     .from("projects")
-    .select("id, title, author_name, word_goal, created_at, updated_at, archived_at")
+    .select("id, title, author_name, word_goal, created_at, updated_at, archived_at, folder_id")
     .eq("user_id", user.id);
   query = archived
     ? query.not("archived_at", "is", null)
@@ -98,7 +105,83 @@ async function fetchProjects(archived: boolean): Promise<ProjectSummary[]> {
     created_at: p.created_at as string,
     updated_at: p.updated_at as string,
     archived_at: (p.archived_at as string | null) ?? null,
+    folder_id: (p.folder_id as string | null) ?? null,
   }));
+}
+
+/** Folders the user has created for organizing projects (ordered). */
+export async function listFolders(): Promise<ProjectFolder[]> {
+  const { supabase, user } = await requireUser();
+  const { data, error } = await supabase
+    .from("project_folders")
+    .select("id, name, position")
+    .eq("user_id", user.id)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((f) => ({
+    id: f.id as string,
+    name: f.name as string,
+    position: (f.position as number) ?? 0,
+  }));
+}
+
+export async function createFolder(name: string): Promise<{ id: string }> {
+  const { supabase, user } = await requireUser();
+  const { data: last } = await supabase
+    .from("project_folders")
+    .select("position")
+    .eq("user_id", user.id)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = ((last?.position as number | undefined) ?? -1) + 1;
+  const { data, error } = await supabase
+    .from("project_folders")
+    .insert({ user_id: user.id, name: name.trim().slice(0, 80) || "New folder", position })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "create folder failed");
+  revalidatePath("/app", "layout");
+  return { id: data.id as string };
+}
+
+export async function renameFolder(folderId: string, name: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("project_folders")
+    .update({ name: name.trim().slice(0, 80) || "Untitled folder" })
+    .eq("id", folderId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+}
+
+/** Delete a folder; its projects fall back to "All" (folder_id set null by FK). */
+export async function deleteFolder(folderId: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("project_folders")
+    .delete()
+    .eq("id", folderId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
+}
+
+/** File a project into a folder, or pass null to move it back to "All". */
+export async function moveProjectToFolder(
+  projectId: string,
+  folderId: string | null,
+): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("projects")
+    .update({ folder_id: folderId })
+    .eq("id", projectId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/app", "layout");
 }
 
 /** Active (non-archived) projects. */
