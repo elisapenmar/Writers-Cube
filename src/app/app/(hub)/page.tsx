@@ -23,6 +23,22 @@ const PROJECTS_PREVIEW = 6;
 const KERNELS_PREVIEW = 3;
 const INSPIRATIONS_PREVIEW = 3;
 
+/** Compact "when was this last touched" label for a project card. */
+function lastTouched(iso: string): string {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+  const days = Math.floor((Date.now() - then.getTime()) / 86_400_000);
+  if (days <= 0) return "Edited today";
+  if (days === 1) return "Edited yesterday";
+  if (days < 7) return `Edited ${days} days ago`;
+  const sameYear = then.getFullYear() === new Date().getFullYear();
+  return `Edited ${then.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+  })}`;
+}
+
 async function safeExercises(projectId: string | null): Promise<ExerciseSummary[]> {
   try {
     return await listExercises(projectId);
@@ -151,6 +167,9 @@ export default async function Dashboard() {
                 <div className="absolute top-3 right-3">
                   <ProjectExportMenu projectId={p.id} />
                 </div>
+                <div className="absolute bottom-4 right-4 text-[10px] text-[var(--wc-faint)] pointer-events-none">
+                  {lastTouched(p.updated_at)}
+                </div>
               </div>
             ))}
           </div>
@@ -175,7 +194,7 @@ export default async function Dashboard() {
                 <option value="novel">Novel</option>
                 <option value="short_story">Short story</option>
                 <option value="poetry">Poetry</option>
-                <option value="essay">Essay</option>
+                <option value="essay">Essay / Article</option>
               </select>
               <button
                 type="submit"

@@ -50,7 +50,7 @@ export const FORM_TERMS: Record<ProjectForm, FormTerms> = {
     hint: "Poems, kept as a collection",
   },
   essay: {
-    label: "Essay",
+    label: "Essay / Article",
     flat: true,
     groupSingular: "Section",
     groupPlural: "Sections",
