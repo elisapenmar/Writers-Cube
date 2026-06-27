@@ -369,6 +369,8 @@ function SceneBlock({
   onStructureChange: () => void;
 }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // CAS version token for scene/loose blocks (see editor.tsx).
+  const baseUpdatedAt = useRef<string | null>(scene.updated_at ?? null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; blockIndex: number } | null>(null);
   const isScene = !scene.kind;
 
@@ -404,12 +406,14 @@ function SceneBlock({
     try {
       let savedAt: string;
       if (scene.kind === "loose") {
-        savedAt = (await updateLooseSceneContent(scene.id, doc)).savedAt;
+        savedAt = (await updateLooseSceneContent(scene.id, doc, baseUpdatedAt.current)).savedAt;
+        baseUpdatedAt.current = savedAt;
       } else if (scene.kind === "exercise") {
         await updateExercise(scene.id, { content: doc });
         savedAt = new Date().toISOString();
       } else {
-        savedAt = (await updateSceneContent(scene.id, doc)).savedAt;
+        savedAt = (await updateSceneContent(scene.id, doc, baseUpdatedAt.current)).savedAt;
+        baseUpdatedAt.current = savedAt;
       }
       onStatus("saved", savedAt);
     } catch {
@@ -418,6 +422,8 @@ function SceneBlock({
   }
 
   useEffect(() => {
+    // New scene loaded: reset the CAS token to this scene's version.
+    baseUpdatedAt.current = scene.updated_at ?? null;
     return () => {
       if (saveTimer.current && editor) {
         clearTimeout(saveTimer.current);
@@ -441,10 +447,6 @@ function SceneBlock({
 
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
-    // A plain right-click is left alone so the browser's native menu — spell
-    // check suggestions, cut/copy/paste, Look Up — shows as expected. Hold
-    // Option/Alt (or use the ⋯ button) to open the scene-structure menu.
-    if (!e.altKey) return;
     e.preventDefault();
     // posAtCoords is null when clicking past the end of a line, fall back to
     // the caret so the menu always opens.
@@ -453,6 +455,50 @@ function SceneBlock({
     const blockIndex = editor.state.doc.resolve(pos).index(0);
     onActivate(editor);
     setCtxMenu({ x: e.clientX, y: e.clientY, blockIndex });
+  }
+
+  // Standard editing commands so the right-click menu feels complete.
+  function doCut() {
+    setCtxMenu(null);
+    editor?.commands.focus();
+    document.execCommand("cut");
+  }
+  function doCopy() {
+    setCtxMenu(null);
+    editor?.commands.focus();
+    document.execCommand("copy");
+  }
+  async function doPaste() {
+    setCtxMenu(null);
+    if (!editor) return;
+    editor.commands.focus();
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) editor.chain().focus().insertContent(text).run();
+    } catch {
+      /* clipboard blocked — the writer can still use Cmd/Ctrl-V */
+    }
+  }
+  function selectAll() {
+    setCtxMenu(null);
+    editor?.chain().focus().selectAll().run();
+  }
+  function clearFormatting() {
+    setCtxMenu(null);
+    editor?.chain().focus().unsetAllMarks().run();
+  }
+  function editLink() {
+    setCtxMenu(null);
+    if (!editor) return;
+    const prev = (editor.getAttributes("link").href as string) || "";
+    const url = window.prompt("Link URL (leave blank to remove):", prev);
+    if (url === null) return;
+    if (url.trim() === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
   }
 
   // Open the scene-structure menu from the ⋯ button, anchored under it, using
@@ -525,7 +571,7 @@ function SceneBlock({
         <button
           type="button"
           onClick={openMenuFromButton}
-          title="Scene actions (split, merge, new) — or Option-right-click"
+          title="Scene actions (split, merge, new) — also on right-click"
           className="opacity-0 group-hover:opacity-100 focus:opacity-100 rounded px-1 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] transition-opacity"
           aria-label="Scene actions"
         >
@@ -546,13 +592,21 @@ function SceneBlock({
             }}
           />
           <div
-            className="fixed z-50 w-56 rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
+            className="fixed z-50 w-60 max-h-[80vh] overflow-y-auto rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
             style={{
-              left: Math.min(ctxMenu.x, window.innerWidth - 240),
-              top: Math.min(ctxMenu.y, window.innerHeight - 220),
+              left: Math.min(ctxMenu.x, window.innerWidth - 250),
+              top: Math.min(ctxMenu.y, Math.max(8, window.innerHeight - 430)),
             }}
           >
-            <div className="px-3 pt-1 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
+            <CtxItem onClick={doCut} shortcut="⌘X">Cut</CtxItem>
+            <CtxItem onClick={doCopy} shortcut="⌘C">Copy</CtxItem>
+            <CtxItem onClick={doPaste} shortcut="⌘V">Paste</CtxItem>
+            <CtxItem onClick={selectAll} shortcut="⌘A">Select all</CtxItem>
+            <CtxDivider />
+            <CtxItem onClick={editLink} shortcut="⌘K">Insert / edit link</CtxItem>
+            <CtxItem onClick={clearFormatting}>Clear formatting</CtxItem>
+            <CtxDivider />
+            <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
               Scene actions
             </div>
             {isScene && (
@@ -580,13 +634,24 @@ function SceneBlock({
   );
 }
 
-function CtxItem({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function CtxItem({
+  onClick,
+  children,
+  shortcut,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  shortcut?: string;
+}) {
   return (
     <button
       onClick={onClick}
-      className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+      className="flex w-full items-center justify-between gap-4 rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
     >
-      {children}
+      <span className="truncate">{children}</span>
+      {shortcut && (
+        <span className="shrink-0 text-[11px] text-[var(--wc-faint)]">{shortcut}</span>
+      )}
     </button>
   );
 }

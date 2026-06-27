@@ -98,10 +98,6 @@ export function Editor({ scene }: { scene: Scene }) {
 
   function onContextMenu(e: React.MouseEvent) {
     if (!editor) return;
-    // Leave a plain right-click to the browser so spell-check suggestions,
-    // cut/copy/paste and Look Up appear as expected. Hold Option/Alt (or use
-    // the ⋯ button) for the split/merge menu.
-    if (!e.altKey) return;
     e.preventDefault();
     // posAtCoords is null when clicking past the end of a line, fall back to
     // the caret position so the menu always opens.
@@ -117,6 +113,50 @@ export function Editor({ scene }: { scene: Scene }) {
     const pos = editor.state.selection.from;
     const index = editor.state.doc.resolve(pos).index(0);
     setCtxMenu({ x: rect.right, y: rect.bottom, blockIndex: index });
+  }
+
+  // Standard editing commands so the right-click menu feels complete.
+  function doCut() {
+    setCtxMenu(null);
+    editor?.commands.focus();
+    document.execCommand("cut");
+  }
+  function doCopy() {
+    setCtxMenu(null);
+    editor?.commands.focus();
+    document.execCommand("copy");
+  }
+  async function doPaste() {
+    setCtxMenu(null);
+    if (!editor) return;
+    editor.commands.focus();
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) editor.chain().focus().insertContent(text).run();
+    } catch {
+      /* clipboard blocked — Cmd/Ctrl-V still works */
+    }
+  }
+  function selectAll() {
+    setCtxMenu(null);
+    editor?.chain().focus().selectAll().run();
+  }
+  function clearFormatting() {
+    setCtxMenu(null);
+    editor?.chain().focus().unsetAllMarks().run();
+  }
+  function editLink() {
+    setCtxMenu(null);
+    if (!editor) return;
+    const prev = (editor.getAttributes("link").href as string) || "";
+    const url = window.prompt("Link URL (leave blank to remove):", prev);
+    if (url === null) return;
+    if (url.trim() === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
   }
 
   async function doMerge(direction: "previous" | "next") {
@@ -260,7 +300,7 @@ export function Editor({ scene }: { scene: Scene }) {
           <button
             onClick={openMenuFromButton}
             className="rounded-md border border-[var(--wc-border-strong)] px-2.5 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-ink)]"
-            title="Scene actions: split here, merge, scene break — or Option-right-click"
+            title="Scene actions: split here, merge, scene break (also on right-click)"
           >
             ⋯
           </button>
@@ -330,34 +370,25 @@ export function Editor({ scene }: { scene: Scene }) {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
           <div
-            className="fixed z-50 w-56 rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
-            style={{ left: Math.min(ctxMenu.x, window.innerWidth - 230), top: Math.min(ctxMenu.y, window.innerHeight - 120) }}
+            className="fixed z-50 w-60 max-h-[80vh] overflow-y-auto rounded-lg border border-[var(--wc-border)] bg-[var(--wc-surface)] p-1 text-sm shadow-xl"
+            style={{ left: Math.min(ctxMenu.x, window.innerWidth - 250), top: Math.min(ctxMenu.y, Math.max(8, window.innerHeight - 360)) }}
           >
-            <button
-              onClick={() => doSplitAt("scenes")}
-              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-            >
-              ✂ Split into a new scene here
-            </button>
-            <button
-              onClick={() => doSplitAt("chapters")}
-              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-            >
-              ✂ Split into a new chapter here
-            </button>
+            <MenuItem onClick={doCut} shortcut="⌘X">Cut</MenuItem>
+            <MenuItem onClick={doCopy} shortcut="⌘C">Copy</MenuItem>
+            <MenuItem onClick={doPaste} shortcut="⌘V">Paste</MenuItem>
+            <MenuItem onClick={selectAll} shortcut="⌘A">Select all</MenuItem>
             <div className="my-1 border-t border-[var(--wc-border)]" />
-            <button
-              onClick={() => doMerge("previous")}
-              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-            >
-              ⇡ Merge with previous scene
-            </button>
-            <button
-              onClick={() => doMerge("next")}
-              className="block w-full rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-            >
-              ⇣ Merge with next scene
-            </button>
+            <MenuItem onClick={editLink} shortcut="⌘K">Insert / edit link</MenuItem>
+            <MenuItem onClick={clearFormatting}>Clear formatting</MenuItem>
+            <div className="my-1 border-t border-[var(--wc-border)]" />
+            <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
+              Scene actions
+            </div>
+            <MenuItem onClick={() => doSplitAt("scenes")}>✂ Split into a new scene here</MenuItem>
+            <MenuItem onClick={() => doSplitAt("chapters")}>✂ Split into a new chapter here</MenuItem>
+            <div className="my-1 border-t border-[var(--wc-border)]" />
+            <MenuItem onClick={() => doMerge("previous")}>⇡ Merge with previous scene</MenuItem>
+            <MenuItem onClick={() => doMerge("next")}>⇣ Merge with next scene</MenuItem>
           </div>
         </>
       )}
@@ -378,6 +409,28 @@ export function Editor({ scene }: { scene: Scene }) {
         />
       )}
     </div>
+  );
+}
+
+function MenuItem({
+  onClick,
+  children,
+  shortcut,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  shortcut?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center justify-between gap-4 rounded-md px-3 py-1.5 text-left text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+    >
+      <span className="truncate">{children}</span>
+      {shortcut && (
+        <span className="shrink-0 text-[11px] text-[var(--wc-faint)]">{shortcut}</span>
+      )}
+    </button>
   );
 }
 
