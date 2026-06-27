@@ -11,7 +11,7 @@ const LINE_SPACINGS: { label: string; value: number }[] = [
   { label: "Single", value: 1 },
   { label: "1.15", value: 1.15 },
   { label: "1.5", value: 1.5 },
-  { label: "Double", value: 2 },
+  { label: "2", value: 2 },
 ];
 
 /**
@@ -21,13 +21,16 @@ const LINE_SPACINGS: { label: string; value: number }[] = [
 export function EditorToolbar({
   editor,
   className = "",
+  leadingBefore,
   leading,
   trailing,
   view,
 }: {
   editor: Editor | null;
   className?: string;
-  /** Actions placed right after undo/redo (Find, History, Focus, Page setup). */
+  /** Actions placed before the undo/redo buttons (e.g. Page setup, Find). */
+  leadingBefore?: React.ReactNode;
+  /** Actions placed right after undo/redo (e.g. History, Focus). */
   leading?: React.ReactNode;
   /** Right-aligned trailing slot (e.g. the save indicator), folded into the same
    *  flex-wrap so the whole bar wraps as one set on narrow widths. */
@@ -53,8 +56,9 @@ export function EditorToolbar({
   // not be touched, editor.can()/isActive() throw on a torn-down view. Still
   // render the trailing actions so they don't vanish before a block is focused.
   if (!editor || editor.isDestroyed) {
-    return leading || trailing ? (
+    return leadingBefore || leading || trailing ? (
       <div className={`flex flex-wrap items-center gap-0.5 ${className}`}>
+        {leadingBefore && <div className="flex items-center gap-2 shrink-0">{leadingBefore}</div>}
         {leading && <div className="flex items-center gap-2 shrink-0">{leading}</div>}
         {trailing && <div className="ml-auto flex items-center gap-2 shrink-0">{trailing}</div>}
       </div>
@@ -80,6 +84,10 @@ export function EditorToolbar({
   const hasAlign = typeof cmds.setTextAlign === "function";
   const hasHighlight = typeof cmds.toggleHighlight === "function";
   const hasLink = typeof cmds.setLink === "function";
+  const hasColumns = typeof cmds.setColumns === "function";
+  const colCount = editor.isActive("columns")
+    ? Number(editor.getAttributes("columns").count) || 2
+    : 1;
   const currentFont = (editor.getAttributes("textStyle").fontFamily as string) || "";
   const currentColor = (editor.getAttributes("textStyle").color as string) || "#111111";
   const currentSize = parseInt(
@@ -138,6 +146,12 @@ export function EditorToolbar({
     <div
       className={`flex flex-wrap items-center gap-0.5 ${className}`}
     >
+      {leadingBefore && (
+        <>
+          <div className="flex items-center gap-2 shrink-0">{leadingBefore}</div>
+          <Divider />
+        </>
+      )}
       <Btn label={<UndoIcon />} title="Undo (⌘Z)" active={false} disabled={!can("undo")} onClick={() => chain().undo().run()} />
       <Btn label={<RedoIcon />} title="Redo (⌘⇧Z)" active={false} disabled={!can("redo")} onClick={() => chain().redo().run()} />
       {leading && (
@@ -265,6 +279,35 @@ export function EditorToolbar({
           <Divider />
           <LineSpacingMenu view={view} />
         </>
+      )}
+
+      {hasColumns && (
+        <div className="relative group/cols shrink-0">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            title="Columns (applied to the selected text)"
+            className={`h-7 px-1.5 rounded inline-flex items-center gap-0.5 ${
+              colCount > 1
+                ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
+                : "text-[var(--wc-ink)] hover:bg-[var(--wc-paper)]"
+            }`}
+          >
+            <ColumnsIcon />
+            <Caret />
+          </button>
+          <div className="absolute left-0 top-full z-50 hidden group-hover/cols:flex gap-0.5 rounded-md border border-[var(--wc-border)] bg-[var(--wc-surface)] p-0.5 shadow-lg">
+            {[1, 2, 3].map((n) => (
+              <Btn
+                key={n}
+                label={`${n}`}
+                title={n === 1 ? "No columns" : `${n} columns`}
+                active={colCount === n}
+                onClick={() => chain().setColumns(n).run()}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
       {hasColor && (
@@ -583,6 +626,15 @@ function LineSpacingMenu({ view }: { view: EditorView }) {
         </label>
       </div>
     </div>
+  );
+}
+
+function ColumnsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4" width="7" height="16" rx="1" />
+      <rect x="14" y="4" width="7" height="16" rx="1" />
+    </svg>
   );
 }
 

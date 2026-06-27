@@ -156,23 +156,28 @@ export function ManuscriptReader({
         <EditorToolbar
           editor={activeEditor}
           view={view}
-          leading={
+          leadingBefore={
             <>
+              <EditorViewOptions view={view} iconOnly />
               <button
                 onClick={() => setFindOpen(true)}
                 disabled={!activeScene}
-                className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+                className="shrink-0 grid place-items-center h-7 w-7 rounded text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
                 title="Find & replace in the focused scene (⌘F)"
               >
-                Find
+                <MagnifierIcon />
               </button>
+            </>
+          }
+          leading={
+            <>
               <button
                 onClick={() => activeScene && setHistoryScene(activeScene)}
                 disabled={!activeScene}
-                className="shrink-0 rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
+                className="shrink-0 grid place-items-center h-7 w-7 rounded text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)] disabled:opacity-40"
                 title="Version history of the focused scene"
               >
-                History
+                <ClockIcon />
               </button>
               <button
                 onClick={() => setFocusScene(activeScene)}
@@ -182,7 +187,6 @@ export function ManuscriptReader({
               >
                 ✶ Focus
               </button>
-              <EditorViewOptions view={view} />
             </>
           }
           trailing={
@@ -204,8 +208,6 @@ export function ManuscriptReader({
           style={
             {
               "--wc-line": String(view.lineSpacing),
-              columnCount: view.columns > 1 ? view.columns : undefined,
-              columnGap: view.columns > 1 ? "2.75rem" : undefined,
             } as CSSProperties
           }
         >
@@ -750,6 +752,24 @@ function CtxItem({
 
 function CtxDivider() {
   return <div className="my-1 border-t border-[var(--wc-border)]" />;
+}
+
+function MagnifierIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
 }
 
 function SaveLabel({

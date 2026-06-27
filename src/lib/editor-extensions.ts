@@ -12,6 +12,7 @@ import { Highlight } from "@tiptap/extension-highlight";
 import { Link } from "@tiptap/extension-link";
 import { Indent } from "@/lib/indent";
 import { FontSize } from "@/lib/font-size";
+import { Columns } from "@/lib/columns";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { FOOTNOTE_NODES } from "@/lib/footnotes";
 import { SpellCheck } from "@/lib/spellcheck-extension";
@@ -36,6 +37,7 @@ export const RTE_EXTENSIONS = [
     HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" },
   }),
   TextAlign.configure({ types: ["heading", "paragraph"] }),
+  Columns,
   Image.configure({ allowBase64: true }),
   Table.configure({ resizable: true }),
   TableRow,

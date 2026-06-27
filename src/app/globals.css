@@ -596,6 +596,16 @@ body {
   z-index: 0;
 }
 
+/* Columns applied to a selection of text (the `columns` node). column-count is
+   set inline per node; this adds the gap + a little breathing room. */
+.wc-columns,
+[data-columns] {
+  column-gap: 2.75rem;
+  margin: 1em 0;
+}
+.wc-columns > *:first-child,
+[data-columns] > *:first-child { margin-top: 0; }
+
 /* Paragraph spacing toggles. */
 .wc-doc[data-space-before="true"] .ProseMirror p { margin-top: 0.85em; }
 .wc-doc[data-space-after="true"] .ProseMirror p { margin-bottom: 0.85em; }

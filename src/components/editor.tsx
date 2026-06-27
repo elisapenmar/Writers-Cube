@@ -410,8 +410,6 @@ export function Editor({ scene }: { scene: Scene }) {
           style={
             {
               "--wc-line": String(view.lineSpacing),
-              columnCount: view.columns > 1 ? view.columns : undefined,
-              columnGap: view.columns > 1 ? "2.75rem" : undefined,
             } as React.CSSProperties
           }
         >

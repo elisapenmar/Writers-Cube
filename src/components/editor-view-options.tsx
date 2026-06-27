@@ -4,9 +4,15 @@ import { useState } from "react";
 import type { EditorView } from "@/store/editor-view-store";
 import { SpellingControls } from "@/components/spelling-controls";
 
-/** Paragraph spacing · columns · margins · spelling — document-level view
- *  controls. (Line spacing lives on the toolbar as its own button.) */
-export function EditorViewOptions({ view }: { view: EditorView }) {
+/** Paragraph spacing · margins · spelling — document-level view controls.
+ *  (Line spacing and columns live on the toolbar as their own buttons.) */
+export function EditorViewOptions({
+  view,
+  iconOnly = false,
+}: {
+  view: EditorView;
+  iconOnly?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const v = view;
 
@@ -14,10 +20,14 @@ export function EditorViewOptions({ view }: { view: EditorView }) {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-        title="Paragraph spacing, columns & margins"
+        className={
+          iconOnly
+            ? "shrink-0 grid place-items-center h-7 w-7 rounded text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+            : "rounded-md border border-[var(--wc-border-strong)] px-3 py-1 text-xs text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+        }
+        title="Page setup: paragraph spacing & margins"
       >
-        ▤ Page setup
+        {iconOnly ? <PageIcon /> : "▤ Page setup"}
       </button>
       {open && (
         <>
@@ -40,18 +50,6 @@ export function EditorViewOptions({ view }: { view: EditorView }) {
                 />
                 Add space after paragraph
               </label>
-            </Group>
-
-            <Group label="Columns">
-              <Seg
-                options={[
-                  { label: "1", value: "1" },
-                  { label: "2", value: "2" },
-                  { label: "3", value: "3" },
-                ]}
-                value={String(v.columns)}
-                onChange={(val) => v.setColumns(Number(val))}
-              />
             </Group>
 
             <Group label="Margins">
@@ -87,30 +85,11 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Seg({
-  options,
-  value,
-  onChange,
-}: {
-  options: { label: string; value: string }[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function PageIcon() {
   return (
-    <div className="flex rounded-md border border-[var(--wc-border-strong)] overflow-hidden text-xs">
-      {options.map((o, i) => (
-        <button
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          className={`flex-1 px-2 py-1 ${i > 0 ? "border-l border-[var(--wc-border)]" : ""} ${
-            value === o.value
-              ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
-              : "text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+    </svg>
   );
 }

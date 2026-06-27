@@ -182,6 +182,10 @@ function renderBlockHtml(block: unknown): string {
       const lvl = Math.min(6, Number(b.attrs?.level) || 2);
       return `<h${lvl}${alignAttr}>${inline()}</h${lvl}>`;
     }
+    case "columns": {
+      const count = Math.max(1, Math.min(3, Number(b.attrs?.count) || 2));
+      return `<div style="column-count:${count};column-gap:2.5rem">${kids()}</div>`;
+    }
     case "blockquote":
       return `<blockquote>${kids()}</blockquote>`;
     case "bulletList":
