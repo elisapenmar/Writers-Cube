@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   createKernel,
   updateKernel,
   deleteKernel,
   type StoryKernel,
 } from "@/server/kernels";
+import { ViewToggle } from "@/components/view-toggle";
+import { useViewMode } from "@/store/view-mode-store";
 
 export function StoryKernels({
   initial,
@@ -19,6 +21,7 @@ export function StoryKernels({
   const [kernels, setKernels] = useState<StoryKernel[]>(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [mode, setMode] = useViewMode("kernels");
 
   function add() {
     setError(null);
@@ -37,11 +40,10 @@ export function StoryKernels({
   }
 
   const visible = limit ? kernels.slice(0, limit) : kernels;
-  const hasMore = limit !== undefined && kernels.length > limit;
 
   return (
     <section>
-      <div className="flex items-baseline justify-between mb-3">
+      <div className="flex items-baseline justify-between mb-1">
         <div>
           <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
             <span className="wc-facet" aria-hidden />
@@ -51,21 +53,24 @@ export function StoryKernels({
             Half-formed ideas, parked here until they&apos;re ready to grow.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {hasMore && (
-            <Link href="/app/kernels" className="text-xs text-[var(--wc-slate)] hover:underline">
-              View all
-            </Link>
-          )}
-          <button
-            onClick={add}
-            disabled={pending}
-            className="shrink-0 rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
-            style={{ background: "var(--wc-plum)" }}
-          >
-            + New kernel
-          </button>
-        </div>
+        <ViewToggle mode={mode} onChange={setMode} />
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          onClick={add}
+          disabled={pending}
+          className="rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
+          style={{ background: "var(--wc-plum)" }}
+        >
+          ＋ New kernel
+        </button>
+        <Link
+          href="/app/kernels"
+          className="rounded-[var(--wc-r-md)] border border-[var(--wc-border-strong)] px-3 py-1.5 text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+        >
+          View all
+        </Link>
       </div>
 
       {error && (
@@ -82,7 +87,7 @@ export function StoryKernels({
           No kernels yet. Jot down a spark, a what-if, an image, a first line,
           before it slips away.
         </p>
-      ) : (
+      ) : mode === "card" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((k) => (
             <KernelCard
@@ -93,6 +98,23 @@ export function StoryKernels({
             />
           ))}
         </div>
+      ) : (
+        <ul className="divide-y divide-[var(--wc-border)] rounded-[var(--wc-r-lg)] border border-[var(--wc-border)] bg-[var(--wc-surface)]">
+          {visible.map((k) => (
+            <li key={k.id} className="flex items-center gap-3 px-3 py-2">
+              <Link href={`/app/kernels/${k.id}`} className="min-w-0 flex-1">
+                <span className="font-serif text-[var(--wc-ink)]">{k.title || "Untitled kernel"}</span>
+                {k.body && <span className="ml-2 text-xs text-[var(--wc-faint)] truncate">{k.body}</span>}
+              </Link>
+              <Link
+                href={`/app/kernels/${k.id}`}
+                className="shrink-0 text-[11px] text-[var(--wc-slate)] hover:underline"
+              >
+                Open
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

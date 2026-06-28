@@ -3,16 +3,14 @@ import {
   listProjects,
   listFolders,
   getActiveProjectId,
-  createProjectAndOpen,
   type ProjectFolder,
 } from "@/server/projects";
 import { listExercises, type ExerciseSummary } from "@/server/prompts";
 import { listKernels, type StoryKernel } from "@/server/kernels";
 import { listInspirations, type Inspiration } from "@/server/inspirations";
-import { ExerciseCard } from "@/components/exercise-card";
+import { PracticeLibrary } from "@/components/practice-library";
 import { StoryKernels } from "@/components/story-kernels";
 import { Inspirations } from "@/components/inspirations";
-import { ImportButton } from "@/components/import-button";
 import { ProjectsSection } from "@/components/projects-section";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { CubeMark } from "@/components/cube-mark";
@@ -120,39 +118,6 @@ export default async function Dashboard() {
             activeId={active?.id ?? null}
             previewLimit={PROJECTS_PREVIEW}
           />
-
-          {/* Compact: start a new project, or import one */}
-          <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <form
-              action={createProjectAndOpen}
-              className="flex-1 rounded-[var(--wc-r-lg)] p-2 border border-dashed border-[var(--wc-border-strong)] bg-transparent flex items-center gap-2"
-            >
-              <input
-                name="title"
-                placeholder="New project title…"
-                className="flex-1 bg-[var(--wc-surface)] rounded-[var(--wc-r-md)] border border-[var(--wc-border)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--wc-slate)]"
-              />
-              <select
-                name="form"
-                defaultValue="novel"
-                title="What are you writing?"
-                className="bg-[var(--wc-surface)] rounded-[var(--wc-r-md)] border border-[var(--wc-border)] px-2 py-2 text-sm focus:outline-none focus:border-[var(--wc-slate)]"
-              >
-                <option value="novel">Novel</option>
-                <option value="short_story">Short story</option>
-                <option value="poetry">Poetry</option>
-                <option value="essay">Essay / Article</option>
-              </select>
-              <button
-                type="submit"
-                className="rounded-[var(--wc-r-md)] px-4 py-2 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105"
-                style={{ background: "var(--wc-slate)" }}
-              >
-                Create
-              </button>
-            </form>
-            <ImportButton />
-          </div>
         </section>
 
         {/* Story kernels */}
@@ -166,41 +131,8 @@ export default async function Dashboard() {
         </div>
 
         {/* Practice library */}
-        <section data-tour="dash-practice">
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
-              <span className="wc-facet" aria-hidden />
-              Practice library
-            </h2>
-            <Link href="/app/exercises" className="text-xs text-[var(--wc-slate)] hover:underline">
-              View all
-            </Link>
-          </div>
-          {practice.length === 0 ? (
-            <EmptyHint>
-              Standalone warm-ups you write from{" "}
-              <Link href="/app/prompts" className="text-[var(--wc-slate)] hover:underline">
-                Writer&apos;s Cube
-              </Link>{" "}
-              land here.
-            </EmptyHint>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {practice.slice(0, 4).map((ex) => (
-                <ExerciseCard key={ex.id} exercise={ex} />
-              ))}
-            </div>
-          )}
-        </section>
+        <PracticeLibrary practice={practice} />
       </div>
     </div>
-  );
-}
-
-function EmptyHint({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-sm text-[var(--wc-muted)] rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-5">
-      {children}
-    </p>
   );
 }

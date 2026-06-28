@@ -1,18 +1,16 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   openProject,
-  createFolder,
-  renameFolder,
-  deleteFolder,
+  createProjectAndOpen,
   type ProjectSummary,
   type ProjectFolder,
 } from "@/server/projects";
 import { ProjectGoal } from "@/components/project-goal";
 import { ProjectExportMenu } from "@/components/project-export-menu";
+import { ImportButton } from "@/components/import-button";
 import { ViewToggle } from "@/components/view-toggle";
 import { useViewMode } from "@/store/view-mode-store";
 
@@ -50,69 +48,22 @@ export function ProjectsSection({
   activeId: string | null;
   previewLimit: number;
 }) {
-  const router = useRouter();
   const [mode, setMode] = useViewMode("projects");
-  const [folderId, setFolderId] = useState<string | null>(null); // null = All
-  const [pending, start] = useTransition();
 
-  const visible = useMemo(() => {
-    const inFolder =
-      folderId === null
-        ? projects
-        : projects.filter((p) => p.folder_id === folderId);
-    return [...inFolder].reverse().slice(0, previewLimit);
-  }, [projects, folderId, previewLimit]);
-
-  const totalInFolder =
-    folderId === null
-      ? projects.length
-      : projects.filter((p) => p.folder_id === folderId).length;
-
-  const activeFolder = folders.find((f) => f.id === folderId) ?? null;
-
-  function addFolder() {
-    const name = window.prompt("Folder name:");
-    if (name === null) return;
-    start(async () => {
-      const { id } = await createFolder(name || "New folder");
-      setFolderId(id);
-      router.refresh();
-    });
-  }
-  function rename() {
-    if (!activeFolder) return;
-    const name = window.prompt("Rename folder:", activeFolder.name);
-    if (name === null) return;
-    start(async () => {
-      await renameFolder(activeFolder.id, name);
-      router.refresh();
-    });
-  }
-  function remove() {
-    if (!activeFolder) return;
-    if (!window.confirm(`Delete the folder "${activeFolder.name}"? Its projects move back to All.`))
-      return;
-    start(async () => {
-      await deleteFolder(activeFolder.id);
-      setFolderId(null);
-      router.refresh();
-    });
-  }
+  const visible = useMemo(
+    () => [...projects].reverse().slice(0, previewLimit),
+    [projects, previewLimit],
+  );
 
   return (
     <>
-      <div className="flex items-baseline justify-between mb-3">
+      <div className="flex items-baseline justify-between mb-1">
         <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
           <span className="wc-facet" aria-hidden />
           Your projects
         </h2>
         <div className="flex items-center gap-3">
           <ViewToggle mode={mode} onChange={setMode} />
-          {totalInFolder > previewLimit && (
-            <Link href="/app/projects" className="text-xs text-[var(--wc-slate)] hover:underline">
-              View all
-            </Link>
-          )}
           <Link
             href="/app/archive"
             className="text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)] hover:underline"
@@ -122,49 +73,30 @@ export function ProjectsSection({
         </div>
       </div>
 
-      {/* Folder bar — between the section title and the cards */}
-      <div className="mb-3 flex flex-wrap items-center gap-1.5">
-        <FolderChip active={folderId === null} onClick={() => setFolderId(null)}>
-          All
-        </FolderChip>
-        {folders.map((f) => (
-          <FolderChip key={f.id} active={folderId === f.id} onClick={() => setFolderId(f.id)}>
-            {f.name}
-          </FolderChip>
-        ))}
-        <button
-          onClick={addFolder}
-          disabled={pending}
-          className="rounded-full border border-dashed border-[var(--wc-border-strong)] px-2.5 py-1 text-xs text-[var(--wc-muted)] hover:text-[var(--wc-ink)] hover:border-[var(--wc-slate)] disabled:opacity-50"
-          title="Create a folder"
+      {/* Action row, under the section marker: create a new project (titled and
+          typed later, inside the project), browse all, or import. */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <form action={createProjectAndOpen}>
+          <button
+            type="submit"
+            className="rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105"
+            style={{ background: "var(--wc-slate)" }}
+          >
+            ＋ New project
+          </button>
+        </form>
+        <Link
+          href="/app/projects"
+          className="rounded-[var(--wc-r-md)] border border-[var(--wc-border-strong)] px-3 py-1.5 text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
         >
-          ＋ Folder
-        </button>
-        {activeFolder && (
-          <span className="ml-1 flex items-center gap-1">
-            <button
-              onClick={rename}
-              className="rounded px-1 text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
-              title="Rename this folder"
-            >
-              ✏
-            </button>
-            <button
-              onClick={remove}
-              className="rounded px-1 text-xs text-[var(--wc-faint)] hover:text-[var(--wc-ink)]"
-              title="Delete this folder"
-            >
-              🗑
-            </button>
-          </span>
-        )}
+          View all
+        </Link>
+        <ImportButton />
       </div>
 
       {visible.length === 0 ? (
         <p className="rounded-[var(--wc-r-lg)] border border-dashed border-[var(--wc-border-strong)] px-4 py-6 text-center text-sm text-[var(--wc-faint)]">
-          {folderId === null
-            ? "No projects yet."
-            : "No projects in this folder yet — move one here from its ⋯ menu."}
+          No projects yet.
         </p>
       ) : mode === "card" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -221,28 +153,5 @@ export function ProjectsSection({
         </ul>
       )}
     </>
-  );
-}
-
-function FolderChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs transition ${
-        active
-          ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
-          : "border border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:text-[var(--wc-ink)] hover:border-[var(--wc-slate)]"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

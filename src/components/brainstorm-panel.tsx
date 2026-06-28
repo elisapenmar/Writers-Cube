@@ -321,12 +321,12 @@ export function BrainstormPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 send();
               }
             }}
-            placeholder={recording ? "Listening…" : "Type or speak. ⌘↩ to send."}
+            placeholder={recording ? "Listening…" : "Type or speak. ↩ to send, ⇧↩ for a new line."}
             rows={2}
             className="flex-1 resize-none rounded-md border border-[var(--wc-border-strong)] px-2 py-1.5 text-sm font-serif focus:outline-none focus:border-[var(--wc-slate)]"
           />

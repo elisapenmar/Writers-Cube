@@ -8,6 +8,8 @@ import {
   deleteInspiration,
   type Inspiration,
 } from "@/server/inspirations";
+import { ViewToggle } from "@/components/view-toggle";
+import { useViewMode } from "@/store/view-mode-store";
 
 export function Inspirations({
   initial,
@@ -19,6 +21,7 @@ export function Inspirations({
   const [items, setItems] = useState<Inspiration[]>(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [mode, setMode] = useViewMode("inspirations");
 
   function add() {
     setError(null);
@@ -37,11 +40,10 @@ export function Inspirations({
   }
 
   const visible = limit ? items.slice(0, limit) : items;
-  const hasMore = limit !== undefined && items.length > limit;
 
   return (
     <section>
-      <div className="flex items-baseline justify-between mb-3">
+      <div className="flex items-baseline justify-between mb-1">
         <div>
           <h2 className="flex items-center gap-2.5 font-serif text-2xl sm:text-[1.7rem] tracking-tight text-[var(--wc-ink)]">
             <span className="wc-facet" aria-hidden />
@@ -51,21 +53,24 @@ export function Inspirations({
             Lines and passages from what you read, kept here to spark your own.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {hasMore && (
-            <Link href="/app/inspirations" className="text-xs text-[var(--wc-slate)] hover:underline">
-              View all
-            </Link>
-          )}
-          <button
-            onClick={add}
-            disabled={pending}
-            className="shrink-0 rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
-            style={{ background: "var(--wc-sage)" }}
-          >
-            + New inspiration
-          </button>
-        </div>
+        <ViewToggle mode={mode} onChange={setMode} />
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          onClick={add}
+          disabled={pending}
+          className="rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105 disabled:opacity-50"
+          style={{ background: "var(--wc-sage)" }}
+        >
+          ＋ New inspiration
+        </button>
+        <Link
+          href="/app/inspirations"
+          className="rounded-[var(--wc-r-md)] border border-[var(--wc-border-strong)] px-3 py-1.5 text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+        >
+          View all
+        </Link>
       </div>
 
       {error && (
@@ -82,7 +87,7 @@ export function Inspirations({
           Nothing here yet. Paste a line that stopped you: a sentence, an image,
           a turn of phrase. Note where it came from.
         </p>
-      ) : (
+      ) : mode === "card" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((i) => (
             <InspirationCard
@@ -93,6 +98,18 @@ export function Inspirations({
             />
           ))}
         </div>
+      ) : (
+        <ul className="divide-y divide-[var(--wc-border)] rounded-[var(--wc-r-lg)] border border-[var(--wc-border)] bg-[var(--wc-surface)]">
+          {visible.map((i) => (
+            <li key={i.id} className="px-3 py-2">
+              <div className="flex items-baseline gap-2">
+                <span className="font-serif text-[var(--wc-ink)]">{i.title || "Untitled"}</span>
+                {i.source && <span className="text-xs italic text-[var(--wc-faint)]">{i.source}</span>}
+              </div>
+              {i.body && <p className="text-xs text-[var(--wc-muted)] truncate">{i.body}</p>}
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );
