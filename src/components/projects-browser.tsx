@@ -8,6 +8,7 @@ import {
   createFolder,
   renameFolder,
   deleteFolder,
+  moveProjectToFolder,
   type ProjectSummary,
   type ProjectFolder,
 } from "@/server/projects";
@@ -27,6 +28,22 @@ export function ProjectsBrowser({
   const router = useRouter();
   const [folderId, setFolderId] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null | "none">("none");
+
+  function moveTo(targetFolderId: string | null, projectId: string) {
+    setDragId(null);
+    setDropTarget("none");
+    start(async () => {
+      await moveProjectToFolder(projectId, targetFolderId);
+      router.refresh();
+    });
+  }
+  function onChipDrop(targetFolderId: string | null, e: React.DragEvent) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain") || dragId;
+    if (id) moveTo(targetFolderId, id);
+  }
 
   const visible = useMemo(
     () =>
@@ -69,11 +86,26 @@ export function ProjectsBrowser({
   return (
     <>
       <div className="flex flex-wrap items-center gap-1.5">
-        <Chip active={folderId === null} onClick={() => setFolderId(null)}>
+        <Chip
+          active={folderId === null}
+          onClick={() => setFolderId(null)}
+          dropActive={dragId !== null && dropTarget === "all"}
+          onDragOver={dragId ? (e) => { e.preventDefault(); setDropTarget("all"); } : undefined}
+          onDragLeave={dragId ? () => setDropTarget("none") : undefined}
+          onDrop={dragId ? (e) => onChipDrop(null, e) : undefined}
+        >
           All
         </Chip>
         {folders.map((f) => (
-          <Chip key={f.id} active={folderId === f.id} onClick={() => setFolderId(f.id)}>
+          <Chip
+            key={f.id}
+            active={folderId === f.id}
+            onClick={() => setFolderId(f.id)}
+            dropActive={dragId !== null && dropTarget === f.id}
+            onDragOver={dragId ? (e) => { e.preventDefault(); setDropTarget(f.id); } : undefined}
+            onDragLeave={dragId ? () => setDropTarget("none") : undefined}
+            onDrop={dragId ? (e) => onChipDrop(f.id, e) : undefined}
+          >
             {f.name}
           </Chip>
         ))}
@@ -97,9 +129,29 @@ export function ProjectsBrowser({
         )}
       </div>
 
+      {folders.length > 0 && (
+        <p className="text-xs text-[var(--wc-faint)]">
+          Tip: drag a project onto a folder above to file it (or use the ⋯ menu).
+        </p>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {visible.map((p) => (
-          <div key={p.id} className="wc-card relative p-4" data-active={activeId === p.id}>
+          <div
+            key={p.id}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData("text/plain", p.id);
+              e.dataTransfer.effectAllowed = "move";
+              setDragId(p.id);
+            }}
+            onDragEnd={() => {
+              setDragId(null);
+              setDropTarget("none");
+            }}
+            className={`wc-card relative p-4 cursor-grab active:cursor-grabbing ${dragId === p.id ? "opacity-50" : ""}`}
+            data-active={activeId === p.id}
+          >
             <form action={openProject}>
               <input type="hidden" name="projectId" value={p.id} />
               <button type="submit" className="block w-full text-left pr-10">
@@ -138,18 +190,31 @@ function Chip({
   active,
   onClick,
   children,
+  dropActive = false,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  dropActive?: boolean;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }) {
   return (
     <button
       onClick={onClick}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       className={`rounded-full px-3 py-1 text-xs transition ${
-        active
-          ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
-          : "border border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:text-[var(--wc-ink)] hover:border-[var(--wc-slate)]"
+        dropActive
+          ? "ring-2 ring-[var(--wc-slate)] ring-offset-1 bg-[var(--wc-canvas)] text-[var(--wc-ink)]"
+          : active
+            ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)]"
+            : "border border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:text-[var(--wc-ink)] hover:border-[var(--wc-slate)]"
       }`}
     >
       {children}
