@@ -13,6 +13,7 @@ import { Link } from "@tiptap/extension-link";
 import { Indent } from "@/lib/indent";
 import { FontSize } from "@/lib/font-size";
 import { Columns } from "@/lib/columns";
+import { Pagination } from "@/lib/pagination";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { FOOTNOTE_NODES } from "@/lib/footnotes";
 import { SpellCheck } from "@/lib/spellcheck-extension";
@@ -46,4 +47,5 @@ export const RTE_EXTENSIONS = [
   ...ALL_TAG_MARKS,
   ...FOOTNOTE_NODES,
   SpellCheck,
+  Pagination,
 ];

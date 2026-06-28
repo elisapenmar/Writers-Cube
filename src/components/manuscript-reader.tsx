@@ -212,6 +212,7 @@ export function ManuscriptReader({
             className={`wc-doc ${
               view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"
             }`}
+            data-paged={view.pageFormat === "paged" ? "true" : undefined}
             data-space-before={view.spaceBefore}
             data-space-after={view.spaceAfter}
             style={

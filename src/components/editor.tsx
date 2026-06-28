@@ -408,6 +408,7 @@ export function Editor({ scene }: { scene: Scene }) {
             <PageRuler view={view} />
             <div
               className="wc-doc wc-doc-paged"
+              data-paged="true"
               data-space-before={view.spaceBefore}
               data-space-after={view.spaceAfter}
               style={
