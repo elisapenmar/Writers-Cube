@@ -27,9 +27,6 @@ export default async function HubLayout({
           <Link href="/app" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
             Dashboard
           </Link>
-          <Link href="/app/prompts" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
-            Prompts
-          </Link>
           <AccountMenu email={user?.email ?? null} />
         </nav>
       </header>

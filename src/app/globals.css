@@ -614,36 +614,28 @@ body {
 .wc-ruler {
   position: relative;
   width: 8.5in;
-  height: 22px;
+  height: 24px;
   margin: 0 auto 6px;
   background: var(--wc-surface);
   border-radius: 2px;
   box-shadow: var(--wc-shadow-md);
   user-select: none;
 }
-.wc-ruler-track {
+/* Tick marks (rendered per 1/8in). Longer = more significant unit. */
+.wc-tick {
   position: absolute;
-  inset: 0;
-  /* full-height inch marks + short 1/8in minor marks along the bottom edge */
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      transparent 0,
-      transparent calc(1in - 1px),
-      rgba(51, 48, 58, 0.32) calc(1in - 1px),
-      rgba(51, 48, 58, 0.32) 1in
-    ),
-    repeating-linear-gradient(
-      to right,
-      transparent 0,
-      transparent calc(0.125in - 1px),
-      rgba(51, 48, 58, 0.18) calc(0.125in - 1px),
-      rgba(51, 48, 58, 0.18) 0.125in
-    );
-  background-repeat: repeat-x, repeat-x;
-  background-position: bottom, bottom;
-  background-size: 100% 100%, 100% 8px;
+  background: rgba(51, 48, 58, 0.42);
+  pointer-events: none;
 }
+.wc-ruler .wc-tick {
+  bottom: 0;
+  width: 1px;
+  margin-left: -0.5px;
+}
+.wc-ruler .wc-tick-in { height: 13px; }
+.wc-ruler .wc-tick-half { height: 10px; }
+.wc-ruler .wc-tick-quarter { height: 7px; }
+.wc-ruler .wc-tick-eighth { height: 4px; background: rgba(51, 48, 58, 0.3); }
 /* The printable area (inside the margins) reads lighter than the margins. */
 .wc-ruler-page {
   position: absolute;
@@ -663,7 +655,7 @@ body {
 .wc-ruler-marker svg { display: block; }
 .wc-ruler-num {
   position: absolute;
-  top: 5px;
+  top: 2px;
   transform: translateX(-50%);
   font-size: 8px;
   line-height: 1;
@@ -688,38 +680,24 @@ body {
 /* Vertical ruler (top/bottom margins), mirroring the horizontal one. */
 .wc-ruler-v {
   position: absolute;
-  left: -30px;
+  left: -32px;
   top: 0;
-  width: 22px;
+  width: 24px;
   height: 11in;
   background: var(--wc-surface);
   border-radius: 2px;
   box-shadow: var(--wc-shadow-md);
   user-select: none;
 }
-.wc-ruler-v-track {
-  position: absolute;
-  inset: 0;
-  /* full-width inch marks + short 1/8in minor marks along the right edge */
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(1in - 1px),
-      rgba(51, 48, 58, 0.32) calc(1in - 1px),
-      rgba(51, 48, 58, 0.32) 1in
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(0.125in - 1px),
-      rgba(51, 48, 58, 0.18) calc(0.125in - 1px),
-      rgba(51, 48, 58, 0.18) 0.125in
-    );
-  background-repeat: repeat-y, repeat-y;
-  background-position: right, right;
-  background-size: 100% 100%, 8px 100%;
+.wc-ruler-v .wc-tick {
+  right: 0;
+  height: 1px;
+  margin-top: -0.5px;
 }
+.wc-ruler-v .wc-tick-in { width: 13px; }
+.wc-ruler-v .wc-tick-half { width: 10px; }
+.wc-ruler-v .wc-tick-quarter { width: 7px; }
+.wc-ruler-v .wc-tick-eighth { width: 4px; background: rgba(51, 48, 58, 0.3); }
 .wc-ruler-v-page {
   position: absolute;
   left: 0;
@@ -728,8 +706,8 @@ body {
 }
 .wc-ruler-v-num {
   position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  left: 2px;
+  transform: translateY(-50%);
   font-size: 8px;
   line-height: 1;
   color: var(--wc-faint);

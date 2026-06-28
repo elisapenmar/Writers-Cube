@@ -155,7 +155,7 @@ function InspirationCard({
   }
 
   return (
-    <div className="wc-card p-3 flex flex-col group">
+    <div className="wc-card p-2.5 flex flex-col group">
       <div className="flex items-start gap-2">
         <input
           value={title}
@@ -181,8 +181,8 @@ function InspirationCard({
           schedule({ body: e.target.value });
         }}
         placeholder="Paste or type the passage that inspired you…"
-        rows={4}
-        className="mt-1 flex-1 resize-none bg-transparent text-sm text-[var(--wc-muted)] leading-relaxed outline-none placeholder:text-[var(--wc-faint)]"
+        rows={2}
+        className="mt-0.5 flex-1 resize-none bg-transparent text-sm text-[var(--wc-muted)] leading-snug outline-none placeholder:text-[var(--wc-faint)]"
       />
       <input
         value={source}
@@ -191,9 +191,9 @@ function InspirationCard({
           schedule({ source: e.target.value });
         }}
         placeholder="Source (book, author, link)…"
-        className="mt-1 w-full bg-transparent text-xs italic text-[var(--wc-faint)] outline-none placeholder:text-[var(--wc-faint)]"
+        className="mt-0.5 w-full bg-transparent text-xs italic text-[var(--wc-faint)] outline-none placeholder:text-[var(--wc-faint)]"
       />
-      <div className="h-3 text-[10px] text-[var(--wc-faint)]">{saving ? "Saving…" : ""}</div>
+      <div className="h-2 text-[10px] text-[var(--wc-faint)]">{saving ? "Saving…" : ""}</div>
     </div>
   );
 }

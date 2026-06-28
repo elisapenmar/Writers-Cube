@@ -15,6 +15,33 @@ function snap(n: number) {
   return Math.round(n / 0.05) * 0.05;
 }
 
+type Tier = "in" | "half" | "quarter" | "eighth";
+type Tick = { pos: number; tier: Tier; label?: number; key: string };
+
+/** Ticks every 1/8in counted inward from BOTH edges, so the inch numbers line up
+ *  with their marks on each side and meet at the centre. Longer marks for inch >
+ *  half > quarter > eighth. */
+function ticksFor(pageLen: number): Tick[] {
+  const half = Math.round(pageLen / 2 / 0.125); // 1/8 steps to the centre
+  const center = pageLen / 2;
+  const tierOf = (k: number): Tier =>
+    k % 8 === 0 ? "in" : k % 8 === 4 ? "half" : k % 2 === 0 ? "quarter" : "eighth";
+  const out: Tick[] = [];
+  for (const fromRight of [false, true]) {
+    for (let k = 0; k <= half; k++) {
+      const d = k * 0.125;
+      const pos = fromRight ? pageLen - d : d;
+      if (fromRight && Math.abs(pos - center) < 0.0625) continue; // dedupe centre
+      const tier = tierOf(k);
+      out.push({ pos, tier, label: tier === "in" ? k / 8 : undefined, key: `${fromRight ? "r" : "l"}${k}` });
+    }
+  }
+  return out;
+}
+
+const H_TICKS = ticksFor(PAGE_W_IN);
+const V_TICKS = ticksFor(PAGE_H_IN);
+
 /**
  * Horizontal ruler above the paged sheet. Each edge counts inches inward from 0,
  * meeting at the 4.25in centre. Drag a marker to set the left/right margin; a
@@ -50,20 +77,16 @@ export function PageRuler({ view }: { view: EditorView }) {
 
   const ml = view.marginLeft;
   const mr = view.marginRight;
-  const ticks = [0, 1, 2, 3, 4];
 
   return (
     <div ref={rulerRef} className="wc-ruler" aria-label="Horizontal margins ruler">
-      <div className="wc-ruler-track" />
       <div className="wc-ruler-page" style={{ left: `${ml}in`, right: `${mr}in` }} />
-      {ticks.map((n) => (
-        <span key={`l${n}`} className="wc-ruler-num" style={{ left: `${n}in` }}>
-          {n}
-        </span>
+      {H_TICKS.map((t) => (
+        <i key={t.key} className={`wc-tick wc-tick-${t.tier}`} style={{ left: `${t.pos}in` }} />
       ))}
-      {ticks.map((n) => (
-        <span key={`r${n}`} className="wc-ruler-num" style={{ left: `${PAGE_W_IN - n}in` }}>
-          {n}
+      {H_TICKS.filter((t) => t.label !== undefined).map((t) => (
+        <span key={`n${t.key}`} className="wc-ruler-num" style={{ left: `${t.pos}in` }}>
+          {t.label}
         </span>
       ))}
       <div
@@ -127,20 +150,16 @@ export function PageRulerV({ view }: { view: EditorView }) {
 
   const mt = view.marginTop;
   const mb = view.marginBottom;
-  const ticks = [0, 1, 2, 3, 4, 5];
 
   return (
     <div ref={rulerRef} className="wc-ruler-v" aria-label="Vertical margins ruler">
-      <div className="wc-ruler-v-track" />
       <div className="wc-ruler-v-page" style={{ top: `${mt}in`, bottom: `${mb}in` }} />
-      {ticks.map((n) => (
-        <span key={`t${n}`} className="wc-ruler-v-num" style={{ top: `${n}in` }}>
-          {n}
-        </span>
+      {V_TICKS.map((t) => (
+        <i key={t.key} className={`wc-tick wc-tick-${t.tier}`} style={{ top: `${t.pos}in` }} />
       ))}
-      {ticks.map((n) => (
-        <span key={`b${n}`} className="wc-ruler-v-num" style={{ top: `${PAGE_H_IN - n}in` }}>
-          {n}
+      {V_TICKS.filter((t) => t.label !== undefined).map((t) => (
+        <span key={`n${t.key}`} className="wc-ruler-v-num" style={{ top: `${t.pos}in` }}>
+          {t.label}
         </span>
       ))}
       <div

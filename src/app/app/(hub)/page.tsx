@@ -19,7 +19,7 @@ import { DashboardTour } from "@/components/dashboard-tour";
 
 const PROJECTS_PREVIEW = 6;
 const KERNELS_PREVIEW = 3;
-const INSPIRATIONS_PREVIEW = 3;
+const INSPIRATIONS_PREVIEW = 4;
 
 async function safeFolders(): Promise<ProjectFolder[]> {
   try {
