@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CubeMark } from "@/components/cube-mark";
 import { AccountMenu } from "@/components/account-menu";
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/server/feedback";
 
 // Allow AI server actions invoked from these pages up to 60s on Vercel.
 export const maxDuration = 60;
@@ -15,6 +16,7 @@ export default async function HubLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const admin = await isAdmin();
 
   return (
     <div className="flex flex-col flex-1 min-h-screen">
@@ -27,6 +29,11 @@ export default async function HubLayout({
           <Link href="/app" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
             Dashboard
           </Link>
+          {admin && (
+            <Link href="/app/admin/feedback" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
+              Feedback
+            </Link>
+          )}
           <AccountMenu email={user?.email ?? null} />
         </nav>
       </header>
