@@ -57,9 +57,9 @@ export function PracticeLibrary({ practice }: { practice: ExerciseSummary[] }) {
         <ul className="divide-y divide-[var(--wc-border)] rounded-[var(--wc-r-lg)] border border-[var(--wc-border)] bg-[var(--wc-surface)]">
           {visible.map((ex) => (
             <li key={ex.id} className="flex items-center gap-3 px-3 py-2">
-              <Link href={`/app/exercises/${ex.id}`} className="min-w-0 flex-1">
-                <span className="font-serif text-[var(--wc-ink)]">{ex.title || ex.prompt.text}</span>
-                <span className="ml-2 text-xs text-[var(--wc-faint)]">
+              <Link href={`/app/exercises/${ex.id}`} className="min-w-0 flex-1 flex items-baseline gap-2">
+                <span className="min-w-0 flex-1 truncate font-serif text-[var(--wc-ink)]">{ex.title || ex.prompt.text}</span>
+                <span className="shrink-0 text-xs text-[var(--wc-faint)]">
                   {ex.word_count.toLocaleString()} words
                 </span>
               </Link>

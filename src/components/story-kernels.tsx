@@ -102,9 +102,9 @@ export function StoryKernels({
         <ul className="divide-y divide-[var(--wc-border)] rounded-[var(--wc-r-lg)] border border-[var(--wc-border)] bg-[var(--wc-surface)]">
           {visible.map((k) => (
             <li key={k.id} className="flex items-center gap-3 px-3 py-2">
-              <Link href={`/app/kernels/${k.id}`} className="min-w-0 flex-1">
-                <span className="font-serif text-[var(--wc-ink)]">{k.title || "Untitled kernel"}</span>
-                {k.body && <span className="ml-2 text-xs text-[var(--wc-faint)] truncate">{k.body}</span>}
+              <Link href={`/app/kernels/${k.id}`} className="min-w-0 flex-1 flex items-baseline gap-2">
+                <span className="shrink truncate font-serif text-[var(--wc-ink)]">{k.title || "Untitled kernel"}</span>
+                {k.body && <span className="min-w-0 flex-1 truncate text-xs text-[var(--wc-faint)]">{k.body}</span>}
               </Link>
               <Link
                 href={`/app/kernels/${k.id}`}

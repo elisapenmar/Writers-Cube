@@ -92,6 +92,7 @@ export function ensureSpeller(): Promise<void> {
     speller = nspell(aff, dic) as Speller;
     buildSuggestionIndex(dic);
     notify();
+    void loadSupplementalWords();
     // Pull the account dictionary (follows the writer across devices). We track
     // accepted words in `personal` (not speller.add) so they can be removed later.
     try {
@@ -119,13 +120,38 @@ export function spellerReady(): boolean {
   return speller !== null;
 }
 
+// The Hunspell en_US dictionary misses many valid derived forms (e.g.
+// "pixelated", "pitter", "arrhythmically"). We supplement it with a broad
+// (~275k) word list fetched once, plus a tiny hand-list for stragglers the big
+// list also lacks. A word is correct if ANY source accepts it.
+const supplemental = new Set<string>();
+const HAND_WORDS = ["arhythmic", "arhythmically", "arrhythmically"];
+for (const w of HAND_WORDS) supplemental.add(w);
+
+async function loadSupplementalWords(): Promise<void> {
+  try {
+    const res = await fetch("/dict/words");
+    if (!res.ok) return;
+    const text = await res.text();
+    for (const w of text.split("\n")) {
+      const lw = w.trim().toLowerCase();
+      if (lw) supplemental.add(lw);
+    }
+    notify(); // re-flag now that coverage improved
+  } catch {
+    /* offline — nspell + the hand-list still apply */
+  }
+}
+
 /** Whether a token should be flagged. Skips short tokens, numbers, and accepted words. */
 export function isMisspelled(word: string): boolean {
   if (!speller || !spellEnabled()) return false;
   if (word.length < 2 || !WORD_OK.test(word) || HAS_DIGIT.test(word)) return false;
   const cached = checkCache.get(word);
   if (cached !== undefined) return cached;
-  const bad = !speller.correct(word) && !personal.has(word.toLowerCase());
+  const lw = word.toLowerCase();
+  const bad =
+    !speller.correct(word) && !personal.has(lw) && !supplemental.has(lw);
   checkCache.set(word, bad);
   return bad;
 }

@@ -103,10 +103,10 @@ export function Inspirations({
           {visible.map((i) => (
             <li key={i.id} className="px-3 py-2">
               <div className="flex items-baseline gap-2">
-                <span className="font-serif text-[var(--wc-ink)]">{i.title || "Untitled"}</span>
-                {i.source && <span className="text-xs italic text-[var(--wc-faint)]">{i.source}</span>}
+                <span className="min-w-0 shrink truncate font-serif text-[var(--wc-ink)]">{i.title || "Untitled"}</span>
+                {i.source && <span className="shrink-0 truncate text-xs italic text-[var(--wc-faint)]">{i.source}</span>}
               </div>
-              {i.body && <p className="text-xs text-[var(--wc-muted)] truncate">{i.body}</p>}
+              {i.body && <p className="truncate text-xs text-[var(--wc-muted)]">{i.body}</p>}
             </li>
           ))}
         </ul>

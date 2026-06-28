@@ -624,13 +624,25 @@ body {
 .wc-ruler-track {
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(
-    to right,
-    transparent 0,
-    transparent calc(1in - 1px),
-    rgba(51, 48, 58, 0.25) calc(1in - 1px),
-    rgba(51, 48, 58, 0.25) 1in
-  );
+  /* full-height inch marks + short 1/8in minor marks along the bottom edge */
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(1in - 1px),
+      rgba(51, 48, 58, 0.32) calc(1in - 1px),
+      rgba(51, 48, 58, 0.32) 1in
+    ),
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(0.125in - 1px),
+      rgba(51, 48, 58, 0.18) calc(0.125in - 1px),
+      rgba(51, 48, 58, 0.18) 0.125in
+    );
+  background-repeat: repeat-x, repeat-x;
+  background-position: bottom, bottom;
+  background-size: 100% 100%, 100% 8px;
 }
 /* The printable area (inside the margins) reads lighter than the margins. */
 .wc-ruler-page {
@@ -688,13 +700,25 @@ body {
 .wc-ruler-v-track {
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent calc(1in - 1px),
-    rgba(51, 48, 58, 0.25) calc(1in - 1px),
-    rgba(51, 48, 58, 0.25) 1in
-  );
+  /* full-width inch marks + short 1/8in minor marks along the right edge */
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(1in - 1px),
+      rgba(51, 48, 58, 0.32) calc(1in - 1px),
+      rgba(51, 48, 58, 0.32) 1in
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(0.125in - 1px),
+      rgba(51, 48, 58, 0.18) calc(0.125in - 1px),
+      rgba(51, 48, 58, 0.18) 0.125in
+    );
+  background-repeat: repeat-y, repeat-y;
+  background-position: right, right;
+  background-size: 100% 100%, 8px 100%;
 }
 .wc-ruler-v-page {
   position: absolute;
