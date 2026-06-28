@@ -10,7 +10,8 @@ import { useSceneCollab } from "@/lib/yjs/use-collab";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
-import { PageRuler } from "@/components/page-ruler";
+import { PageRuler, PageRulerV } from "@/components/page-ruler";
+import { ZoomSelect } from "@/components/zoom-select";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorViewOptions } from "@/components/editor-view-options";
@@ -358,6 +359,7 @@ export function Editor({ scene }: { scene: Scene }) {
             ⋯
           </button>
           <EditorViewOptions view={view} />
+          <ZoomSelect view={view} />
           <button
             onClick={() => setTypewriterOpen(true)}
             className="rounded-md border border-[var(--wc-border-strong)] px-3 py-1 hover:bg-[var(--wc-canvas)] text-[var(--wc-muted)]"
@@ -406,20 +408,27 @@ export function Editor({ scene }: { scene: Scene }) {
         {view.pageFormat === "paged" ? (
           <div className="wc-page-zoom" style={{ zoom: view.pageZoom } as React.CSSProperties}>
             <PageRuler view={view} />
-            <div
-              className="wc-doc wc-doc-paged"
-              data-paged="true"
-              data-space-before={view.spaceBefore}
-              data-space-after={view.spaceAfter}
-              style={
-                {
-                  "--wc-line": String(view.lineSpacing),
-                  "--wc-margin-l": `${view.marginLeft}in`,
-                  "--wc-margin-r": `${view.marginRight}in`,
-                } as React.CSSProperties
-              }
-            >
-              <EditorContent editor={editor} />
+            <div className="wc-page-rel">
+              <PageRulerV view={view} />
+              <div
+                className="wc-doc wc-doc-paged"
+                data-paged="true"
+                data-margin-top={view.marginTop}
+                data-margin-bottom={view.marginBottom}
+                data-space-before={view.spaceBefore}
+                data-space-after={view.spaceAfter}
+                style={
+                  {
+                    "--wc-line": String(view.lineSpacing),
+                    "--wc-margin-l": `${view.marginLeft}in`,
+                    "--wc-margin-r": `${view.marginRight}in`,
+                    "--wc-margin-t": `${view.marginTop}in`,
+                    "--wc-margin-b": `${view.marginBottom}in`,
+                  } as React.CSSProperties
+                }
+              >
+                <EditorContent editor={editor} />
+              </div>
             </div>
           </div>
         ) : (

@@ -19,6 +19,10 @@ type ViewValues = {
   marginLeft: number;
   /** Right page margin, in inches (paged view; set via the ruler). */
   marginRight: number;
+  /** Top page margin, in inches (paged view; set via the vertical ruler). */
+  marginTop: number;
+  /** Bottom page margin, in inches (paged view; set via the vertical ruler). */
+  marginBottom: number;
 };
 
 export type EditorView = ViewValues & {
@@ -30,6 +34,8 @@ export type EditorView = ViewValues & {
   setPageZoom: (v: number) => void;
   setMarginLeft: (v: number) => void;
   setMarginRight: (v: number) => void;
+  setMarginTop: (v: number) => void;
+  setMarginBottom: (v: number) => void;
 };
 
 /** Per-form defaults: novels read as a continuous manuscript (pageless);
@@ -45,6 +51,8 @@ function defaultsFor(form?: string): ViewValues {
     pageZoom: 1,
     marginLeft: 1,
     marginRight: 1,
+    marginTop: 1,
+    marginBottom: 1,
   };
 }
 
@@ -88,5 +96,7 @@ export function useEditorView(projectId = "_global", form?: string): EditorView 
     setPageZoom: (pageZoom) => patch(projectId, { pageZoom }),
     setMarginLeft: (marginLeft) => patch(projectId, { marginLeft }),
     setMarginRight: (marginRight) => patch(projectId, { marginRight }),
+    setMarginTop: (marginTop) => patch(projectId, { marginTop }),
+    setMarginBottom: (marginBottom) => patch(projectId, { marginBottom }),
   };
 }

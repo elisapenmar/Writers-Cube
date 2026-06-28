@@ -21,8 +21,9 @@ import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { EditorViewOptions } from "@/components/editor-view-options";
-import { PageRuler } from "@/components/page-ruler";
+import { PageRuler, PageRulerV } from "@/components/page-ruler";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
+import { ZoomSelect } from "@/components/zoom-select";
 import { TypewriterMode } from "@/components/typewriter-mode";
 import { useEditorView } from "@/store/editor-view-store";
 import { termsFor } from "@/lib/project-forms";
@@ -149,6 +150,10 @@ export function ManuscriptReader({
 
   return (
     <div className="relative flex-1 flex flex-col h-screen bg-[var(--wc-page)]">
+      {/* Bubble menu lives at the root (outside the zoomed page) so floating-ui
+          positions it over the selection rather than being thrown off by the
+          page-zoom transform. Bound to whichever block is focused. */}
+      {activeEditor && <TagBubbleMenu editor={activeEditor} />}
       {findOpen && activeEditor && (
         <FindReplace editor={activeEditor} onClose={() => setFindOpen(false)} />
       )}
@@ -180,6 +185,7 @@ export function ManuscriptReader({
               >
                 <ClockIcon />
               </button>
+              <ZoomSelect view={view} />
               <button
                 onClick={() => setFocusScene(activeScene)}
                 disabled={!activeScene}
@@ -208,11 +214,15 @@ export function ManuscriptReader({
           }
         >
           {view.pageFormat === "paged" && <PageRuler view={view} />}
+          <div className={view.pageFormat === "paged" ? "wc-page-rel" : ""}>
+          {view.pageFormat === "paged" && <PageRulerV view={view} />}
           <div
             className={`wc-doc ${
               view.pageFormat === "paged" ? "wc-doc-paged" : "wc-doc-pageless"
             }`}
             data-paged={view.pageFormat === "paged" ? "true" : undefined}
+            data-margin-top={view.marginTop}
+            data-margin-bottom={view.marginBottom}
             data-space-before={view.spaceBefore}
             data-space-after={view.spaceAfter}
             style={
@@ -220,6 +230,8 @@ export function ManuscriptReader({
                 "--wc-line": String(view.lineSpacing),
                 "--wc-margin-l": `${view.marginLeft}in`,
                 "--wc-margin-r": `${view.marginRight}in`,
+                "--wc-margin-t": `${view.marginTop}in`,
+                "--wc-margin-b": `${view.marginBottom}in`,
               } as CSSProperties
             }
           >
@@ -260,6 +272,7 @@ export function ManuscriptReader({
               {looseScenes.map(renderScene)}
             </section>
           )}
+          </div>
           </div>
         </div>
       </div>
@@ -377,7 +390,6 @@ function DraftBlock({
           Start typing to begin your {pieceLabel}…
         </div>
       )}
-      {editor && <TagBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );
@@ -667,7 +679,6 @@ function SceneBlock({
           ⋯
         </button>
       </div>
-      {editor && <TagBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />
 
       {ctxMenu && (

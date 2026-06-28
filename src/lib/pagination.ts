@@ -20,9 +20,7 @@ import type { EditorView } from "@tiptap/pm/view";
 const KEY = new PluginKey<DecorationSet>("pagination");
 
 const PAGE_H_IN = 11;
-const MARGIN_IN = 1; // top & bottom page margins
 const GAP_IN = 0.5; // desk gap shown between sheets
-const CONTENT_IN = PAGE_H_IN - 2 * MARGIN_IN; // 9in usable height per page
 const PX_PER_IN = 96; // logical px; CSS `zoom` scales the rendered widget
 
 export const Pagination = Extension.create({
@@ -84,6 +82,9 @@ function compute(view: EditorView): { set: DecorationSet; sig: string } {
   if (!paged || host.querySelector("[data-columns]")) {
     return { set: DecorationSet.empty, sig: "" };
   }
+  const marginTop = parseFloat(paged.getAttribute("data-margin-top") || "1") || 1;
+  const marginBottom = parseFloat(paged.getAttribute("data-margin-bottom") || "1") || 1;
+  const contentIn = PAGE_H_IN - marginTop - marginBottom; // usable height per page
 
   // px-per-inch in the current (possibly zoomed) render, so block heights convert
   // to zoom-independent inches.
@@ -105,10 +106,10 @@ function compute(view: EditorView): { set: DecorationSet; sig: string } {
       const cs = getComputedStyle(dom);
       h = (r.height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0)) / pxPerIn;
     }
-    if (used > 0 && used + h > CONTENT_IN) {
-      const remaining = CONTENT_IN - used; // white left at the page bottom
-      const fillIn = remaining + 2 * MARGIN_IN + GAP_IN;
-      const deskTopIn = remaining + MARGIN_IN;
+    if (used > 0 && used + h > contentIn) {
+      const remaining = contentIn - used; // white left at the page bottom
+      const fillIn = remaining + marginTop + marginBottom + GAP_IN;
+      const deskTopIn = remaining + marginBottom;
       decos.push(
         Decoration.widget(offset, () => makeBreak(fillIn, deskTopIn), {
           side: -1,

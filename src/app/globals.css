@@ -567,12 +567,22 @@ body {
 .wc-doc-paged {
   --wc-margin-l: 1in;
   --wc-margin-r: 1in;
+  --wc-margin-t: 1in;
+  --wc-margin-b: 1in;
   width: 8.5in;
   margin: 0 auto;
-  padding: 1in var(--wc-margin-r) 1in var(--wc-margin-l);
+  padding: var(--wc-margin-t) var(--wc-margin-r) var(--wc-margin-b) var(--wc-margin-l);
   border-radius: 2px;
   box-shadow: var(--wc-shadow-md);
   background-color: var(--wc-surface);
+}
+
+/* Positioning context so the vertical ruler can sit just left of the sheet
+   without shifting it (keeps it aligned with the top horizontal ruler). */
+.wc-page-rel {
+  position: relative;
+  width: 8.5in;
+  margin: 0 auto;
 }
 
 /* Page breaks (from the pagination plugin): a transparent spacer that lets the
@@ -639,6 +649,92 @@ body {
   color: var(--wc-slate);
 }
 .wc-ruler-marker svg { display: block; }
+.wc-ruler-num {
+  position: absolute;
+  top: 5px;
+  transform: translateX(-50%);
+  font-size: 8px;
+  line-height: 1;
+  color: var(--wc-faint);
+  pointer-events: none;
+}
+.wc-ruler-readout {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--wc-slate);
+  color: var(--wc-on-accent);
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Vertical ruler (top/bottom margins), mirroring the horizontal one. */
+.wc-ruler-v {
+  position: absolute;
+  left: -30px;
+  top: 0;
+  width: 22px;
+  height: 11in;
+  background: var(--wc-surface);
+  border-radius: 2px;
+  box-shadow: var(--wc-shadow-md);
+  user-select: none;
+}
+.wc-ruler-v-track {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1in - 1px),
+    rgba(51, 48, 58, 0.25) calc(1in - 1px),
+    rgba(51, 48, 58, 0.25) 1in
+  );
+}
+.wc-ruler-v-page {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(51, 48, 58, 0.06);
+}
+.wc-ruler-v-num {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8px;
+  line-height: 1;
+  color: var(--wc-faint);
+  pointer-events: none;
+}
+.wc-ruler-v-marker {
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 16px;
+  margin-top: -8px;
+  cursor: ns-resize;
+  color: var(--wc-slate);
+}
+.wc-ruler-v-marker svg { display: block; }
+.wc-ruler-readout-v {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--wc-slate);
+  color: var(--wc-on-accent);
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
 
 /* Columns applied to a selection of text (the `columns` node). column-count is
    set inline per node; this adds the gap + a little breathing room. */
