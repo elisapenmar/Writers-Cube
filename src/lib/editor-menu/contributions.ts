@@ -6,4 +6,6 @@
 // e.g.
 //   import "@/lib/lookup/editor-menu"; // Wave 2 Stream B — Look up / Find another word
 
+import "@/lib/lookup/editor-menu"; // Wave 2 Stream B: Look up / Find another word
+
 export {};
