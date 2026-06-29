@@ -12,6 +12,7 @@
 //   import "@/components/panels/language";       // Stream C
 
 import "@/components/panels/corkboard"; // Stream A
+import "@/components/panels/research"; // Stream D
 import "@/components/panels/submissions"; // Stream E — Submissions tracker
 
 export {};
