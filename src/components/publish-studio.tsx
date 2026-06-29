@@ -15,6 +15,10 @@ import {
   chapterHeading,
 } from "@/lib/publish-types";
 import { savePublishSettings } from "@/server/publish";
+import "@/lib/export/presets"; // run export-preset registrations at load
+import { getExportPreset } from "@/lib/export/presets/registry";
+import { configFor } from "@/lib/form-config";
+import { useActiveForm } from "@/store/active-form-store";
 
 export type PublishSample = { chapterTitle: string; paragraphs: string[] };
 
@@ -36,6 +40,21 @@ export function PublishStudio({
 
   function update<K extends keyof PublishSettings>(key: K, value: PublishSettings[K]) {
     setS((prev) => ({ ...prev, [key]: value }));
+    setDirty(true);
+  }
+
+  // Export presets offered for this project's form (resolved via the registry;
+  // streams register e.g. KDP / Shunn). "book" is the standard, no-override base.
+  const form = useActiveForm((st) => st.form);
+  const presets = configFor(form)
+    .exportPresets.map((id) => getExportPreset(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+
+  // Applying a preset layers its partial settings over the current ones.
+  function applyPreset(id: string) {
+    const preset = getExportPreset(id);
+    if (!preset) return;
+    setS((prev) => ({ ...prev, ...(preset.settings as Partial<PublishSettings>) }));
     setDirty(true);
   }
 
@@ -81,6 +100,23 @@ export function PublishStudio({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_minmax(320px,420px)]">
           {/* ---- Controls ---- */}
           <div className="space-y-6">
+            {presets.length > 1 && (
+              <Panel title="Start from a preset" hint="One click to apply industry-standard formatting. You can still tweak anything below.">
+                <div className="flex flex-wrap gap-2">
+                  {presets.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => applyPreset(p.id)}
+                      title={p.description}
+                      className="rounded-[var(--wc-r-md)] border border-[var(--wc-border-strong)] bg-[var(--wc-paper)] px-3 py-1.5 text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </Panel>
+            )}
             <Panel title="Book details" hint="Used on the title & copyright pages and in ebook metadata.">
               <Grid>
                 <Text label="Title" value={s.title ?? ""} onChange={(v) => update("title", v)} placeholder={projectTitle} />
