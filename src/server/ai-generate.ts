@@ -6,6 +6,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { resolveProjectId } from "@/server/project-context";
 import { getAnthropic, ANTHROPIC_MODEL } from "@/lib/anthropic";
+import { consumeAiAllowance } from "@/server/plan";
 import { htmlToPlainText } from "@/lib/html-text";
 import type { MindMapNode } from "@/server/brainstorm";
 import type { SavedMindMap } from "@/server/mindmap";
@@ -78,16 +79,29 @@ export async function generateMindMapFromManuscript(): Promise<{ nodes: MindMapN
     throw new Error("Nothing to read yet — write or import some scenes first.");
   }
 
+  // Meter this AI-assist against the free-tier monthly allowance before spending
+  // Claude tokens. Throws (blocks) when a free user is at the cap; no-op on paid.
+  await consumeAiAllowance();
+
   const anthropic = getAnthropic();
   const completion = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: 1500,
-    system: `You map a novelist's story into a thought map (a tree of short nodes).
+    system: [
+      {
+        type: "text",
+        // Cache the stable instruction prefix so repeated generations reuse it.
+        // Caching is a prefix match (tools then system then messages); the
+        // per-call manuscript/notes go in the user turn, after this breakpoint.
+        text: `You map a novelist's story into a thought map (a tree of short nodes).
 - Start from a single root node = the story's core (title or central premise).
 - Children branch into the major elements you actually see in the text: main characters, central conflict, setting, key threads/themes.
 - Each node label is 1–6 words, in the writer's own words where possible.
 - Don't invent material that isn't supported by the text.
 Call render_thought_map. No prose.`,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
     tools: [
       {
         name: "render_thought_map",
@@ -171,12 +185,20 @@ async function buildAndSaveTimeline(
   const completion = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: 2500,
-    system: `You extract a story timeline from a novelist's material.
+    system: [
+      {
+        type: "text",
+        // Stable instruction prefix, cached so repeated timeline generations
+        // reuse it. Per-call material is appended in the user turn below.
+        text: `You extract a story timeline from a novelist's material.
 - Identify the key events in the order they happen in the story's chronology.
 - Group them into 1–3 lanes ("tracks") only if the story clearly has parallel threads (e.g. two POVs, two timeframes). Otherwise use a single lane.
 - Each event: a short title, a "when" label using whatever time cues the text gives ("Day 1", "That night", "Twenty years earlier", "Chapter 3"), and a one-sentence note.
 - Only include events actually present in the material. Don't invent.
 Never use em dashes; use commas or periods. Call build_timeline. No prose.`,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
     tools: [
       {
         name: "build_timeline",
@@ -251,6 +273,7 @@ export async function generateTimelineFromManuscript(): Promise<TimelineState> {
   if (!manuscript && !notes) {
     throw new Error("Nothing to read yet — write or import some scenes first.");
   }
+  await consumeAiAllowance();
   return buildAndSaveTimeline(
     projectId,
     `NOTES:\n${notes || "(none)"}\n\nMANUSCRIPT EXCERPT:\n${manuscript || "(none)"}\n\nBuild the timeline now.`,
@@ -266,6 +289,7 @@ export async function generateTimelineFromBrainstorm(): Promise<TimelineState> {
   if (!transcript) {
     throw new Error("No brainstorm yet — chat in the Brainstorm panel first.");
   }
+  await consumeAiAllowance();
   return buildAndSaveTimeline(
     projectId,
     `BRAINSTORM CONVERSATION:\n${transcript}\n\nBuild the timeline now.`,

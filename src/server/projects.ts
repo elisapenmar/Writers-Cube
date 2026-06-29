@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireProjectCapacity } from "@/server/plan";
 
 const ACTIVE_PROJECT_COOKIE = "wc_active_project";
 
@@ -281,6 +282,9 @@ export async function deleteProjectForever(id: string): Promise<void> {
 
 export async function createProject(title?: string, form?: string): Promise<{ id: string }> {
   const { supabase, user } = await requireUser();
+  // Enforce the free-tier active-project cap. Paid plans pass through; a free
+  // user at the limit gets a clear, catchable error before anything is created.
+  await requireProjectCapacity();
   const f = ["novel", "short_story", "poetry", "essay"].includes(form ?? "") ? form : "novel";
   const { data, error } = await supabase
     .from("projects")
