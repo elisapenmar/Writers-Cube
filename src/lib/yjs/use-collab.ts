@@ -5,13 +5,23 @@ import type { Extensions } from "@tiptap/react";
 import type { SupabaseYjsProvider } from "./provider";
 import type { CollabUser } from "./collab-extensions";
 import type { CrdtKind } from "@/server/crdt";
+import { isNative, isStandalone } from "@/lib/platform";
 
-/** Live co-editing is opt-in: `?yjs=1` in the URL or localStorage.yjs_enabled. */
+/**
+ * Whether the Yjs sync engine drives the editor.
+ *
+ * On mobile (native shell or installed PWA) it is ALWAYS on: Yjs + y-indexeddb
+ * is how prose survives offline and converges on reconnect, so the opt-in gate
+ * does not apply there. On desktop web it stays opt-in (`?yjs=1` in the URL or
+ * localStorage.yjs_enabled), with `?yjs=0` as an explicit override even on
+ * mobile for debugging.
+ */
 export function yjsEnabled(): boolean {
   if (typeof window === "undefined") return false;
   const params = new URLSearchParams(window.location.search);
+  if (params.get("yjs") === "0") return false; // explicit off wins everywhere
   if (params.get("yjs") === "1") return true;
-  if (params.get("yjs") === "0") return false;
+  if (isNative() || isStandalone()) return true; // mobile: always on
   try {
     return localStorage.getItem("yjs_enabled") === "1";
   } catch {

@@ -19,10 +19,33 @@ import { useEditorView } from "@/store/editor-view-store";
 import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
 import { useClampedMenuPosition } from "@/lib/menu-position";
 import { AiDiamond } from "@/components/icons";
+import { startOutbox, registerOutboxHandlers } from "@/lib/offline";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-export function Editor({ scene }: { scene: Scene }) {
+/**
+ * Headless hooks for Agent B's mobile toolbar/shell. The editor owns its Tiptap
+ * instance; Agent B renders chrome around it WITHOUT editing this file's
+ * internals:
+ *
+ * - `onEditorReady(editor)` hands B the live Tiptap editor (or null on unmount)
+ *   so a mobile toolbar can run commands (`editor.chain().focus()...`) and read
+ *   `editor.isActive(...)` for active-state styling. B builds its own toolbar
+ *   component against this instance.
+ * - `renderToolbar(editor)` lets B inject a replacement toolbar in the toolbar
+ *   slot (e.g. a touch-friendly bar). When omitted, the default EditorToolbar
+ *   renders, so desktop is unchanged.
+ *
+ * Sync state is consumed separately via `useSyncState()` from "@/lib/offline";
+ * B can render that indicator anywhere in its shell.
+ */
+export type EditorProps = {
+  scene: Scene;
+  onEditorReady?: (editor: TiptapEditor | null) => void;
+  renderToolbar?: (editor: TiptapEditor | null) => React.ReactNode;
+};
+
+export function Editor({ scene, onEditorReady, renderToolbar }: EditorProps) {
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(scene.updated_at);
   const [wordCount, setWordCount] = useState<number>(scene.word_count);
@@ -265,6 +288,21 @@ export function Editor({ scene }: { scene: Scene }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.id]);
 
+  // Offline/sync layer: register the structural-mutation replay handlers and
+  // wire the outbox to connectivity once. Both are idempotent, so mounting the
+  // editor (the most common writing surface) is a safe place to kick it off.
+  useEffect(() => {
+    registerOutboxHandlers();
+    const stop = startOutbox();
+    return stop;
+  }, []);
+
+  // Hand the live editor to Agent B's mobile toolbar/shell (and clear on unmount).
+  useEffect(() => {
+    onEditorReady?.(editor);
+    return () => onEditorReady?.(null);
+  }, [editor, onEditorReady]);
+
   // ⌘F / Ctrl-F opens find & replace.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -376,7 +414,7 @@ export function Editor({ scene }: { scene: Scene }) {
       )}
 
       <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
-        <EditorToolbar editor={editor} view={view} />
+        {renderToolbar ? renderToolbar(editor) : <EditorToolbar editor={editor} view={view} />}
       </div>
 
       {typewriterOpen && (
