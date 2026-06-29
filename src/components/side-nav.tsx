@@ -34,10 +34,14 @@ import {
   signOut,
 } from "@/server/scenes";
 import { termsFor } from "@/lib/project-forms";
+import { configFor, BUILTIN_TOOL_META, isBuiltinTool } from "@/lib/form-config";
+import { getRegisteredGroup, isGroupAvailableForForm } from "@/components/panels/registry";
+import "@/components/panels"; // run feature-stream panel registrations at load
 import { EditableTitle } from "@/components/editable-title";
 import { ProjectFormPill } from "@/components/project-form-pill";
 import { createLooseScene } from "@/server/loose";
 import { useOrganize } from "@/store/organize-store";
+import { useActiveForm } from "@/store/active-form-store";
 import { useEditorView } from "@/store/editor-view-store";
 import { SidebarToggle, CubeMark } from "@/components/icons";
 
@@ -74,9 +78,17 @@ export function SideNav({
     });
   }
 
+  const setActiveForm = useActiveForm((s) => s.setForm);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Keep the organize panel in sync with this project's form (used to filter
+  // Story-Bible tabs per form without prop-threading).
+  useEffect(() => {
+    setActiveForm(project.form);
+  }, [project.form, setActiveForm]);
 
   useEffect(() => {
     setChapters(project.chapters);
@@ -188,7 +200,7 @@ export function SideNav({
 
       {/* Tools */}
       <div className="px-3 py-2 border-b border-[var(--wc-border)]">
-        <ToolsRow />
+        <ToolsRow form={project.form} />
       </div>
 
       {/* Structure header + view toggle */}
@@ -528,62 +540,58 @@ function ProjectMetadata({ project }: { project: ProjectTree }) {
   );
 }
 
-function ToolsRow() {
+type ToolButton = {
+  id: string;
+  label: string;
+  icon: string;
+  kind: "brainstorm" | "group";
+  group?: string;
+  tour?: string;
+};
+
+/** Resolve a form's configured tool ids into renderable buttons. Built-in tools
+ *  always resolve; stream-provided tools resolve only once their group is
+ *  registered and allowed for this form — otherwise they're skipped, so the
+ *  config can name tools before their stream ships. */
+function resolveTools(form: string): ToolButton[] {
+  return configFor(form)
+    .tools.map((id): ToolButton | null => {
+      if (isBuiltinTool(id)) {
+        const m = BUILTIN_TOOL_META[id];
+        return { id, label: m.label, icon: m.icon, kind: m.kind, group: m.group, tour: m.tour };
+      }
+      const g = getRegisteredGroup(id);
+      if (g && isGroupAvailableForForm(id, form)) {
+        return { id, label: g.label, icon: g.icon, kind: "group", group: g.id };
+      }
+      return null;
+    })
+    .filter((t): t is ToolButton => t !== null);
+}
+
+function ToolsRow({ form }: { form: string }) {
   const openGroup = useOrganize((s) => s.openGroup);
   const setBsOpen = useOrganize((s) => s.setBsOpen);
+  const tools = resolveTools(form);
   const btn =
     "flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] text-[var(--wc-muted)] hover:bg-[var(--wc-paper)] border border-[var(--wc-border)]";
   return (
     <div className="grid grid-cols-3 gap-1.5">
-      <button
-        type="button"
-        data-tour="brainstorm"
-        onClick={() => setBsOpen(true)}
-        className={btn}
-        title="Open the Brainstorm panel"
-      >
-        <span aria-hidden className="text-base leading-none">💭</span>
-        Brainstorm
-      </button>
-      <button
-        type="button"
-        data-tour="bible"
-        onClick={() => openGroup("bible")}
-        className={btn}
-        title="Map · outline · characters"
-      >
-        <span aria-hidden className="text-base leading-none">📖</span>
-        Story Bible
-      </button>
-      <button
-        type="button"
-        data-tour="organize"
-        onClick={() => openGroup("organize")}
-        className={btn}
-        title="Notes · canvas"
-      >
-        <span aria-hidden className="text-base leading-none">🗂️</span>
-        Organize
-      </button>
-      <button
-        type="button"
-        onClick={() => openGroup("tags")}
-        className={btn}
-        title="Tagged passages"
-      >
-        <span aria-hidden className="text-base leading-none">🏷️</span>
-        Tags
-      </button>
-      <button
-        type="button"
-        data-tour="prompts"
-        onClick={() => openGroup("prompts")}
-        className={btn}
-        title="Writing prompts for this project"
-      >
-        <span aria-hidden className="text-base leading-none">🎲</span>
-        Prompts
-      </button>
+      {tools.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          data-tour={t.tour}
+          onClick={() => (t.kind === "brainstorm" ? setBsOpen(true) : openGroup(t.group!))}
+          className={btn}
+          title={t.label}
+        >
+          <span aria-hidden className="text-base leading-none">
+            {t.icon}
+          </span>
+          {t.label}
+        </button>
+      ))}
     </div>
   );
 }

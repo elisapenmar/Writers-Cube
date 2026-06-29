@@ -54,7 +54,12 @@ import {
   GROUP_TABS,
   GROUP_LABEL,
   type OrganizeFormat,
+  type PanelGroup,
 } from "@/store/organize-store";
+import { configFor, type BibleTab } from "@/lib/form-config";
+import { useActiveForm } from "@/store/active-form-store";
+import type { ProjectForm } from "@/lib/project-forms";
+import { getRegisteredGroup, findRegisteredTab } from "@/components/panels/registry";
 
 const TAB_LABEL: Record<OrganizeFormat, string> = {
   notes: "Notes",
@@ -68,6 +73,29 @@ const TAB_LABEL: Record<OrganizeFormat, string> = {
   tags: "Tags",
   prompts: "Prompts",
 };
+
+/** Tabs to show for a group: built-in groups use their fixed tab list (the
+ *  Story-Bible list is filtered to the tabs this form allows); registered groups
+ *  use their declared tabs. */
+function tabsForGroup(group: string, form: ProjectForm): string[] {
+  const builtin = GROUP_TABS[group as PanelGroup];
+  if (builtin) {
+    if (group === "bible") {
+      const allowed = new Set<string>(configFor(form).bibleTabs as BibleTab[]);
+      return builtin.filter((t) => allowed.has(t));
+    }
+    return builtin;
+  }
+  return getRegisteredGroup(group)?.tabs.map((t) => t.id) ?? [];
+}
+
+function groupLabel(group: string): string {
+  return GROUP_LABEL[group as PanelGroup] ?? getRegisteredGroup(group)?.label ?? "";
+}
+
+function tabLabel(tab: string): string {
+  return TAB_LABEL[tab as OrganizeFormat] ?? findRegisteredTab(tab)?.label ?? tab;
+}
 import { MindMap } from "@/components/mind-map";
 import { OutlineTab } from "@/components/outline-tree";
 import { CharactersTab } from "@/components/characters-tab";
@@ -121,6 +149,7 @@ export function OrganizePanel() {
     setError,
   } = useOrganize();
 
+  const activeForm = useActiveForm((s) => s.form);
   const visible = open || pinned;
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -204,19 +233,14 @@ export function OrganizePanel() {
 
   if (!visible) return null;
   const widthStyle = { width: `${panelWidth}px`, maxWidth: "95vw" };
+  const groupTabs = tabsForGroup(panelGroup, activeForm);
+  const registeredTab = findRegisteredTab(format);
+  const RegisteredPanel = registeredTab?.Component;
 
   async function generate() {
-    if (
-      format === "outline" ||
-      format === "characters" ||
-      format === "places" ||
-      format === "items" ||
-      format === "canvas" ||
-      format === "timeline" ||
-      format === "tags" ||
-      format === "prompts"
-    )
-      return;
+    // Only the AI-backed Notes/Map formats support Generate; everything else
+    // (bible tabs, canvas, tags, prompts, registered panels) bails out.
+    if (format !== "notes" && format !== "mindmap") return;
     setOrganizing(true);
     setError(null);
     try {
@@ -293,22 +317,22 @@ export function OrganizePanel() {
         title="Drag to resize"
       />
       <header className="flex items-center justify-between border-b border-[var(--wc-border)] px-4 py-3 gap-2">
-        <h2 className="font-serif text-base shrink-0 text-[var(--wc-ink)]">{GROUP_LABEL[panelGroup]}</h2>
+        <h2 className="font-serif text-base shrink-0 text-[var(--wc-ink)]">{groupLabel(panelGroup)}</h2>
         <div className="flex items-center gap-1 flex-1 justify-end">
           <div className="flex flex-wrap">
-            {GROUP_TABS[panelGroup].map((tab, i) => (
+            {groupTabs.map((tab, i) => (
               <button
                 key={tab}
-                onClick={() => setFormat(tab)}
+                onClick={() => setFormat(tab as OrganizeFormat)}
                 className={`py-1 px-2 text-xs border ${i === 0 ? "rounded-l-md" : "-ml-px"} ${
-                  i === GROUP_TABS[panelGroup].length - 1 ? "rounded-r-md" : ""
+                  i === groupTabs.length - 1 ? "rounded-r-md" : ""
                 } ${
                   format === tab
                     ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
                     : "bg-[var(--wc-surface)] border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
                 }`}
               >
-                {TAB_LABEL[tab]}
+                {tabLabel(tab)}
               </button>
             ))}
           </div>
@@ -379,7 +403,9 @@ export function OrganizePanel() {
             </button>
           </div>
         )}
-        {format === "timeline" ? (
+        {RegisteredPanel ? (
+          <RegisteredPanel />
+        ) : format === "timeline" ? (
           <TimelineTab />
         ) : format === "tags" ? (
           <TagsTab />

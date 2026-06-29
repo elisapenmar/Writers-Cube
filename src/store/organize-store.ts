@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { MindMapNode, OrganizeFormat as BrainstormFormat } from "@/server/brainstorm";
 import type { SavedPosition } from "@/server/mindmap";
+import { firstRegisteredFormat } from "@/components/panels/registry";
 
 export type OrganizeFormat =
   | BrainstormFormat
@@ -16,7 +17,14 @@ export type OrganizeFormat =
   | "tags"
   | "prompts";
 
+/** A built-in format or a stream-registered panel format id. The `& {}` keeps
+ *  literal autocomplete for the known formats while allowing any registered id. */
+export type OrganizeFormatId = OrganizeFormat | (string & {});
+
 export type PanelGroup = "organize" | "bible" | "tags" | "prompts";
+
+/** A built-in group or a stream-registered group id. */
+export type PanelGroupId = PanelGroup | (string & {});
 
 export const GROUP_TABS: Record<PanelGroup, OrganizeFormat[]> = {
   organize: ["notes", "canvas"],
@@ -56,10 +64,13 @@ type OrganizeState = {
   positions: Record<string, SavedPosition>;
   /** Have we loaded the saved mind map from the DB yet (this tab)? */
   mindMapHydrated: boolean;
+  // Registered-panel formats are stored here too (cast to OrganizeFormat); the
+  // panel renderer resolves them via the registry. Kept as OrganizeFormat so the
+  // built-in Notes/Map generate flow can still narrow on literals.
   format: OrganizeFormat;
   /** Which entry the right panel was opened as. */
-  panelGroup: PanelGroup;
-  openGroup: (group: PanelGroup) => void;
+  panelGroup: PanelGroupId;
+  openGroup: (group: PanelGroupId) => void;
   /** When set, the matching tab scrolls to & highlights this card, then clears it. */
   focusCharacterId: string | null;
   setFocusCharacterId: (id: string | null) => void;
@@ -133,7 +144,11 @@ export const useOrganize = create<OrganizeState>()(
       openGroup: (group) =>
         set({
           panelGroup: group,
-          format: GROUP_TABS[group][0],
+          // Built-in groups have fixed tabs; registered groups resolve their
+          // first tab from the panel registry.
+          format: (GROUP_TABS[group as PanelGroup]?.[0] ??
+            firstRegisteredFormat(group) ??
+            "notes") as OrganizeFormat,
           open: true,
         }),
       focusCharacterId: null,
