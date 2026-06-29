@@ -105,6 +105,10 @@ type OrganizeState = {
   setOrganizing: (b: boolean) => void;
   setError: (s: string | null) => void;
   reset: () => void;
+  /** Clear all project-scoped data AND hydration flags so the panel re-reads
+   *  from the server when the active project changes (prevents one story's
+   *  notes/mind map/cards from bleeding into another). */
+  prepareForProject: () => void;
 };
 
 export const useOrganize = create<OrganizeState>()(
@@ -200,6 +204,21 @@ export const useOrganize = create<OrganizeState>()(
           nodes: null,
           positions: {},
           mindMapHydrated: false,
+          organizing: false,
+          error: null,
+        }),
+      prepareForProject: () =>
+        set({
+          notes: "",
+          notesHydrated: false,
+          notesDraft: "",
+          notesSavedAt: null,
+          nodes: null,
+          positions: {},
+          mindMapHydrated: false,
+          focusCharacterId: null,
+          focusPlaceId: null,
+          focusItemId: null,
           organizing: false,
           error: null,
         }),

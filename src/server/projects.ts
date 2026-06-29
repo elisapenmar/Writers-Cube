@@ -51,6 +51,25 @@ export async function setActiveProject(projectId: string): Promise<void> {
   revalidatePath("/app", "layout");
 }
 
+/**
+ * Point the active-project cookie at `projectId` when it isn't already, so the
+ * Story Bible / Organize panel (which resolve project via this cookie) match the
+ * content being viewed. Called from the scene/chapter pages, which address
+ * content by id and would otherwise leave the cookie stale. Returns whether it
+ * changed, so the caller can refresh only when needed.
+ */
+export async function reconcileActiveProject(projectId: string): Promise<boolean> {
+  if (!projectId) return false;
+  const store = await cookies();
+  if (store.get(ACTIVE_PROJECT_COOKIE)?.value === projectId) return false;
+  store.set(ACTIVE_PROJECT_COOKIE, projectId, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+  return true;
+}
+
 async function fetchProjects(archived: boolean): Promise<ProjectSummary[]> {
   const { supabase, user } = await requireUser();
   let query = supabase

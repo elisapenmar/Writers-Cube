@@ -1,15 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOrganize } from "@/store/organize-store";
 import { OrganizePanel } from "@/components/organize-panel";
 import { BrainstormSidePanel } from "@/components/brainstorm-side-panel";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  projectId,
+}: {
+  children: React.ReactNode;
+  projectId: string;
+}) {
   const open = useOrganize((s) => s.open);
   const panelWidth = useOrganize((s) => s.panelWidth);
   const bsOpen = useOrganize((s) => s.bsOpen);
   const bsWidth = useOrganize((s) => s.bsWidth);
+
+  // When the active project changes, drop the previous story's notes/mind map/
+  // cards so the panel re-reads from the server for the new project (the store
+  // is module-global and otherwise survives the remount).
+  const prevProject = useRef(projectId);
+  useEffect(() => {
+    if (prevProject.current !== projectId) {
+      prevProject.current = projectId;
+      useOrganize.getState().prepareForProject();
+    }
+  }, [projectId]);
 
   // Only reserve space for the panels on wider screens. On phones the panels
   // are full-screen overlays, so pushing the manuscript would shove it off-screen.
@@ -37,7 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <BrainstormSidePanel />
-      <OrganizePanel />
+      <OrganizePanel key={projectId} />
     </>
   );
 }

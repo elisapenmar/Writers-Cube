@@ -41,10 +41,10 @@ export default async function WritingLayout({
   return (
     <div className="wc-workspace flex flex-1 h-screen overflow-hidden">
       <SideNav project={project} uncategorized={uncategorized} />
-      <AppShell>{children}</AppShell>
+      <AppShell projectId={project.id}>{children}</AppShell>
       <StudioTour />
       <RecoveredEdits />
-      <SmartTextLoader />
+      <SmartTextLoader key={project.id} />
     </div>
   );
 }

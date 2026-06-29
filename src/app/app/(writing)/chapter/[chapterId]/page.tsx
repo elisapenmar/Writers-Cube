@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveProjectId } from "@/server/projects";
+import { ActiveProjectSync } from "@/components/active-project-sync";
 import {
   ManuscriptReader,
   type ManuscriptChapter,
@@ -20,11 +22,14 @@ export default async function ChapterPage({
     .maybeSingle();
   if (!chapter) notFound();
 
-  const { data: scenes } = await supabase
-    .from("scenes")
-    .select("id, title, content, position, updated_at")
-    .eq("chapter_id", chapter.id)
-    .order("position", { ascending: true });
+  const [{ data: scenes }, activeId] = await Promise.all([
+    supabase
+      .from("scenes")
+      .select("id, title, content, position, updated_at")
+      .eq("chapter_id", chapter.id)
+      .order("position", { ascending: true }),
+    getActiveProjectId(),
+  ]);
 
   const chapters: ManuscriptChapter[] = [
     {
@@ -41,10 +46,16 @@ export default async function ChapterPage({
   ];
 
   return (
-    <ManuscriptReader
-      projectId={chapter.project_id as string}
-      projectTitle={chapter.title as string}
-      chapters={chapters}
-    />
+    <>
+      <ActiveProjectSync
+        projectId={chapter.project_id as string}
+        activeId={activeId}
+      />
+      <ManuscriptReader
+        projectId={chapter.project_id as string}
+        projectTitle={chapter.title as string}
+        chapters={chapters}
+      />
+    </>
   );
 }
