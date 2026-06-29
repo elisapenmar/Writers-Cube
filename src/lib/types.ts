@@ -6,6 +6,7 @@ export type Scene = {
   content: unknown;
   word_count: number;
   updated_at: string;
+  synopsis?: string | null;
 };
 
 export type Chapter = {

@@ -124,13 +124,26 @@ export async function getOrCreateProject(): Promise<ProjectTree> {
     .order("position", { ascending: true });
 
   const chapterIds = (chapters ?? []).map((c) => c.id);
-  const { data: scenes } = chapterIds.length
-    ? await supabase
+  // `synopsis` (migration 0038, corkboard) may not exist yet on older databases;
+  // fall back to selecting without it so the app keeps working pre-migration.
+  let scenes: Scene[] | null = [];
+  if (chapterIds.length) {
+    const withSynopsis = await supabase
+      .from("scenes")
+      .select("id, chapter_id, title, position, content, word_count, updated_at, synopsis")
+      .in("chapter_id", chapterIds)
+      .order("position", { ascending: true });
+    if (withSynopsis.error) {
+      const { data } = await supabase
         .from("scenes")
         .select("id, chapter_id, title, position, content, word_count, updated_at")
         .in("chapter_id", chapterIds)
-        .order("position", { ascending: true })
-    : { data: [] as Scene[] };
+        .order("position", { ascending: true });
+      scenes = (data as Scene[]) ?? [];
+    } else {
+      scenes = (withSynopsis.data as Scene[]) ?? [];
+    }
+  }
 
   const chaptersWithScenes: Chapter[] = (chapters ?? []).map((c) => ({
     ...c,
