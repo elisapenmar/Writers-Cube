@@ -20,6 +20,7 @@ import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type Spel
 import { useClampedMenuPosition } from "@/lib/menu-position";
 import { AiDiamond } from "@/components/icons";
 import { startOutbox, registerOutboxHandlers } from "@/lib/offline";
+import { registerActiveEditor, clearActiveEditor } from "@/lib/editor-bridge";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -297,10 +298,16 @@ export function Editor({ scene, onEditorReady, renderToolbar }: EditorProps) {
     return stop;
   }, []);
 
-  // Hand the live editor to Agent B's mobile toolbar/shell (and clear on unmount).
+  // Hand the live editor to the mobile toolbar/shell: both the optional prop and
+  // the global editor bridge (which the fixed mobile formatting bar reads), then
+  // clear both on unmount.
   useEffect(() => {
     onEditorReady?.(editor);
-    return () => onEditorReady?.(null);
+    if (editor) registerActiveEditor(editor);
+    return () => {
+      onEditorReady?.(null);
+      if (editor) clearActiveEditor(editor);
+    };
   }, [editor, onEditorReady]);
 
   // ⌘F / Ctrl-F opens find & replace.

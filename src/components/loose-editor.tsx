@@ -5,6 +5,7 @@ import { useEditor, EditorContent, type Editor as TiptapEditor } from "@tiptap/r
 import { useEffect, useRef, useState } from "react";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
 import { useCollab } from "@/lib/yjs/use-collab";
+import { registerActiveEditor, clearActiveEditor } from "@/lib/editor-bridge";
 import {
   updateLooseSceneContent,
   renameLooseScene,
@@ -104,6 +105,14 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
     baseUpdatedAt.current = scene.updated_at;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.id]);
+
+  // Drive the mobile formatting bar in the capture-first loose-scene flow.
+  useEffect(() => {
+    if (editor) registerActiveEditor(editor);
+    return () => {
+      if (editor) clearActiveEditor(editor);
+    };
+  }, [editor]);
 
   useEffect(() => {
     const handler = () => {

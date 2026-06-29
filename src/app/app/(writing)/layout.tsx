@@ -1,5 +1,5 @@
-import { SideNav, type UncategorizedItem } from "@/components/side-nav";
-import { AppShell } from "@/components/app-shell";
+import { type UncategorizedItem } from "@/components/side-nav";
+import { WritingLayoutSwitch } from "@/components/mobile/writing-layout-switch";
 import { StudioTour } from "@/components/studio-tour";
 import { RecoveredEdits } from "@/components/recovered-edits";
 import { SmartTextLoader } from "@/components/smart-text-loader";
@@ -39,12 +39,13 @@ export default async function WritingLayout({
   }
 
   return (
-    <div className="wc-workspace flex flex-1 h-screen overflow-hidden">
-      <SideNav project={project} uncategorized={uncategorized} />
-      <AppShell projectId={project.id}>{children}</AppShell>
+    <>
+      <WritingLayoutSwitch project={project} uncategorized={uncategorized}>
+        {children}
+      </WritingLayoutSwitch>
       <StudioTour />
       <RecoveredEdits />
       <SmartTextLoader key={project.id} />
-    </div>
+    </>
   );
 }
