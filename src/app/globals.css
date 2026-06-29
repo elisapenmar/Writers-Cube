@@ -878,3 +878,35 @@ body {
   letter-spacing: 0.04em;
   color: var(--wc-faint, #636a73);
 }
+
+/* ----------------------------------------------------------------------------
+   Mobile-first gating (Wave 1, Agent B).
+   At phone widths the mobile shell (top bar, bottom tabs, drawer, keyboard-aware
+   formatting bar) takes over navigation and formatting, so desktop-only,
+   pointer-oriented editor chrome is hidden here. The desktop experience above
+   the breakpoint is untouched. These rules are scoped to a media query, never to
+   the elements globally, so nothing is deleted, only hidden on small screens.
+   ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Page rulers are drag-to-set-margin affordances built for a mouse; there is
+     no sensible touch gesture for them in v1, so hide them on phones. The paged
+     document still renders; only the rulers go. */
+  .wc-ruler,
+  .wc-ruler-v {
+    display: none !important;
+  }
+
+  /* Paged layout assumes an 8.5in sheet wider than a phone. Let the document
+     reflow to the viewport so the writer is not horizontally scrolling a page. */
+  .wc-page-zoom {
+    width: 100%;
+  }
+
+  /* The desktop formatting toolbar is replaced by the floating, keyboard-aware
+     mobile toolbar. Hide the in-header desktop toolbar row to avoid two bars.
+     Targeted by the editor's toolbar wrapper (border-b row holding the toolbar);
+     scoped under .wc-mobile-editor which the mobile shell sets on its content. */
+  .wc-mobile-editor .wc-desktop-toolbar {
+    display: none;
+  }
+}
