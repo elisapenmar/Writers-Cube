@@ -11,6 +11,7 @@
 //   import "@/lib/export/presets/shunn";   // Stream E — Shunn manuscript
 
 import "@/lib/export/presets/registry";
-import "@/lib/export/presets/kdp";
+import "@/lib/export/presets/kdp"; // Stream F — Amazon/KDP
+import "@/lib/export/presets/shunn"; // Stream E — Shunn manuscript
 
 export {};
