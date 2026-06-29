@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { StudioTour } from "@/components/studio-tour";
 import { RecoveredEdits } from "@/components/recovered-edits";
 import { SmartTextLoader } from "@/components/smart-text-loader";
+import { LookupPopoverHost } from "@/components/lookup/lookup-popover-host";
 import { getOrCreateProject } from "@/server/scenes";
 import { listExercises } from "@/server/prompts";
 import { listLooseScenes } from "@/server/loose";
@@ -45,6 +46,7 @@ export default async function WritingLayout({
       <StudioTour />
       <RecoveredEdits />
       <SmartTextLoader key={project.id} />
+      <LookupPopoverHost />
     </div>
   );
 }
