@@ -35,6 +35,11 @@ export default function LoginPage() {
         {error && (
           <p className="text-sm text-red-600">{error}</p>
         )}
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          Keep getting bounced back here after signing in? Check that cookies are
+          enabled for this site. Writer&apos;s Cube needs them to keep you signed
+          in.
+        </p>
       </div>
     </main>
   );
