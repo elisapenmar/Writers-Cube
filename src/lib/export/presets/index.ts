@@ -11,5 +11,6 @@
 //   import "@/lib/export/presets/shunn";   // Stream E — Shunn manuscript
 
 import "@/lib/export/presets/registry";
+import "@/lib/export/presets/shunn"; // Stream E — Shunn manuscript
 
 export {};
