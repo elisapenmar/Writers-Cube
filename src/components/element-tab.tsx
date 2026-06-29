@@ -218,6 +218,7 @@ export function ElementTab({
             >
               <ElementCard
                 row={r}
+                focused={highlightId === r.id}
                 onPatch={(patch) => patchLocal(r.id, patch)}
                 onRemoved={() => setRows((prev) => (prev ?? []).filter((x) => x.id !== r.id))}
                 onError={setError}
@@ -234,6 +235,7 @@ export function ElementTab({
 
 function ElementCard({
   row,
+  focused = false,
   onPatch,
   onRemoved,
   onError,
@@ -241,6 +243,7 @@ function ElementCard({
   remove,
 }: {
   row: StoryItem;
+  focused?: boolean;
   onPatch: (patch: Partial<StoryItem>) => void;
   onRemoved: () => void;
   onError: (msg: string) => void;
@@ -253,6 +256,11 @@ function ElementCard({
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Opening this card from the manuscript (Smart Text click) expands it.
+  useEffect(() => {
+    if (focused) setExpanded(true);
+  }, [focused]);
 
   useEffect(() => {
     setName(row.name);

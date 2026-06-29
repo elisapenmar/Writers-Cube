@@ -37,7 +37,7 @@ function buildDecorations(doc: PMNode): DecorationSet {
           class: "wc-smart-text",
           "data-el-id": el.id,
           "data-el-kind": el.kind,
-          title: `${el.name} — ⌘/Ctrl-click to open`,
+          title: `${el.name} — click to open`,
         }),
       );
     }
@@ -61,8 +61,6 @@ function recognizerPlugin() {
         return recogKey.getState(state);
       },
       handleClick(view, _pos, event) {
-        // Plain click edits; modifier-click follows the link to the card.
-        if (!event.metaKey && !event.ctrlKey) return false;
         const target = (event.target as HTMLElement)?.closest?.(
           "[data-el-id]",
         ) as HTMLElement | null;
@@ -72,9 +70,15 @@ function recognizerPlugin() {
           | StoryElement["kind"]
           | null;
         if (!id || !kind) return false;
-        event.preventDefault();
         openStoryElement({ id, kind, name: target.textContent ?? "" });
-        return true;
+        // A modifier-click is purely "go to the card", so swallow the event.
+        // A plain click also opens the card but lets the caret land so the
+        // writer can keep editing the name in place.
+        if (event.metaKey || event.ctrlKey) {
+          event.preventDefault();
+          return true;
+        }
+        return false;
       },
     },
     view(editorView) {

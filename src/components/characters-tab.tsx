@@ -229,6 +229,7 @@ export function CharactersTab() {
             >
               <CharacterCard
                 character={c}
+                focused={highlightId === c.id}
                 onPatch={(patch) => applyPatch(c.id, patch)}
                 onDelete={() => removeLocal(c.id)}
                 onError={setError}
@@ -243,11 +244,13 @@ export function CharactersTab() {
 
 function CharacterCard({
   character,
+  focused = false,
   onPatch,
   onDelete,
   onError,
 }: {
   character: Character;
+  focused?: boolean;
   onPatch: (patch: Partial<Character>) => void;
   onDelete: () => void;
   onError: (msg: string) => void;
@@ -260,6 +263,12 @@ function CharacterCard({
   const [expanded, setExpanded] = useState(false);
   const [citing, setCiting] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Opening this card from the manuscript (Smart Text click) expands it so the
+  // writer immediately sees the full bullets + citations.
+  useEffect(() => {
+    if (focused) setExpanded(true);
+  }, [focused]);
 
   async function cite() {
     setCiting(true);

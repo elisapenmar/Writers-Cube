@@ -669,6 +669,12 @@ export async function pullCharactersFromProject(): Promise<{
     throw new Error("Nothing to read yet — write some scenes first.");
   }
 
+  // Scale bullet detail to manuscript length: a long draft should distill to the
+  // plot-relevant essentials, not accumulate every small character note.
+  const longManuscript = manuscript.length > 6000;
+  const bulletRule = longManuscript
+    ? `description: at MOST 3 to 5 bullet points (NOT prose), one per line, each starting with "• ". This is a substantial manuscript, so keep only what matters to the story: the character's defining traits and their key decisions or turning points in the plot. Collapse minor personality details and habits into a single summarizing bullet rather than listing each one. Don't pad.`
+    : `description: 3 to 6 short bullet points (NOT prose), one fact/trait/relationship/arc-beat per line, each starting with "• ".`;
   const anthropic = getAnthropic();
   const completion = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
@@ -679,7 +685,7 @@ Rules:
 - Only include people who actually appear in the text. Don't invent characters.
 - name: the most specific name used in the text.
 - role: a short descriptor inferred from the text (e.g. "protagonist", "her brother"). Omit if unclear.
-- description: 3–6 short bullet points (NOT prose), one fact/trait/relationship/arc-beat per line, each starting with "• ". Ground every bullet in what the text actually shows. Use the writer's own details. Never use em dashes; use commas or periods.
+- ${bulletRule} Ground every bullet in what the text actually shows. Use the writer's own details. Never use em dashes; use commas or periods.
 - Skip walk-on names with no substance.
 
 Call list_characters. No prose.`,
