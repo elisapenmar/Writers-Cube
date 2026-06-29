@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   openProject,
-  createProjectAndOpen,
   createFolder,
   renameFolder,
   deleteFolder,
@@ -12,6 +11,7 @@ import {
   type ProjectSummary,
   type ProjectFolder,
 } from "@/server/projects";
+import { NewProjectButton } from "@/components/new-project-button";
 import { ProjectExportMenu } from "@/components/project-export-menu";
 import { OpenPending } from "@/components/open-pending";
 
@@ -171,18 +171,7 @@ export function ProjectsBrowser({
           </div>
         ))}
 
-        <form
-          action={createProjectAndOpen}
-          className="rounded-2xl p-4 border border-dashed border-[var(--wc-border-strong)] bg-transparent flex items-center justify-center"
-        >
-          <button
-            type="submit"
-            className="rounded-lg px-3 py-1.5 text-sm text-[var(--wc-on-accent)]"
-            style={{ background: "var(--wc-slate)" }}
-          >
-            ＋ New project
-          </button>
-        </form>
+        <NewProjectButton variant="card" />
       </div>
     </>
   );

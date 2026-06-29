@@ -4,10 +4,10 @@ import { useMemo } from "react";
 import Link from "next/link";
 import {
   openProject,
-  createProjectAndOpen,
   type ProjectSummary,
   type ProjectFolder,
 } from "@/server/projects";
+import { NewProjectButton } from "@/components/new-project-button";
 import { ProjectGoal } from "@/components/project-goal";
 import { ProjectExportMenu } from "@/components/project-export-menu";
 import { OpenPending } from "@/components/open-pending";
@@ -77,15 +77,7 @@ export function ProjectsSection({
       {/* Action row, under the section marker: create a new project (titled and
           typed later, inside the project), browse all, or import. */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <form action={createProjectAndOpen}>
-          <button
-            type="submit"
-            className="rounded-[var(--wc-r-md)] px-3 py-1.5 text-sm text-[var(--wc-on-accent)] transition hover:brightness-105"
-            style={{ background: "var(--wc-slate)" }}
-          >
-            ＋ New project
-          </button>
-        </form>
+        <NewProjectButton variant="inline" />
         <Link
           href="/app/projects"
           className="rounded-[var(--wc-r-md)] border border-[var(--wc-border-strong)] px-3 py-1.5 text-sm text-[var(--wc-ink)] hover:bg-[var(--wc-canvas)]"
