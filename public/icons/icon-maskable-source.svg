@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24">
+  <!-- Maskable variant: full-bleed background, cube held inside the ~66% safe zone
+       so OS circle/squircle masks never clip the mark. -->
+  <rect width="24" height="24" fill="#edeeeb"/>
+  <g transform="translate(12,12) scale(0.62) translate(-12,-12)">
+    <path d="M12 2.5 21 7l-9 4.5L3 7l9-4.5Z" fill="#9bb0a0"/>
+    <path d="M3 7l9 4.5V21l-9-4.5V7Z" fill="#5e7488"/>
+    <path d="M21 7l-9 4.5V21l9-4.5V7Z" fill="#6f6480"/>
+  </g>
+</svg>

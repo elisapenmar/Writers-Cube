@@ -1,9 +1,31 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 
 export const metadata: Metadata = {
+  applicationName: "Writer's Cube",
   title: "Writer's Cube",
   description: "Writer's Cube, V0.5",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Writer's Cube",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icons/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  // Match the default (mist) canvas tone so the mobile status bar blends in.
+  themeColor: "#edeeeb",
+  // Let the app paint under the notch/home indicator on phones.
+  viewportFit: "cover",
+  width: "device-width",
+  initialScale: 1,
+  // Intentionally NOT capping maximum-scale — pinch-zoom must stay available (a11y).
 };
 
 // Applied before paint so the chosen theme/motion never flashes the default.
@@ -29,6 +51,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--wc-canvas)] text-[var(--wc-ink)]">
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>
