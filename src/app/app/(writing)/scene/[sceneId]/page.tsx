@@ -32,10 +32,22 @@ export default async function ScenePage({
   ]);
   const projectId = chapter?.project_id as string | undefined;
 
+  // The project form decides the editor mode (poetry => verse). Default to novel
+  // if the lookup fails so the editor always renders.
+  let form = "novel";
+  if (projectId) {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("form")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (project?.form) form = project.form as string;
+  }
+
   return (
     <>
       {projectId && <ActiveProjectSync projectId={projectId} activeId={activeId} />}
-      <Editor scene={scene as Scene} />
+      <Editor scene={scene as Scene} form={form} />
     </>
   );
 }

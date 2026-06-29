@@ -11,4 +11,6 @@
 //   import "@/components/panels/submissions";   // Stream E
 //   import "@/components/panels/language";       // Stream C
 
+import "@/components/panels/poetry"; // Stream C — poetry language sidebar
+
 export {};
