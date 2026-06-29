@@ -799,3 +799,53 @@ body {
   text-decoration-skip-ink: none;
   text-underline-offset: 2px;
 }
+
+/* Smart Text: a recognized story element (character / place / item). A quiet
+   dotted underline so prose stays readable; ⌘/Ctrl-click opens its card. */
+.wc-smart-text {
+  text-decoration: underline dotted
+    color-mix(in srgb, var(--wc-plum) 60%, transparent);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.wc-smart-text:hover {
+  text-decoration-color: var(--wc-plum);
+  background: color-mix(in srgb, var(--wc-plum) 9%, transparent);
+}
+
+/* Smart Text type-ahead popup (appended to <body>, positioned at the caret). */
+.wc-smarttext-suggest {
+  position: fixed;
+  z-index: 60;
+  min-width: 11rem;
+  max-width: 18rem;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--wc-border, #d8d4cf);
+  background: var(--wc-surface, #fff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.wc-smarttext-suggest-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.82rem;
+  color: var(--wc-ink, #2e323b);
+  text-align: left;
+  cursor: pointer;
+}
+.wc-smarttext-suggest-item:hover,
+.wc-smarttext-suggest-item.is-active {
+  background: color-mix(in srgb, var(--wc-plum) 14%, transparent);
+}
+.wc-smarttext-suggest-kind {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--wc-faint, #636a73);
+}

@@ -3,11 +3,49 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { resolveProjectId } from "@/server/project-context";
+import type { StoryElement } from "@/lib/story-elements";
 
 export type LinkTargets = {
   scenes: { id: string; title: string; chapter: string }[];
   characters: { id: string; name: string }[];
 };
+
+/**
+ * Every named story element in the active project (characters, places, items),
+ * flattened for the editor's Smart Text recognizer + type-ahead. Places/Items
+ * are queried defensively so this keeps working before those tables exist.
+ */
+export async function listStoryElements(): Promise<StoryElement[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const projectId = await resolveProjectId(supabase, user.id);
+  if (!projectId) return [];
+
+  const out: StoryElement[] = [];
+  const tables: { table: string; kind: StoryElement["kind"] }[] = [
+    { table: "characters", kind: "character" },
+    { table: "places", kind: "place" },
+    { table: "items", kind: "item" },
+  ];
+  for (const { table, kind } of tables) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("id, name")
+      .eq("user_id", user.id)
+      .eq("project_id", projectId)
+      .order("position", { ascending: true });
+    if (error) continue; // table not created yet, or transient — skip this kind
+    for (const row of data ?? []) {
+      const name = String((row as { name?: unknown }).name ?? "").trim();
+      if (name) out.push({ id: (row as { id: string }).id, name, kind });
+    }
+  }
+  return out;
+}
 
 /** Scenes (story moments) and characters in the active project, for link pickers. */
 export async function listLinkTargets(): Promise<LinkTargets> {

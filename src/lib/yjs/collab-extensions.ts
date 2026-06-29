@@ -22,6 +22,7 @@ import { FontSize } from "@/lib/font-size";
 import { ALL_TAG_MARKS } from "@/lib/tag-mark";
 import { FOOTNOTE_NODES } from "@/lib/footnotes";
 import { SpellCheck } from "@/lib/spellcheck-extension";
+import { SmartText } from "@/lib/smart-text-extension";
 import type { SupabaseYjsProvider } from "./provider";
 
 export type CollabUser = { name: string; color: string };
@@ -51,6 +52,7 @@ export function buildCollabExtensions(provider: SupabaseYjsProvider, user: Colla
     ...ALL_TAG_MARKS,
     ...FOOTNOTE_NODES,
     SpellCheck,
+    SmartText,
     Collaboration.configure({ document: provider.doc }),
     CollaborationCaret.configure({ provider, user }),
   ];

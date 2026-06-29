@@ -61,6 +61,8 @@ const TAB_LABEL: Record<OrganizeFormat, string> = {
   mindmap: "Map",
   outline: "Outline",
   characters: "Characters",
+  places: "Places",
+  items: "Items",
   canvas: "Canvas",
   timeline: "Timeline",
   tags: "Tags",
@@ -69,6 +71,8 @@ const TAB_LABEL: Record<OrganizeFormat, string> = {
 import { MindMap } from "@/components/mind-map";
 import { OutlineTab } from "@/components/outline-tree";
 import { CharactersTab } from "@/components/characters-tab";
+import { PlacesTab } from "@/components/places-tab";
+import { ItemsTab } from "@/components/items-tab";
 import { TagsTab } from "@/components/tags-tab";
 import { PromptsTab } from "@/components/prompts-tab";
 import { AiSourceMenu } from "@/components/ai-source-menu";
@@ -205,6 +209,8 @@ export function OrganizePanel() {
     if (
       format === "outline" ||
       format === "characters" ||
+      format === "places" ||
+      format === "items" ||
       format === "canvas" ||
       format === "timeline" ||
       format === "tags" ||
@@ -383,6 +389,10 @@ export function OrganizePanel() {
           <CanvasTab />
         ) : format === "characters" ? (
           <CharactersTab />
+        ) : format === "places" ? (
+          <PlacesTab />
+        ) : format === "items" ? (
+          <ItemsTab />
         ) : format === "outline" ? (
           <OutlineTab />
         ) : format === "notes" ? (

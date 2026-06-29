@@ -16,6 +16,11 @@ import { AiSourceMenu } from "@/components/ai-source-menu";
 import { CharacterGrid } from "@/components/character-grid";
 import { useOrganize } from "@/store/organize-store";
 
+/** Tell the editor's Smart Text registry to re-read after a name change. */
+function notifyElementsChanged() {
+  window.dispatchEvent(new Event("wc:story-elements-changed"));
+}
+
 /** Split a description into clean bullet strings (leading •/-/* removed). */
 function bulletLines(text: string): string[] {
   return (text ?? "")
@@ -73,6 +78,7 @@ export function CharactersTab() {
       try {
         const created = await createCharacter();
         setCharacters((prev) => [...(prev ?? []), created]);
+        notifyElementsChanged();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Add failed");
       }
@@ -89,6 +95,7 @@ export function CharactersTab() {
           ? await pullCharactersFromBrainstorm()
           : await pullCharactersFromProject();
       await load();
+      notifyElementsChanged();
       const bits: string[] = [];
       if (result.added) bits.push(`${result.added} new`);
       if (result.filled) bits.push(`${result.filled} filled`);
@@ -283,6 +290,7 @@ function CharacterCard({
         if (patch.description !== undefined) update.description = patch.description;
         await updateCharacter(character.id, update);
         onPatch(patch);
+        if (patch.name !== undefined) notifyElementsChanged();
       } catch (e) {
         onError(e instanceof Error ? e.message : "Save failed");
       } finally {
@@ -296,6 +304,7 @@ function CharacterCard({
     try {
       await deleteCharacter(character.id);
       onDelete();
+      notifyElementsChanged();
     } catch (e) {
       onError(e instanceof Error ? e.message : "Delete failed");
     }

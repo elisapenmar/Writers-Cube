@@ -9,6 +9,8 @@ export type OrganizeFormat =
   | BrainstormFormat
   | "outline"
   | "characters"
+  | "places"
+  | "items"
   | "canvas"
   | "timeline"
   | "tags"
@@ -18,7 +20,7 @@ export type PanelGroup = "organize" | "bible" | "tags" | "prompts";
 
 export const GROUP_TABS: Record<PanelGroup, OrganizeFormat[]> = {
   organize: ["notes", "canvas"],
-  bible: ["mindmap", "outline", "characters", "timeline"],
+  bible: ["mindmap", "outline", "characters", "places", "items", "timeline"],
   tags: ["tags"],
   prompts: ["prompts"],
 };
@@ -58,11 +60,17 @@ type OrganizeState = {
   /** Which entry the right panel was opened as. */
   panelGroup: PanelGroup;
   openGroup: (group: PanelGroup) => void;
-  /** When set, the Characters tab scrolls to & highlights this card, then clears it. */
+  /** When set, the matching tab scrolls to & highlights this card, then clears it. */
   focusCharacterId: string | null;
   setFocusCharacterId: (id: string | null) => void;
-  /** Open Story Bible → Characters and focus a specific card. */
+  focusPlaceId: string | null;
+  setFocusPlaceId: (id: string | null) => void;
+  focusItemId: string | null;
+  setFocusItemId: (id: string | null) => void;
+  /** Open Story Bible → (Characters | Places | Items) and focus a specific card. */
   openCharacter: (id: string) => void;
+  openPlace: (id: string) => void;
+  openItem: (id: string) => void;
   open: boolean;
   pinned: boolean;
   /** Selected brainstorm id for the brainstorm side panel. null → load the latest. */
@@ -126,12 +134,30 @@ export const useOrganize = create<OrganizeState>()(
         }),
       focusCharacterId: null,
       setFocusCharacterId: (id) => set({ focusCharacterId: id }),
+      focusPlaceId: null,
+      setFocusPlaceId: (id) => set({ focusPlaceId: id }),
+      focusItemId: null,
+      setFocusItemId: (id) => set({ focusItemId: id }),
       openCharacter: (id) =>
         set({
           panelGroup: "bible",
           format: "characters",
           open: true,
           focusCharacterId: id,
+        }),
+      openPlace: (id) =>
+        set({
+          panelGroup: "bible",
+          format: "places",
+          open: true,
+          focusPlaceId: id,
+        }),
+      openItem: (id) =>
+        set({
+          panelGroup: "bible",
+          format: "items",
+          open: true,
+          focusItemId: id,
         }),
       open: false,
       pinned: false,
