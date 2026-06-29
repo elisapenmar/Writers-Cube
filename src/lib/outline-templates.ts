@@ -15,7 +15,9 @@ export type OutlineTemplateKey =
   | "save-the-cat"
   | "kishotenketsu"
   | "seven-point"
-  | "freytags-pyramid";
+  | "freytags-pyramid"
+  | "story-circle"
+  | "twenty-seven-chapter";
 
 export type OutlineTemplate = {
   key: OutlineTemplateKey;
@@ -198,6 +200,87 @@ export const OUTLINE_TEMPLATES: OutlineTemplate[] = [
         ]),
         group("Act V, Dénouement", [
           leaf("Resolution; new equilibrium established"),
+        ]),
+      ],
+    }),
+  },
+  {
+    key: "story-circle",
+    name: "Dan Harmon's Story Circle",
+    description: "Eight-step cycle of departure and changed return.",
+    build: () => ({
+      id: uid("root"),
+      title: "Dan Harmon's Story Circle",
+      children: [
+        leaf("You, a character in their comfort zone"),
+        leaf("Need, they want something"),
+        leaf("Go, they enter an unfamiliar situation"),
+        leaf("Search, they adapt to it"),
+        leaf("Find, they get what they wanted"),
+        leaf("Take, they pay a heavy price for it"),
+        leaf("Return, they go back to their familiar situation"),
+        leaf("Change, having changed"),
+      ],
+    }),
+  },
+  {
+    key: "twenty-seven-chapter",
+    name: "27-Chapter Plotting",
+    description: "Three acts of three sections of three chapters each.",
+    build: () => ({
+      id: uid("root"),
+      title: "27-Chapter Plotting",
+      children: [
+        group("Act One, Setup", [
+          group("Beginning", [
+            leaf("Introduction, the protagonist's ordinary world"),
+            leaf("Inciting incident, the catalyst that disrupts it"),
+            leaf("Immediate reaction, the first response to the change"),
+          ]),
+          group("Middle", [
+            leaf("Reaction, the protagonist regroups and resists"),
+            leaf("Action, they commit to a plan"),
+            leaf("Consequence, the result of that plan"),
+          ]),
+          group("End", [
+            leaf("Pressure, stakes and tension rise"),
+            leaf("Pinch, a setback forces a hard choice"),
+            leaf("Push, the protagonist crosses into Act Two"),
+          ]),
+        ]),
+        group("Act Two, Confrontation", [
+          group("Beginning", [
+            leaf("New world, the protagonist explores unfamiliar territory"),
+            leaf("Fun and games, they test the new situation"),
+            leaf("Old contrast, the old world is recalled for contrast"),
+          ]),
+          group("Middle", [
+            leaf("Build up, complications accumulate toward the midpoint"),
+            leaf("Midpoint, a turn that raises the stakes"),
+            leaf("Reversal, momentum swings against the protagonist"),
+          ]),
+          group("End", [
+            leaf("Reaction, the protagonist absorbs the reversal"),
+            leaf("Action, they make a decisive move"),
+            leaf("Dedication, full commitment despite the cost"),
+          ]),
+        ]),
+        group("Act Three, Resolution", [
+          group("Beginning", [
+            leaf("Trials, mounting obstacles before the end"),
+            leaf("Pinch, the lowest point; all seems lost"),
+            leaf("Darkest moment, the protagonist confronts despair"),
+          ]),
+          group("Middle", [
+            leaf("Power within, they find the resolve to go on"),
+            leaf("Action, the final push toward the climax"),
+            leaf("Converge, every thread meets at the climax"),
+          ]),
+          group("End", [
+            leaf("Battle, the climactic confrontation"),
+            leaf("Climax, the decisive turning point"),
+            leaf("Resolution, the new status quo and changed protagonist"),
+          ]),
         ]),
       ],
     }),
