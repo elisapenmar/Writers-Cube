@@ -19,6 +19,12 @@ import { useEditorView } from "@/store/editor-view-store";
 import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
 import { useClampedMenuPosition } from "@/lib/menu-position";
 import { AiDiamond } from "@/components/icons";
+import {
+  visibleEditorMenuItems,
+  resolveMenuSelection,
+  type EditorMenuContext,
+} from "@/lib/editor-menu/registry";
+import "@/lib/editor-menu/contributions"; // run feature menu-item registrations at load
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -276,6 +282,20 @@ export function Editor({ scene }: { scene: Scene }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
+  // Resolve the selection/word for the open menu, then collect the feature items
+  // (e.g. Look up / Find another word) that apply. The host renders them in their
+  // own section without knowing what they are.
+  const menuCtx: EditorMenuContext | null =
+    editor && ctxMenu
+      ? {
+          editor,
+          pos: ctxMenu.pos,
+          ...resolveMenuSelection(editor, ctxMenu.pos),
+          close: () => setCtxMenu(null),
+        }
+      : null;
+  const contributedItems = menuCtx ? visibleEditorMenuItems(menuCtx) : [];
+
   return (
     <div className="relative flex flex-col flex-1 h-screen">
       {findOpen && editor && (
@@ -464,6 +484,23 @@ export function Editor({ scene }: { scene: Scene }) {
             <MenuItem onClick={toggleSpelling}>
               {spellEnabled() ? "✓ " : ""}Check spelling
             </MenuItem>
+            {menuCtx && contributedItems.length > 0 && (
+              <>
+                <div className="my-1 border-t border-[var(--wc-border)]" />
+                {contributedItems.map((it) => (
+                  <MenuItem
+                    key={it.id}
+                    shortcut={it.shortcut}
+                    onClick={() => {
+                      setCtxMenu(null);
+                      void it.run(menuCtx);
+                    }}
+                  >
+                    {typeof it.label === "function" ? it.label(menuCtx) : it.label}
+                  </MenuItem>
+                ))}
+              </>
+            )}
             <div className="my-1 border-t border-[var(--wc-border)]" />
             <div className="px-3 pt-0.5 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--wc-faint)]">
               Scene actions
