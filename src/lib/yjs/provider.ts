@@ -5,6 +5,7 @@ import {
   applyAwarenessUpdate,
   removeAwarenessStates,
 } from "y-protocols/awareness";
+import { IndexeddbPersistence } from "y-indexeddb";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { loadCrdt, saveCrdt, type CrdtKind } from "@/server/crdt";
@@ -48,6 +49,13 @@ export class SupabaseYjsProvider {
   private persistTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
   private resolveLoaded!: () => void;
+  /**
+   * Local IndexedDB mirror of the Y.Doc. This is what makes prose offline: edits
+   * are written here synchronously so they survive a reload / app close with no
+   * network, then converge over the Realtime channel (CRDT merge) on reconnect.
+   * Constructed in init() so a server bundle never touches IndexedDB.
+   */
+  private idb: IndexeddbPersistence | null = null;
 
   constructor(kind: CrdtKind, id: string, doc: Y.Doc, awareness: Awareness) {
     this.kind = kind;
@@ -87,6 +95,18 @@ export class SupabaseYjsProvider {
   }
 
   private async init() {
+    // 1) Local IndexedDB first — restores offline edits before anything else, so
+    //    the doc is never momentarily empty when reopening with no network.
+    try {
+      if (typeof indexedDB !== "undefined") {
+        this.idb = new IndexeddbPersistence(`crdt:${this.kind}:${this.id}`, this.doc);
+        await this.idb.whenSynced;
+      }
+    } catch {
+      /* no IndexedDB (private mode / SSR) — fall through to the server snapshot */
+    }
+    // 2) Durable server snapshot — applied as a CRDT update, so it merges with
+    //    (does not clobber) whatever the local mirror just restored.
     try {
       const state = await loadCrdt(this.kind, this.id);
       if (state && !this.destroyed) Y.applyUpdate(this.doc, fromB64(state), this.remote);
@@ -148,6 +168,9 @@ export class SupabaseYjsProvider {
     this.doc.off("update", this.onDocUpdate);
     this.awareness.off("update", this.onAwarenessUpdate);
     removeAwarenessStates(this.awareness, [this.doc.clientID], "destroy");
+    // Detach the IndexedDB mirror but keep its data — that local copy is exactly
+    // what lets the next cold open restore offline edits.
+    void this.idb?.destroy();
     void this.channel.unsubscribe();
   }
 }
