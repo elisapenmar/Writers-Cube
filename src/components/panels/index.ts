@@ -13,6 +13,7 @@
 
 import "@/components/panels/corkboard"; // Stream A
 import "@/components/panels/research"; // Stream D
-import "@/components/panels/submissions"; // Stream E — Submissions tracker
+import "@/components/panels/submissions"; // Stream E, submissions tracker
+import "@/components/panels/poetry"; // Stream C, poetry language sidebar
 
 export {};

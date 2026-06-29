@@ -25,10 +25,16 @@ import {
   type EditorMenuContext,
 } from "@/lib/editor-menu/registry";
 import "@/lib/editor-menu/contributions"; // run feature menu-item registrations at load
+import { configFor } from "@/lib/form-config";
+import { VerseGutter } from "@/components/verse-gutter";
+import { useActiveEditor } from "@/store/active-editor-store";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-export function Editor({ scene }: { scene: Scene }) {
+export function Editor({ scene, form }: { scene: Scene; form?: string }) {
+  // Verse mode (poetry): hard line + stanza breaks are preserved and a per-line
+  // syllable gutter is shown. Prose mode is the default and unchanged.
+  const isVerse = configFor(form).editorMode === "verse";
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [savedAt, setSavedAt] = useState<string | null>(scene.updated_at);
   const [wordCount, setWordCount] = useState<number>(scene.word_count);
@@ -82,8 +88,29 @@ export function Editor({ scene }: { scene: Scene }) {
       editorProps: {
         attributes: {
           // Width / line-spacing / columns are controlled by the page wrapper.
-          class: "prose prose-zinc max-w-none min-h-[60vh] focus:outline-none font-serif text-lg",
+          // Verse mode pads the left edge so the syllable gutter has room.
+          class: `prose prose-zinc max-w-none min-h-[60vh] focus:outline-none font-serif text-lg${
+            isVerse ? " wc-verse pl-12" : ""
+          }`,
         },
+        // In verse mode plain Enter keeps you on a new LINE within the stanza (a
+        // hard break, not a prose paragraph split), so single newlines survive.
+        // Shift+Enter starts a new stanza (paragraph). Prose mode is untouched.
+        // Works off the live `view` (not the `editor` ref) to avoid a stale
+        // closure across re-renders.
+        handleKeyDown: isVerse
+          ? (view, event) => {
+              if (event.key !== "Enter") return false;
+              const { state, dispatch } = view;
+              if (event.shiftKey || event.metaKey || event.ctrlKey) {
+                return false; // let the default Enter split the block (stanza).
+              }
+              const br = state.schema.nodes.hardBreak;
+              if (!br) return false;
+              dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView());
+              return true;
+            }
+          : undefined,
       },
       onCreate: collabReady ? ({ editor }) => seedCollabDoc(editor) : undefined,
       onUpdate: ({ editor }) => {
@@ -256,6 +283,38 @@ export function Editor({ scene }: { scene: Scene }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene.id]);
+
+  // Publish this editor to the active-editor bridge so docked panels (the poetry
+  // language sidebar) can read the selected word and insert form scaffolds. Keep
+  // the selected word in sync on every selection change. Cleared on unmount.
+  useEffect(() => {
+    if (!editor) return;
+    const store = useActiveEditor.getState();
+    store.setEditor(editor);
+    const syncWord = () => {
+      const { from, to, empty } = editor.state.selection;
+      let word = "";
+      if (!empty) {
+        word = editor.state.doc.textBetween(from, to, " ").trim();
+      } else {
+        // Caret with no selection: grab the word the caret sits in.
+        const $pos = editor.state.doc.resolve(from);
+        const text = $pos.parent.textContent;
+        const offset = $pos.parentOffset;
+        const left = text.slice(0, offset).match(/[A-Za-z'-]+$/)?.[0] ?? "";
+        const right = text.slice(offset).match(/^[A-Za-z'-]+/)?.[0] ?? "";
+        word = (left + right).trim();
+      }
+      // Only publish single words; multi-word selections aren't lookup targets.
+      useActiveEditor.getState().setSelectedWord(/\s/.test(word) ? "" : word);
+    };
+    editor.on("selectionUpdate", syncWord);
+    return () => {
+      editor.off("selectionUpdate", syncWord);
+      const current = useActiveEditor.getState();
+      if (current.editor === editor) current.setEditor(null);
+    };
+  }, [editor]);
 
   // ⌘F / Ctrl-F opens find & replace.
   useEffect(() => {
@@ -433,7 +492,10 @@ export function Editor({ scene }: { scene: Scene }) {
                   } as React.CSSProperties
                 }
               >
-                <EditorContent editor={editor} />
+                <div className="relative">
+                  {isVerse && editor && <VerseGutter editor={editor} />}
+                  <EditorContent editor={editor} />
+                </div>
               </div>
             </div>
           </div>
@@ -444,7 +506,10 @@ export function Editor({ scene }: { scene: Scene }) {
             data-space-after={view.spaceAfter}
             style={{ "--wc-line": String(view.lineSpacing) } as React.CSSProperties}
           >
-            <EditorContent editor={editor} />
+            <div className="relative">
+              {isVerse && editor && <VerseGutter editor={editor} />}
+              <EditorContent editor={editor} />
+            </div>
           </div>
         )}
       </div>
