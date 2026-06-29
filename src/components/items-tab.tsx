@@ -1,7 +1,15 @@
 "use client";
 
 import { ElementTab } from "@/components/element-tab";
-import { listItems, createItem, updateItem, deleteItem } from "@/server/items";
+import {
+  listItems,
+  createItem,
+  updateItem,
+  deleteItem,
+  itemsChapterMatrix,
+  pullItemsFromBrainstorm,
+  pullItemsFromProject,
+} from "@/server/items";
 import { useOrganize } from "@/store/organize-store";
 
 export function ItemsTab() {
@@ -17,6 +25,9 @@ export function ItemsTab() {
       remove={deleteItem}
       focusId={focusId}
       clearFocus={() => setFocusId(null)}
+      pullFromBrainstorm={pullItemsFromBrainstorm}
+      pullFromProject={pullItemsFromProject}
+      matrix={itemsChapterMatrix}
     />
   );
 }

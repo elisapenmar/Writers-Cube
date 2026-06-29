@@ -27,8 +27,8 @@ export type PanelGroup = "organize" | "bible" | "tags" | "prompts";
 export type PanelGroupId = PanelGroup | (string & {});
 
 export const GROUP_TABS: Record<PanelGroup, OrganizeFormat[]> = {
-  organize: ["notes", "canvas"],
-  bible: ["mindmap", "outline", "characters", "places", "items", "timeline"],
+  organize: ["notes", "mindmap", "canvas"],
+  bible: ["outline", "characters", "places", "items", "timeline"],
   tags: ["tags"],
   prompts: ["prompts"],
 };
@@ -240,6 +240,17 @@ export const useOrganize = create<OrganizeState>()(
     }),
     {
       name: "wc-organize",
+      // The Map moved from Story Bible into Organize. A returning user may have
+      // {panelGroup:"bible", format:"mindmap"} persisted; re-home it to Organize
+      // so they don't land on a Bible header with no Map tab.
+      version: 1,
+      migrate: (persisted) => {
+        const s = (persisted ?? {}) as Record<string, unknown>;
+        if (s.format === "mindmap" && s.panelGroup === "bible") {
+          return { ...s, panelGroup: "organize" } as never;
+        }
+        return s as never;
+      },
       // Persist only UI prefs locally. Notes AND the mind map live in the DB —
       // we always hydrate from server on mount.
       partialize: (s) => ({

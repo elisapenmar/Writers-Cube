@@ -29,7 +29,7 @@ const STEPS: Step[] = [
           scenes, and every scene keeps its own version history.
         </Feature>
         <Feature icon="📖" name="Story Bible" ai>
-          Characters, an outline, a thought map, and a timeline, each can be generated
+          Characters, an outline, and a timeline, each can be generated
           from your manuscript or brainstorm.
         </Feature>
         <Feature icon="💭" name="Brainstorm" ai>

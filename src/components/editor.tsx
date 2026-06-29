@@ -4,7 +4,7 @@ import { useEditor, EditorContent, type Editor as TiptapEditor } from "@tiptap/r
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Scene } from "@/lib/types";
-import { updateSceneContent, splitScene, splitSceneAt, mergeScene } from "@/server/scenes";
+import { updateSceneContent, splitScene, splitSceneAt } from "@/server/scenes";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
 import { useSceneCollab } from "@/lib/yjs/use-collab";
 import { TypewriterMode } from "@/components/typewriter-mode";
@@ -211,20 +211,6 @@ export function Editor({ scene }: { scene: Scene }) {
     }
     const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
     editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
-  }
-
-  async function doMerge(direction: "previous" | "next") {
-    setCtxMenu(null);
-    setSplitMsg(null);
-    try {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      if (editor) await save(editor.getJSON());
-      const { sceneId } = await mergeScene(scene.id, direction);
-      router.push(`/app/scene/${sceneId}`);
-      router.refresh();
-    } catch (err) {
-      setSplitMsg(err instanceof Error ? err.message : "Merge failed");
-    }
   }
 
   async function doSplitAt(into: "scenes" | "chapters") {
@@ -484,9 +470,6 @@ export function Editor({ scene }: { scene: Scene }) {
             </div>
             <MenuItem onClick={() => doSplitAt("scenes")}>✂ Split into a new scene here</MenuItem>
             <MenuItem onClick={() => doSplitAt("chapters")}>✂ Split into a new chapter here</MenuItem>
-            <div className="my-1 border-t border-[var(--wc-border)]" />
-            <MenuItem onClick={() => doMerge("previous")}>⇡ Merge with previous scene</MenuItem>
-            <MenuItem onClick={() => doMerge("next")}>⇣ Merge with next scene</MenuItem>
           </div>
         </>
       )}

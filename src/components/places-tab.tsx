@@ -1,7 +1,15 @@
 "use client";
 
 import { ElementTab } from "@/components/element-tab";
-import { listPlaces, createPlace, updatePlace, deletePlace } from "@/server/places";
+import {
+  listPlaces,
+  createPlace,
+  updatePlace,
+  deletePlace,
+  placesChapterMatrix,
+  pullPlacesFromBrainstorm,
+  pullPlacesFromProject,
+} from "@/server/places";
 import { useOrganize } from "@/store/organize-store";
 
 export function PlacesTab() {
@@ -17,6 +25,9 @@ export function PlacesTab() {
       remove={deletePlace}
       focusId={focusId}
       clearFocus={() => setFocusId(null)}
+      pullFromBrainstorm={pullPlacesFromBrainstorm}
+      pullFromProject={pullPlacesFromProject}
+      matrix={placesChapterMatrix}
     />
   );
 }

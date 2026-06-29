@@ -5,7 +5,11 @@ import {
   createElement,
   updateElement,
   deleteElement,
+  elementChapterMatrix,
+  pullElementsFromBrainstorm,
+  pullElementsFromProject,
   type StoryItem,
+  type ElementMatrix,
 } from "@/server/story-element-crud";
 
 export type Item = StoryItem;
@@ -27,4 +31,16 @@ export async function updateItem(
 
 export async function deleteItem(id: string): Promise<void> {
   return deleteElement("items", id);
+}
+
+export async function itemsChapterMatrix(): Promise<ElementMatrix> {
+  return elementChapterMatrix("items");
+}
+
+export async function pullItemsFromBrainstorm() {
+  return pullElementsFromBrainstorm("items", "item");
+}
+
+export async function pullItemsFromProject() {
+  return pullElementsFromProject("items", "item");
 }

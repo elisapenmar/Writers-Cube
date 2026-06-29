@@ -22,7 +22,7 @@ export type BuiltinToolId = "brainstorm" | "bible" | "organize" | "tags" | "prom
 export type ToolId = BuiltinToolId | (string & {});
 
 /** Story-Bible sub-tabs; ids match the `OrganizeFormat`s of the bible group. */
-export type BibleTab = "mindmap" | "outline" | "characters" | "places" | "items" | "timeline";
+export type BibleTab = "outline" | "characters" | "places" | "items" | "timeline";
 
 export type FormConfig = {
   structureModel: StructureModel;
@@ -40,7 +40,7 @@ export const FORM_CONFIG: Record<ProjectForm, FormConfig> = {
     structureModel: "hierarchical",
     editorMode: "prose",
     tools: ["brainstorm", "bible", "organize", "corkboard", "tags", "prompts"],
-    bibleTabs: ["mindmap", "outline", "characters", "places", "items", "timeline"],
+    bibleTabs: ["outline", "characters", "places", "items", "timeline"],
     exportPresets: ["book", "kdp"],
   },
   short_story: {
@@ -48,7 +48,7 @@ export const FORM_CONFIG: Record<ProjectForm, FormConfig> = {
     editorMode: "prose",
     tools: ["brainstorm", "bible", "organize", "submissions", "tags", "prompts"],
     // Lighter bible: characters by default, no places/items.
-    bibleTabs: ["mindmap", "outline", "characters", "timeline"],
+    bibleTabs: ["outline", "characters", "timeline"],
     exportPresets: ["book", "shunn"],
   },
   poetry: {
@@ -64,7 +64,7 @@ export const FORM_CONFIG: Record<ProjectForm, FormConfig> = {
     editorMode: "prose",
     // Research/source manager instead of the full bible.
     tools: ["brainstorm", "research", "organize", "tags", "prompts"],
-    bibleTabs: ["mindmap", "outline", "timeline"],
+    bibleTabs: ["outline", "timeline"],
     exportPresets: ["book"],
   },
 };

@@ -20,12 +20,12 @@ const STOPS: Stop[] = [
   {
     sel: '[data-tour="bible"]',
     title: "Story Bible",
-    body: "Characters, an outline, a thought map, and a timeline, build them by hand or generate from your draft.",
+    body: "Characters, an outline, and a timeline, build them by hand or generate from your draft.",
   },
   {
     sel: '[data-tour="organize"]',
     title: "Organize",
-    body: "A home for working notes and a freeform canvas of references and clippings.",
+    body: "A home for working notes, a draggable thought map, and a freeform canvas of references and clippings.",
   },
   {
     sel: '[data-tour="prompts"]',

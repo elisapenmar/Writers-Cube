@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { StoryItem } from "@/server/story-element-crud";
+import type { StoryItem, ElementMatrix } from "@/server/story-element-crud";
+import { AiSourceMenu } from "@/components/ai-source-menu";
+import { ElementGrid } from "@/components/element-grid";
 
 /** Tell the editor's Smart Text registry to re-read after a name change. */
 function notifyChanged() {
   window.dispatchEvent(new Event("wc:story-elements-changed"));
 }
+
+type PullResult = { added: number; filled: number; total: number };
 
 type ElementTabProps = {
   noun: string; // singular, lowercase: "place" / "item"
@@ -20,6 +24,10 @@ type ElementTabProps = {
   remove: (id: string) => Promise<void>;
   focusId: string | null;
   clearFocus: () => void;
+  /** Optional AI pulls + appearance grid. When omitted, those controls hide. */
+  pullFromBrainstorm?: () => Promise<PullResult>;
+  pullFromProject?: () => Promise<PullResult>;
+  matrix?: () => Promise<ElementMatrix>;
 };
 
 /**
@@ -36,11 +44,21 @@ export function ElementTab({
   remove,
   focusId,
   clearFocus,
+  pullFromBrainstorm,
+  pullFromProject,
+  matrix,
 }: ElementTabProps) {
   const [rows, setRows] = useState<StoryItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [pulling, setPulling] = useState(false);
   const [pending, startTransition] = useTransition();
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [showGrid, setShowGrid] = useState(false);
+  const [gridKey, setGridKey] = useState(0);
+
+  const canGenerate = !!(pullFromBrainstorm && pullFromProject);
+  const label = noun.charAt(0).toUpperCase() + noun.slice(1);
 
   useEffect(() => {
     void reload();
@@ -62,8 +80,35 @@ export function ElementTab({
     try {
       setRows(await load());
       setError(null);
+      setGridKey((k) => k + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Load failed");
+    }
+  }
+
+  async function onPull(source: "brainstorm" | "project") {
+    if (!pullFromBrainstorm || !pullFromProject) return;
+    setPulling(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const result =
+        source === "brainstorm" ? await pullFromBrainstorm() : await pullFromProject();
+      await reload();
+      notifyChanged();
+      const bits: string[] = [];
+      if (result.added) bits.push(`${result.added} new`);
+      if (result.filled) bits.push(`${result.filled} filled`);
+      const where = source === "brainstorm" ? "brainstorm" : "manuscript";
+      setInfo(
+        bits.length
+          ? `Pulled from ${where}: ${bits.join(", ")}. (Your manual edits were kept.)`
+          : `Nothing new to pull. Your list already covers what's in the ${where}.`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Pull failed");
+    } finally {
+      setPulling(false);
     }
   }
 
@@ -98,13 +143,39 @@ export function ElementTab({
           {(rows?.length ?? 0)} {noun}
           {(rows?.length ?? 0) === 1 ? "" : "s"}
         </div>
-        <button
-          onClick={add}
-          disabled={pending}
-          className="rounded-md bg-[var(--wc-slate)] px-2 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
-        >
-          + Add
-        </button>
+        <div className="flex items-center gap-1.5">
+          {matrix && (
+            <button
+              onClick={() => setShowGrid((g) => !g)}
+              className={`rounded-md px-2 py-1 text-xs border ${
+                showGrid
+                  ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
+                  : "border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+              }`}
+              title={`Show where each ${noun} appears, chapter by chapter`}
+            >
+              ▦ Grid
+            </button>
+          )}
+          {canGenerate && (
+            <AiSourceMenu
+              label={(rows?.length ?? 0) > 0 ? "Update" : "Generate"}
+              busy={pulling || pending}
+              options={[
+                { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat + notes" },
+                { key: "project", label: "From manuscript", hint: "Your actual prose" },
+              ]}
+              onSelect={(k) => onPull(k as "brainstorm" | "project")}
+            />
+          )}
+          <button
+            onClick={add}
+            disabled={pending || pulling}
+            className="rounded-md bg-[var(--wc-slate)] px-2 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
+          >
+            + Add
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -114,6 +185,22 @@ export function ElementTab({
             <button onClick={() => setError(null)} className="ml-2 underline">
               Dismiss
             </button>
+          </div>
+        )}
+        {info && (
+          <div className="bg-amber-50 border border-amber-200 rounded-md px-4 py-2 text-xs text-amber-900">
+            {info}
+            <button onClick={() => setInfo(null)} className="ml-2 underline">
+              Dismiss
+            </button>
+          </div>
+        )}
+        {matrix && showGrid && (
+          <div className="mb-1">
+            <ElementGrid load={matrix} nounLabel={label} refreshKey={gridKey} />
+            <p className="mt-1 text-[10px] text-[var(--wc-faint)]">
+              Numbers = name mentions per chapter. Click a cell to jump to the scene.
+            </p>
           </div>
         )}
         {(rows ?? []).length === 0 && !error ? (

@@ -29,6 +29,7 @@ import {
   renameScene,
   reorderChapters,
   reorderScenes,
+  mergeScene,
   updateProjectMetadata,
   attachUncategorizedToChapter,
   signOut,
@@ -134,6 +135,18 @@ export function SideNav({
     });
   }
 
+  function onMergeScene(sceneId: string, direction: "previous" | "next") {
+    startTransition(async () => {
+      try {
+        const { sceneId: survivor } = await mergeScene(sceneId, direction);
+        router.push(`/app/scene/${survivor}`);
+        router.refresh();
+      } catch {
+        // Boundaries are already disabled in the UI; ignore the rare race.
+      }
+    });
+  }
+
   function onScenesDragEnd(chapterId: string, event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -224,6 +237,7 @@ export function SideNav({
             mounted={mounted}
             pieceLabel={terms.pieceSingular}
             onReorder={onScenesDragEnd}
+            onMerge={onMergeScene}
           />
         ) : chapters.length === 0 ? (
           <p className="px-2 py-4 text-sm text-[var(--wc-faint)]">
@@ -263,6 +277,7 @@ export function SideNav({
                     pending={pending}
                     onAddScene={addScene}
                     onDragScenes={(e) => onScenesDragEnd(chapter.id, e)}
+                    onMerge={onMergeScene}
                     dropActive={overChapter === chapter.id && !!dragItem}
                     onItemDragOver={() => dragItem && setOverChapter(chapter.id)}
                     onItemDragLeave={() => setOverChapter((c) => (c === chapter.id ? null : c))}
@@ -603,6 +618,7 @@ function SortableChapter({
   pending,
   onAddScene,
   onDragScenes,
+  onMerge,
   ...drop
 }: {
   chapter: Chapter;
@@ -611,6 +627,7 @@ function SortableChapter({
   pending: boolean;
   onAddScene: (chapterId: string) => void;
   onDragScenes: (e: DragEndEvent) => void;
+  onMerge: (sceneId: string, direction: "previous" | "next") => void;
 } & DropProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: chapter.id });
@@ -663,11 +680,14 @@ function SortableChapter({
           strategy={verticalListSortingStrategy}
         >
           <ul className="ml-2 border-l border-[var(--wc-border)] pl-2">
-            {chapter.scenes.map((scene) => (
+            {chapter.scenes.map((scene, i) => (
               <SortableScene
                 key={scene.id}
                 scene={scene}
                 active={activeSceneId === scene.id}
+                canMergeUp={i > 0}
+                canMergeDown={i < chapter.scenes.length - 1}
+                onMerge={onMerge}
               />
             ))}
           </ul>
@@ -685,6 +705,7 @@ function FlatPieces({
   mounted,
   pieceLabel,
   onReorder,
+  onMerge,
 }: {
   chapters: Chapter[];
   activeSceneId: string | undefined;
@@ -692,8 +713,16 @@ function FlatPieces({
   mounted: boolean;
   pieceLabel: string;
   onReorder: (chapterId: string, e: DragEndEvent) => void;
+  onMerge: (sceneId: string, direction: "previous" | "next") => void;
 }) {
   const scenes = chapters.flatMap((c) => c.scenes);
+  // Merge is within a piece's own chapter, so first/last is per chapter.
+  const mergeCaps = new Map<string, { up: boolean; down: boolean }>();
+  for (const c of chapters) {
+    c.scenes.forEach((s, i) =>
+      mergeCaps.set(s.id, { up: i > 0, down: i < c.scenes.length - 1 }),
+    );
+  }
   if (scenes.length === 0) {
     return (
       <p className="px-2 py-4 text-sm text-[var(--wc-faint)]">
@@ -731,7 +760,14 @@ function FlatPieces({
       <SortableContext items={scenes.map((s) => s.id)} strategy={verticalListSortingStrategy}>
         <ul className="space-y-0.5 px-1">
           {scenes.map((s) => (
-            <SortableScene key={s.id} scene={s} active={activeSceneId === s.id} />
+            <SortableScene
+              key={s.id}
+              scene={s}
+              active={activeSceneId === s.id}
+              canMergeUp={mergeCaps.get(s.id)?.up ?? false}
+              canMergeDown={mergeCaps.get(s.id)?.down ?? false}
+              onMerge={onMerge}
+            />
           ))}
         </ul>
       </SortableContext>
@@ -739,7 +775,19 @@ function FlatPieces({
   );
 }
 
-function SortableScene({ scene, active }: { scene: Scene; active: boolean }) {
+function SortableScene({
+  scene,
+  active,
+  canMergeUp,
+  canMergeDown,
+  onMerge,
+}: {
+  scene: Scene;
+  active: boolean;
+  canMergeUp: boolean;
+  canMergeDown: boolean;
+  onMerge: (sceneId: string, direction: "previous" | "next") => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: scene.id });
 
@@ -748,6 +796,9 @@ function SortableScene({ scene, active }: { scene: Scene; active: boolean }) {
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  const arrowBtn =
+    "px-0.5 text-[var(--wc-faint)] hover:text-[var(--wc-ink)] disabled:opacity-0 disabled:cursor-default leading-none";
 
   return (
     <li ref={setNodeRef} style={style} className="group flex items-center">
@@ -770,6 +821,28 @@ function SortableScene({ scene, active }: { scene: Scene; active: boolean }) {
           onSave={(next) => renameScene(scene.id, next)}
         />
       </Link>
+      <span className="ml-1 flex items-center opacity-0 group-hover:opacity-100">
+        <button
+          type="button"
+          onClick={() => onMerge(scene.id, "previous")}
+          disabled={!canMergeUp}
+          className={arrowBtn}
+          title="Merge into the scene above"
+          aria-label="Merge into previous scene"
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          onClick={() => onMerge(scene.id, "next")}
+          disabled={!canMergeDown}
+          className={arrowBtn}
+          title="Merge with the scene below"
+          aria-label="Merge with next scene"
+        >
+          ↓
+        </button>
+      </span>
     </li>
   );
 }
