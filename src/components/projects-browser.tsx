@@ -13,6 +13,7 @@ import {
   type ProjectFolder,
 } from "@/server/projects";
 import { ProjectExportMenu } from "@/components/project-export-menu";
+import { OpenPending } from "@/components/open-pending";
 
 /** Full project browser for the "View all" page: folder management + filtering
  *  + the grid of projects. (Folder creation lives here, not on the dashboard.) */
@@ -162,6 +163,7 @@ export function ProjectsBrowser({
                   {p.id === activeId && " · open"}
                 </div>
               </button>
+              <OpenPending />
             </form>
             <div className="absolute top-3 right-3">
               <ProjectExportMenu projectId={p.id} folders={folders} currentFolderId={p.folder_id} />

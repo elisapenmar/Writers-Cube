@@ -814,6 +814,35 @@ body {
   background: color-mix(in srgb, var(--wc-plum) 9%, transparent);
 }
 
+/* "Opening…" overlay on a project card while its open action + navigation run. */
+.wc-open-pending {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--wc-r-lg, 0.75rem);
+  background: color-mix(in srgb, var(--wc-surface, #fff) 78%, transparent);
+  backdrop-filter: blur(1px);
+  font-size: 0.8rem;
+  color: var(--wc-muted, #5b616a);
+}
+.wc-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--wc-slate, #566b7e) 35%, transparent);
+  border-top-color: var(--wc-slate, #566b7e);
+  animation: wc-spin 0.6s linear infinite;
+}
+@keyframes wc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Smart Text type-ahead popup (appended to <body>, positioned at the caret). */
 .wc-smarttext-suggest {
   position: fixed;

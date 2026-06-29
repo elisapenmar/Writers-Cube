@@ -10,6 +10,7 @@ import {
 } from "@/server/projects";
 import { ProjectGoal } from "@/components/project-goal";
 import { ProjectExportMenu } from "@/components/project-export-menu";
+import { OpenPending } from "@/components/open-pending";
 import { ImportButton } from "@/components/import-button";
 import { ViewToggle } from "@/components/view-toggle";
 import { useViewMode } from "@/store/view-mode-store";
@@ -110,6 +111,7 @@ export function ProjectsSection({
                     {metaLine(p, activeId === p.id)}
                   </div>
                 </button>
+                <OpenPending />
               </form>
               <ProjectGoal projectId={p.id} wordCount={p.word_count} initialGoal={p.word_goal} />
               <div className="absolute top-3 right-3">
@@ -128,7 +130,7 @@ export function ProjectsSection({
       ) : (
         <ul className="divide-y divide-[var(--wc-border)] rounded-[var(--wc-r-lg)] border border-[var(--wc-border)] bg-[var(--wc-surface)]">
           {visible.map((p) => (
-            <li key={p.id} data-active={activeId === p.id} className="flex items-center gap-3 px-3 py-2">
+            <li key={p.id} data-active={activeId === p.id} className="relative flex items-center gap-3 px-3 py-2">
               <form action={openProject} className="min-w-0 flex-1">
                 <input type="hidden" name="projectId" value={p.id} />
                 <button type="submit" className="block w-full truncate text-left">
@@ -137,6 +139,7 @@ export function ProjectsSection({
                     {metaLine(p, activeId === p.id)}
                   </span>
                 </button>
+                <OpenPending />
               </form>
               <span className="hidden sm:block shrink-0 text-[10px] text-[var(--wc-faint)]">
                 {lastTouched(p.updated_at)}
