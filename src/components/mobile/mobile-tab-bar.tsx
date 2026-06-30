@@ -8,12 +8,12 @@ import { MobileQuickCapture } from "@/components/mobile/mobile-quick-capture";
 
 /**
  * Bottom tab bar: the primary mobile navigation, replacing the desktop fixed
- * side-nav at phone widths. Five thumb-reachable targets with the "Note" action
+ * side-nav at phone widths. Five thumb-reachable targets with the "Scene" action
  * raised in the center.
  *
  *   Home      -> dashboard
  *   Chapters  -> opens the structure drawer (project tree / scenes)
- *   Note      -> one-tap new note (loose scene) for this project (center)
+ *   Scene     -> one-tap new (loose/uncategorized) scene for this project (center)
  *   Tools     -> opens the Story Bible / AI panels (organize panel)
  *   More      -> opens the nav drawer's secondary menu (settings, sign out)
  *

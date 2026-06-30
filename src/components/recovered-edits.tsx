@@ -57,7 +57,7 @@ function label(entityType: string): string {
     case "scene":
       return "Scene";
     case "loose_scene":
-      return "Note";
+      return "Scene";
     case "brainstorm":
       return "Brainstorm";
     case "outline":
