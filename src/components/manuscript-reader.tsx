@@ -20,6 +20,7 @@ import { useCollab } from "@/lib/yjs/use-collab";
 import { SceneHistory } from "@/components/scene-history";
 import { FindReplace } from "@/components/find-replace";
 import { EditorToolbar } from "@/components/editor-toolbar";
+import { registerActiveEditor, clearActiveEditor } from "@/lib/editor-bridge";
 import { EditorViewOptions } from "@/components/editor-view-options";
 import { PageRuler, PageRulerV } from "@/components/page-ruler";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
@@ -80,6 +81,15 @@ export function ManuscriptReader({
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
   const [activeScene, setActiveScene] = useState<ManuscriptScene | null>(null);
+
+  // Drive the mobile top formatting bar with whichever scene block is focused,
+  // so the whole-project view gets the same top toolbar as a single scene.
+  useEffect(() => {
+    if (activeEditor) registerActiveEditor(activeEditor);
+    return () => {
+      if (activeEditor) clearActiveEditor(activeEditor);
+    };
+  }, [activeEditor]);
   const [focusScene, setFocusScene] = useState<ManuscriptScene | null>(null);
   const [historyScene, setHistoryScene] = useState<ManuscriptScene | null>(null);
   const [findOpen, setFindOpen] = useState(false);
@@ -158,7 +168,7 @@ export function ManuscriptReader({
         <FindReplace editor={activeEditor} onClose={() => setFindOpen(false)} />
       )}
       {/* Sticky toolbar, operates on whichever block is focused */}
-      <div className="sticky top-0 z-20 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
+      <div className="wc-desktop-toolbar sticky top-0 z-20 border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-2">
         <EditorToolbar
           editor={activeEditor}
           view={view}

@@ -304,7 +304,6 @@ export function OrganizePanel() {
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
   }
-  const width = pinned ? "w-[30rem]" : "w-full md:w-[min(70vw,1000px)]";
 
   return (
     <aside
@@ -316,77 +315,83 @@ export function OrganizePanel() {
         className="absolute inset-y-0 left-0 w-1.5 -translate-x-1/2 cursor-col-resize hover:bg-[var(--wc-stone)] active:bg-[var(--wc-stone)] z-40"
         title="Drag to resize"
       />
-      <header className="flex items-center justify-between border-b border-[var(--wc-border)] px-4 py-3 gap-2">
-        <h2 className="font-serif text-base shrink-0 text-[var(--wc-ink)]">{groupLabel(panelGroup)}</h2>
-        <div className="flex items-center gap-1 flex-1 justify-end">
-          <div className="flex flex-wrap">
-            {groupTabs.map((tab, i) => (
+      <header className="border-b border-[var(--wc-border)] px-4 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-serif text-base shrink-0 text-[var(--wc-ink)]">{groupLabel(panelGroup)}</h2>
+          <div className="flex items-center gap-1">
+            {format === "notes" && (
               <button
-                key={tab}
-                onClick={() => setFormat(tab as OrganizeFormat)}
-                className={`py-1 px-2 text-xs border ${i === 0 ? "rounded-l-md" : "-ml-px"} ${
-                  i === groupTabs.length - 1 ? "rounded-r-md" : ""
-                } ${
-                  format === tab
-                    ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
-                    : "bg-[var(--wc-surface)] border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
-                }`}
+                onClick={generate}
+                disabled={organizing}
+                className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
+                title={
+                  hasCurrent
+                    ? "Have the AI add new ideas from the conversation to your notes"
+                    : "Have the AI distill the conversation into notes"
+                }
               >
-                {tabLabel(tab)}
+                <AiDiamond className="text-[var(--wc-on-accent)]" />
+                {organizing ? "…" : hasCurrent ? "Update" : "Generate"}
               </button>
-            ))}
-          </div>
-          {format === "notes" && (
+            )}
+            {format === "mindmap" && (
+              <AiSourceMenu
+                label={hasCurrent ? "Update" : "Generate"}
+                busy={organizing}
+                options={[
+                  { key: "manuscript", label: "From manuscript", hint: "Your actual prose + notes" },
+                  { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat" },
+                ]}
+                onSelect={(k) => generateMapFrom(k as "manuscript" | "brainstorm")}
+              />
+            )}
             <button
-              onClick={generate}
-              disabled={organizing}
-              className="flex items-center gap-1 rounded-md bg-[var(--wc-slate)] px-2.5 py-1 text-xs text-[var(--wc-on-accent)] hover:bg-[var(--wc-slate)] disabled:opacity-40"
+              onClick={togglePin}
+              className={`rounded-md px-2 py-1 text-xs border ${
+                pinned
+                  ? "bg-amber-100 text-amber-900 border-amber-300"
+                  : "border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+              }`}
               title={
-                hasCurrent
-                  ? "Have the AI add new ideas from the conversation to your notes"
-                  : "Have the AI distill the conversation into notes"
+                pinned
+                  ? "Unpin from side"
+                  : "Pin to right side (keeps visible across pages)"
               }
             >
-              <AiDiamond className="text-[var(--wc-on-accent)]" />
-              {organizing ? "…" : hasCurrent ? "Update" : "Generate"}
+              {pinned ? "Pinned" : "Pin"}
             </button>
-          )}
-          {format === "mindmap" && (
-            <AiSourceMenu
-              label={hasCurrent ? "Update" : "Generate"}
-              busy={organizing}
-              options={[
-                { key: "manuscript", label: "From manuscript", hint: "Your actual prose + notes" },
-                { key: "brainstorm", label: "From brainstorm", hint: "The thought-partner chat" },
-              ]}
-              onSelect={(k) => generateMapFrom(k as "manuscript" | "brainstorm")}
-            />
-          )}
-          <button
-            onClick={togglePin}
-            className={`rounded-md px-2 py-1 text-xs border ${
-              pinned
-                ? "bg-amber-100 text-amber-900 border-amber-300"
-                : "border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
-            }`}
-            title={
-              pinned
-                ? "Unpin from side"
-                : "Pin to right side (keeps visible across pages)"
-            }
-          >
-            {pinned ? "Pinned" : "Pin"}
-          </button>
-          <button
-            onClick={() => {
-              setOpen(false);
-              if (pinned) useOrganize.setState({ pinned: false });
-            }}
-            className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] text-lg leading-none px-1"
-            title="Close"
-          >
-            ×
-          </button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                if (pinned) useOrganize.setState({ pinned: false });
+              }}
+              className="text-[var(--wc-faint)] hover:text-[var(--wc-ink)] text-lg leading-none px-1"
+              title="Close"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs on their own row in a single scrollable strip, so the per-format
+            action buttons above never reflow them: the segmented control looks
+            identical no matter which tab (or which format's buttons) is active. */}
+        <div className="mt-2 -mx-1 flex overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {groupTabs.map((tab, i) => (
+            <button
+              key={tab}
+              onClick={() => setFormat(tab as OrganizeFormat)}
+              className={`shrink-0 py-1 px-2 text-xs border ${i === 0 ? "rounded-l-md" : "-ml-px"} ${
+                i === groupTabs.length - 1 ? "rounded-r-md" : ""
+              } ${
+                format === tab
+                  ? "bg-[var(--wc-slate)] text-[var(--wc-on-accent)] border-[var(--wc-slate)]"
+                  : "bg-[var(--wc-surface)] border-[var(--wc-border-strong)] text-[var(--wc-muted)] hover:bg-[var(--wc-canvas)]"
+              }`}
+            >
+              {tabLabel(tab)}
+            </button>
+          ))}
         </div>
       </header>
 

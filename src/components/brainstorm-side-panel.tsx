@@ -39,7 +39,7 @@ export function BrainstormSidePanel() {
 
   return (
     <aside
-      className="fixed inset-y-0 z-30 bg-[var(--wc-surface)] border-r border-[var(--wc-border)] flex flex-col shadow-2xl"
+      className="wc-bs-panel fixed inset-y-0 z-30 bg-[var(--wc-surface)] border-r border-[var(--wc-border)] flex flex-col shadow-2xl"
       style={{ left: `${leftOffset}px`, width: `${bsWidth}px`, maxWidth: "95vw" }}
     >
       <header className="flex items-center justify-between border-b border-[var(--wc-border)] px-4 py-3 gap-2">

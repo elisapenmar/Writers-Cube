@@ -5,6 +5,7 @@ import type { ProjectTree } from "@/lib/types";
 import type { UncategorizedItem } from "@/components/side-nav";
 import { useOrganize } from "@/store/organize-store";
 import { OrganizePanel } from "@/components/organize-panel";
+import { BrainstormSidePanel } from "@/components/brainstorm-side-panel";
 import { useSyncStatusFallback } from "@/lib/sync-state";
 import { MobileTabBar } from "@/components/mobile/mobile-tab-bar";
 import { MobileNavDrawer } from "@/components/mobile/mobile-nav-drawer";
@@ -50,12 +51,16 @@ export function MobileShell({
 
   return (
     <div className="flex min-h-[100dvh] flex-1 flex-col bg-[var(--wc-canvas)]">
-      <MobileTopBar project={project} />
+      {/* Sticky header: the project bar plus the editor formatting bar (when an
+          editor is active), so the RTE toolbar is always at the top and looks the
+          same whether viewing the whole project or a single scene. */}
+      <div className="sticky top-0 z-30">
+        <MobileTopBar project={project} />
+        <MobileEditorToolbar />
+      </div>
 
-      {/* Content. Bottom padding clears the fixed tab bar / formatting bar. */}
+      {/* Content. Bottom padding clears the fixed tab bar. */}
       <main className="flex flex-1 flex-col overflow-x-hidden pb-20">{children}</main>
-
-      <MobileEditorToolbar />
 
       <MobileTabBar onOpenStructure={() => setStructureOpen(true)} />
 
@@ -67,9 +72,9 @@ export function MobileShell({
         onClose={() => setStructureOpen(false)}
       />
 
-      {/* Story Bible / AI-assist panels (the "Tools" tab target). The brainstorm
-          mind-map canvas is intentionally not mounted on mobile (gated off for
-          v1 per the companion feature set). */}
+      {/* Brainstorm (center tab) + Story Bible / Organize / Tags panels render
+          full-screen on phones when their tab is tapped. */}
+      <BrainstormSidePanel />
       <OrganizePanel key={project.id} />
     </div>
   );

@@ -902,6 +902,15 @@ body {
     width: 100%;
   }
 
+  /* The brainstorm panel is positioned with inline left/width offsets for the
+     desktop side-by-side layout; on phones it should be a full-screen overlay,
+     so override those inline styles (hence !important). */
+  .wc-bs-panel {
+    left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
   /* The desktop editor chrome (the title/word-count/Find/History/Focus header
      row and the formatting toolbar row) is replaced on phones by the mobile top
      bar and the floating, keyboard-aware mobile toolbar. Hide both desktop rows

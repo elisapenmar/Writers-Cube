@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useActiveEditor } from "@/lib/editor-bridge";
-import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
 
 /**
  * Touch-friendly formatting bar for the mobile editor.
@@ -12,10 +11,10 @@ import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
  * `editor.tsx` internals; it only calls the same chainable commands the desktop
  * `editor-toolbar` already uses.
  *
- * Keyboard handling: the bar is fixed to the bottom and lifted by the live
- * keyboard inset so it rides just above the on-screen keyboard instead of being
- * hidden under it. Buttons use `onPointerDown` + preventDefault so tapping a
- * format does not blur the editor or collapse the text selection.
+ * Position: a calm bar pinned at the top of the writing area (the shell makes it
+ * sticky under the project bar), identical across the whole-project and single-
+ * scene views. Buttons use `onPointerDown` + preventDefault so tapping a format
+ * does not blur the editor or collapse the text selection.
  *
  * Scope: only the formatting that makes sense by thumb. Hover-only desktop menus
  * (font family, columns, color picker, tables) are deliberately left to the
@@ -23,7 +22,6 @@ import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
  */
 export function MobileEditorToolbar() {
   const editor = useActiveEditor();
-  const inset = useKeyboardInset();
   const [, force] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -56,12 +54,7 @@ export function MobileEditorToolbar() {
 
   return (
     <div
-      className="fixed inset-x-0 z-40 border-t border-[var(--wc-border)] bg-[var(--wc-surface)]/95 backdrop-blur md:hidden"
-      style={{
-        // Ride above the keyboard; when closed, sit on the safe-area inset.
-        bottom: inset > 0 ? inset : 0,
-        paddingBottom: inset > 0 ? 0 : "env(safe-area-inset-bottom)",
-      }}
+      className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] md:hidden"
       role="toolbar"
       aria-label="Text formatting"
     >
