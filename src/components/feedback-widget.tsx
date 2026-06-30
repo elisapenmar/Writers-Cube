@@ -75,7 +75,11 @@ export function FeedbackWidget() {
   }
 
   return (
-    <>
+    // Desktop-only: the floating widget collides with the mobile tab bar, so it
+    // is hidden on phones for now. `md:` = the 768px mobile breakpoint, so this
+    // shows from tablet width up. (If we want beta feedback on phones later, add
+    // an entry to the mobile "More" drawer rather than re-floating this.)
+    <div className="hidden md:block">
       {!open && (
         <button
           onClick={() => setOpen(true)}
@@ -210,6 +214,6 @@ export function FeedbackWidget() {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }

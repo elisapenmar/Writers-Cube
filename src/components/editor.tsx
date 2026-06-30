@@ -340,7 +340,7 @@ export function Editor({ scene, onEditorReady, renderToolbar }: EditorProps) {
       {findOpen && editor && (
         <FindReplace editor={editor} onClose={() => setFindOpen(false)} />
       )}
-      <header className="flex items-center justify-between border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-3">
+      <header className="wc-desktop-toolbar flex items-center justify-between border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-3">
         <h2 className="font-serif text-lg truncate">{scene.title}</h2>
         <div className="flex items-center gap-3 text-xs text-[var(--wc-faint)] shrink-0">
           <span className="tabular-nums">{wordCount} words</span>
@@ -420,7 +420,7 @@ export function Editor({ scene, onEditorReady, renderToolbar }: EditorProps) {
         </div>
       )}
 
-      <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
+      <div className="wc-desktop-toolbar border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
         {renderToolbar ? renderToolbar(editor) : <EditorToolbar editor={editor} view={view} />}
       </div>
 

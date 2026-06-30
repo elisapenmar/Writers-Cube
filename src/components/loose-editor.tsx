@@ -198,7 +198,7 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
         />
       )}
 
-      <div className="border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
+      <div className="wc-desktop-toolbar border-b border-[var(--wc-border)] bg-[var(--wc-surface)] px-6 py-1.5">
         <EditorToolbar editor={editor} />
       </div>
 

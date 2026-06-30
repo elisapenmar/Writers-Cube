@@ -77,10 +77,10 @@ export default async function Dashboard() {
     inspirations.length === 0;
 
   return (
-    <div className="relative flex-1 overflow-y-auto wc-cube-bg">
+    <div className="relative flex-1 overflow-y-auto overflow-x-hidden wc-cube-bg">
       <CubeField />
       <DashboardTour />
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-10 space-y-10">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-10">
         {/* Hero */}
         <section
           data-tour="dash-hero"

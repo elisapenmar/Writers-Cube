@@ -20,12 +20,12 @@ export default async function HubLayout({
 
   return (
     <div className="flex flex-col flex-1 min-h-screen">
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--wc-border)] bg-[var(--wc-surface)]">
-        <Link href="/app" className="flex items-center gap-2 font-serif text-lg text-[var(--wc-ink)]">
+      <header className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 border-b border-[var(--wc-border)] bg-[var(--wc-surface)]">
+        <Link href="/app" className="flex min-w-0 items-center gap-2 font-serif text-lg text-[var(--wc-ink)]">
           <CubeMark size={20} />
-          Writer&apos;s Cube
+          <span className="truncate">Writer&apos;s Cube</span>
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex shrink-0 items-center gap-4 text-sm">
           <Link href="/app" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
             Dashboard
           </Link>
@@ -37,7 +37,9 @@ export default async function HubLayout({
           <AccountMenu email={user?.email ?? null} />
         </nav>
       </header>
-      <div className="flex flex-1 flex-col">{children}</div>
+      {/* Clip stray horizontal overflow so hub pages never force a zoom-out /
+          sideways scroll on phones (a dashboard should only scroll vertically). */}
+      <div className="flex flex-1 flex-col overflow-x-clip">{children}</div>
     </div>
   );
 }

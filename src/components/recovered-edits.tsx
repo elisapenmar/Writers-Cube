@@ -111,7 +111,9 @@ export function RecoveredEdits() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-4 z-50 rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900 shadow-lg ring-1 ring-amber-300 hover:bg-amber-200"
+          // Lifted above the mobile bottom tab bar on phones (bottom-24); desktop
+          // keeps the corner position.
+          className="fixed bottom-24 right-4 z-50 rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900 shadow-lg ring-1 ring-amber-300 hover:bg-amber-200 md:bottom-4"
         >
           ⚠ {edits.length} recovered edit{edits.length === 1 ? "" : "s"} — click to review
         </button>

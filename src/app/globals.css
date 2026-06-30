@@ -902,11 +902,13 @@ body {
     width: 100%;
   }
 
-  /* The desktop formatting toolbar is replaced by the floating, keyboard-aware
-     mobile toolbar. Hide the in-header desktop toolbar row to avoid two bars.
-     Targeted by the editor's toolbar wrapper (border-b row holding the toolbar);
-     scoped under .wc-mobile-editor which the mobile shell sets on its content. */
-  .wc-mobile-editor .wc-desktop-toolbar {
+  /* The desktop editor chrome (the title/word-count/Find/History/Focus header
+     row and the formatting toolbar row) is replaced on phones by the mobile top
+     bar and the floating, keyboard-aware mobile toolbar. Hide both desktop rows
+     so there are not three stacked bars. The editor only renders inside the
+     mobile shell below this breakpoint, so the media query alone is enough; no
+     ancestor class is required. */
+  .wc-desktop-toolbar {
     display: none;
   }
 }
