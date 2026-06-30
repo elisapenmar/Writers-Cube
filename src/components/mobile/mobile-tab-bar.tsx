@@ -8,12 +8,12 @@ import { MobileQuickCapture } from "@/components/mobile/mobile-quick-capture";
 
 /**
  * Bottom tab bar: the primary mobile navigation, replacing the desktop fixed
- * side-nav at phone widths. Five thumb-reachable targets with the capture FAB in
- * the center (capture-first positioning).
+ * side-nav at phone widths. Five thumb-reachable targets with the "Note" action
+ * raised in the center.
  *
  *   Home      -> dashboard
  *   Chapters  -> opens the structure drawer (project tree / scenes)
- *   Capture   -> one-tap new loose scene (center FAB)
+ *   Note      -> one-tap new note (loose scene) for this project (center)
  *   Tools     -> opens the Story Bible / AI panels (organize panel)
  *   More      -> opens the nav drawer's secondary menu (settings, sign out)
  *

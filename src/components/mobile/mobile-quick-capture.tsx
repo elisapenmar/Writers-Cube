@@ -4,13 +4,17 @@ import { useTransition } from "react";
 import { createLooseScene } from "@/server/loose";
 
 /**
- * Capture-first fast path for mobile.
+ * "New note" fast path for mobile.
  *
- * One tap creates a fresh loose scene and drops the writer straight into the
- * editor with the caret ready. `createLooseScene` inserts the row and redirects
- * to `/app/loose/{id}` server-side, so there is no intermediate screen: from a
- * cold app open, the tab-bar Capture button to a blinking cursor is a single
- * round trip (target: under ~10 seconds).
+ * One tap creates a fresh note (a loose scene attached to the current project —
+ * an uncategorized scrap not yet filed into a chapter) and drops the writer
+ * straight into the editor with the caret ready. `createLooseScene` inserts the
+ * row and redirects to `/app/loose/{id}` server-side, so there is no
+ * intermediate screen.
+ *
+ * The button is explicitly labelled "Note" (not a bare "+") so it never reads as
+ * "my manuscript was replaced by a blank page": tapping it clearly means "start
+ * a new note for this project," and the existing work stays under Chapters.
  *
  * Rendered as the center action of the mobile tab bar (`variant="fab"`) and also
  * offered as a large primary button on empty/landing states (`variant="block"`).
@@ -44,21 +48,26 @@ export function MobileQuickCapture({
         className="flex w-full items-center justify-center gap-2 rounded-[var(--wc-r-md)] bg-[var(--wc-slate)] px-4 py-3.5 text-base font-medium text-[var(--wc-on-accent)] active:opacity-90 disabled:opacity-60"
       >
         <PencilPlus />
-        {pending ? "Opening." : "Quick capture"}
+        {pending ? "Opening…" : "New note"}
       </button>
     );
   }
 
+  // Center tab-bar action: a raised circle with a "Note" label, so it matches the
+  // other labelled tabs instead of being an unlabelled mystery "+".
   return (
-    <button
-      type="button"
-      onClick={capture}
-      disabled={pending}
-      aria-label="Quick capture a new loose scene"
-      className="grid h-14 w-14 -translate-y-3 place-items-center rounded-full bg-[var(--wc-slate)] text-[var(--wc-on-accent)] shadow-[var(--wc-shadow-md)] active:opacity-90 disabled:opacity-60"
-    >
-      {pending ? <Spinner /> : <PencilPlus size={24} />}
-    </button>
+    <div className="flex w-14 flex-col items-center">
+      <button
+        type="button"
+        onClick={capture}
+        disabled={pending}
+        aria-label="New note for this project"
+        className="grid h-12 w-12 -translate-y-2 place-items-center rounded-full bg-[var(--wc-slate)] text-[var(--wc-on-accent)] shadow-[var(--wc-shadow-md)] active:opacity-90 disabled:opacity-60"
+      >
+        {pending ? <Spinner /> : <PencilPlus size={22} />}
+      </button>
+      <span className="-mt-1 text-[10px] font-medium text-[var(--wc-slate)]">Note</span>
+    </div>
   );
 }
 
