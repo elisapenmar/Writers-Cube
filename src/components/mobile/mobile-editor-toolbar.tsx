@@ -65,6 +65,8 @@ export function MobileEditorToolbar() {
       role="toolbar"
       aria-label="Text formatting"
     >
+      {/* Default: super-simple — history + bold/italic/underline. Everything else
+          is one tap away behind the expand (▾) toggle, so the bar stays calm. */}
       <div className="flex items-center gap-0.5 overflow-x-auto px-1 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <TBtn label={<UndoIcon />} title="Undo" onClick={() => chain().undo().run()} />
         <TBtn label={<RedoIcon />} title="Redo" onClick={() => chain().redo().run()} />
@@ -73,20 +75,9 @@ export function MobileEditorToolbar() {
         <TBtn label="I" italic title="Italic" active={isActive("italic")} onClick={() => chain().toggleItalic().run()} />
         <TBtn label="U" underline title="Underline" active={isActive("underline")} onClick={() => chain().toggleUnderline().run()} />
         <Sep />
-        {hasHeading && (
-          <>
-            <TBtn label="H1" title="Heading 1" active={isActive("heading", { level: 1 })} onClick={() => chain().toggleHeading({ level: 1 }).run()} />
-            <TBtn label="H2" title="Heading 2" active={isActive("heading", { level: 2 })} onClick={() => chain().toggleHeading({ level: 2 }).run()} />
-            <Sep />
-          </>
-        )}
-        <TBtn label="•" title="Bullet list" active={isActive("bulletList")} onClick={() => chain().toggleBulletList().run()} />
-        <TBtn label="1." title="Numbered list" active={isActive("orderedList")} onClick={() => chain().toggleOrderedList().run()} />
-        <TBtn label="❝" title="Quote" active={isActive("blockquote")} onClick={() => chain().toggleBlockquote().run()} />
-        <Sep />
         <TBtn
-          label="Aa"
-          title="More"
+          label={<Chevron open={moreOpen} />}
+          title={moreOpen ? "Fewer options" : "More options"}
           active={moreOpen}
           onClick={() => setMoreOpen((o) => !o)}
         />
@@ -95,8 +86,21 @@ export function MobileEditorToolbar() {
         </div>
       </div>
 
+      {/* Expanded: headings, lists, quote, and the rest. */}
       {moreOpen && (
         <div className="flex items-center gap-0.5 overflow-x-auto border-t border-[var(--wc-border)] px-1 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {hasHeading && (
+            <>
+              <TBtn label="H1" title="Heading 1" active={isActive("heading", { level: 1 })} onClick={() => chain().toggleHeading({ level: 1 }).run()} />
+              <TBtn label="H2" title="Heading 2" active={isActive("heading", { level: 2 })} onClick={() => chain().toggleHeading({ level: 2 }).run()} />
+              <TBtn label="H3" title="Heading 3" active={isActive("heading", { level: 3 })} onClick={() => chain().toggleHeading({ level: 3 }).run()} />
+              <Sep />
+            </>
+          )}
+          <TBtn label="•" title="Bullet list" active={isActive("bulletList")} onClick={() => chain().toggleBulletList().run()} />
+          <TBtn label="1." title="Numbered list" active={isActive("orderedList")} onClick={() => chain().toggleOrderedList().run()} />
+          <TBtn label="❝" title="Quote" active={isActive("blockquote")} onClick={() => chain().toggleBlockquote().run()} />
+          <Sep />
           <TBtn label="S" strike title="Strikethrough" active={isActive("strike")} onClick={() => chain().toggleStrike().run()} />
           {typeof cmds.toggleHighlight === "function" && (
             <TBtn
@@ -105,9 +109,6 @@ export function MobileEditorToolbar() {
               active={isActive("highlight")}
               onClick={() => chain().toggleHighlight().run()}
             />
-          )}
-          {hasHeading && (
-            <TBtn label="H3" title="Heading 3" active={isActive("heading", { level: 3 })} onClick={() => chain().toggleHeading({ level: 3 }).run()} />
           )}
           <TBtn label="¶" title="Paragraph" onClick={() => chain().setParagraph().run()} />
           {typeof cmds.indent === "function" && (
@@ -187,6 +188,25 @@ function RedoIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M15 14l5-5-5-5" />
       <path d="M20 9H9a5 5 0 0 0 0 10h1" />
+    </svg>
+  );
+}
+/** Expand/collapse chevron for the "more options" toggle (points up when open). */
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={`transition-transform ${open ? "rotate-180" : ""}`}
+    >
+      <path d="m6 9 6 6 6-6" />
     </svg>
   );
 }
