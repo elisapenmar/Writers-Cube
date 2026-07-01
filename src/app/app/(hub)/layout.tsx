@@ -26,11 +26,15 @@ export default async function HubLayout({
           <span className="truncate">Writer&apos;s Cube</span>
         </Link>
         <nav className="flex shrink-0 items-center gap-4 text-sm">
-          <Link href="/app" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
+          {/* Text links are desktop niceties; on phones they made the fixed-width
+              nav overflow (pushing the account menu off-screen and widening the
+              whole page). The logo already navigates to the dashboard, so hide
+              them below sm and keep just the logo + account menu on mobile. */}
+          <Link href="/app" className="hidden sm:inline text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
             Dashboard
           </Link>
           {admin && (
-            <Link href="/app/admin/feedback" className="text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
+            <Link href="/app/admin/feedback" className="hidden sm:inline text-[var(--wc-muted)] hover:text-[var(--wc-ink)]">
               Feedback
             </Link>
           )}
