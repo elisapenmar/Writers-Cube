@@ -501,7 +501,7 @@ function runsFromInline(
   return runs.length ? runs : [new TextRun({ text: "", size: o.size, font: o.font })];
 }
 
-async function imageParagraph(src: string, o: DocxOpts): Promise<Paragraph | null> {
+async function imageParagraph(src: string): Promise<Paragraph | null> {
   if (!src) return null;
   const img = await fetchImageBytes(src);
   if (!img || img.ext === "svg") return null;
@@ -587,7 +587,7 @@ async function docxBlocks(nodes: unknown[] | undefined, o: DocxOpts): Promise<(P
         n++;
       }
     } else if (b.type === "image") {
-      const para = await imageParagraph(b.attrs?.src ? String(b.attrs.src) : "", o);
+      const para = await imageParagraph(b.attrs?.src ? String(b.attrs.src) : "");
       if (para) out.push(para);
     } else if (b.type === "table") {
       const rows: TableRow[] = [];

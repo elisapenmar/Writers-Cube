@@ -73,6 +73,8 @@ export function BrainstormPanel() {
     };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!Ctor) {
+      // Client-only feature detection; must run post-hydration in the effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSpeechSupported(false);
       return;
     }
@@ -353,7 +355,12 @@ function EditableTitle({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title ?? "");
-  useEffect(() => setDraft(title ?? ""), [title]);
+  const [prevTitle, setPrevTitle] = useState(title);
+  // Re-sync the draft when the source title changes, during render.
+  if (title !== prevTitle) {
+    setPrevTitle(title);
+    setDraft(title ?? "");
+  }
 
   if (editing) {
     return (

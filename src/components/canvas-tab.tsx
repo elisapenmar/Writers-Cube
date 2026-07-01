@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  getCanvas,
-  saveCanvas,
-  type CanvasItem,
-  type CanvasState,
-} from "@/server/canvas";
+import { getCanvas, saveCanvas, type CanvasItem } from "@/server/canvas";
 
 const CANVAS_WIDTH = 2400;
 const CANVAS_HEIGHT = 1800;
 const MAX_IMAGE_BYTES = 800_000; // ~800 KB; bigger images get downscaled client-side
+
+/** Unique-enough id for a new canvas item. Module-scope so the impure
+ *  Date.now()/Math.random() calls never run during component render. */
+function newCanvasId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+}
 
 export function CanvasTab() {
   const [items, setItems] = useState<CanvasItem[]>([]);
@@ -77,7 +78,7 @@ export function CanvasTab() {
     const scrollLeft = containerRef.current?.scrollLeft ?? 0;
     const scrollTop = containerRef.current?.scrollTop ?? 0;
     const newItem: CanvasItem = {
-      id: `t-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+      id: newCanvasId("t"),
       type: "text",
       x: scrollLeft + 80,
       y: scrollTop + 80,
@@ -100,7 +101,7 @@ export function CanvasTab() {
     const scrollLeft = containerRef.current?.scrollLeft ?? 0;
     const scrollTop = containerRef.current?.scrollTop ?? 0;
     const newItem: CanvasItem = {
-      id: `w-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+      id: newCanvasId("w"),
       type: "webpage",
       x: scrollLeft + 120,
       y: scrollTop + 120,
@@ -125,7 +126,7 @@ export function CanvasTab() {
       const maxDisplay = 320;
       const ratio = Math.min(1, maxDisplay / Math.max(dims.width, dims.height));
       const newItem: CanvasItem = {
-        id: `i-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+        id: newCanvasId("i"),
         type: "image",
         x: scrollLeft + 100,
         y: scrollTop + 100,
@@ -530,8 +531,12 @@ function CanvasItemView({
 }) {
   const [editing, setEditing] = useState(false);
   const [textDraft, setTextDraft] = useState(item.content);
-
-  useEffect(() => setTextDraft(item.content), [item.content]);
+  const [prevContent, setPrevContent] = useState(item.content);
+  // Re-sync the draft when the item content changes, during render.
+  if (item.content !== prevContent) {
+    setPrevContent(item.content);
+    setTextDraft(item.content);
+  }
 
   function onDragStart(e: React.PointerEvent) {
     if (editing) return;

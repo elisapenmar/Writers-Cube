@@ -70,6 +70,8 @@ export function ElementTab({
     const el = document.getElementById(`wc-el-${noun}-${focusId}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Highlight only after locating the DOM node, so this must run in the effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlightId(focusId);
       setTimeout(() => setHighlightId(null), 2200);
     }
@@ -255,18 +257,26 @@ function ElementCard({
   const [description, setDescription] = useState(row.description);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [prevFocused, setPrevFocused] = useState(focused);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Opening this card from the manuscript (Smart Text click) expands it.
-  useEffect(() => {
+  // Handled during render (React docs pattern) instead of in an effect.
+  if (focused !== prevFocused) {
+    setPrevFocused(focused);
     if (focused) setExpanded(true);
-  }, [focused]);
+  }
 
-  useEffect(() => {
+  // Re-sync editable drafts whenever the row prop's identity or canonical
+  // fields change, during render rather than in an effect.
+  const rowSig = [row.id, row.name, row.category ?? "", row.description].join(" ");
+  const [prevRowSig, setPrevRowSig] = useState(rowSig);
+  if (rowSig !== prevRowSig) {
+    setPrevRowSig(rowSig);
     setName(row.name);
     setCategory(row.category ?? "");
     setDescription(row.description);
-  }, [row.id, row.name, row.category, row.description]);
+  }
 
   function schedule(patch: { name?: string; category?: string | null; description?: string }) {
     if (saveTimer.current) clearTimeout(saveTimer.current);

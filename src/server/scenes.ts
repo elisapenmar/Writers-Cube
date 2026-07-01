@@ -863,15 +863,6 @@ type DocNode = {
   content?: DocNode[];
 };
 
-const TAG_MARK_TYPES = new Set([
-  "tag",
-  "tagLookup",
-  "tagRevise",
-  "tagWeak",
-  "tagFactcheck",
-  "tagPlaceholder",
-]);
-
 /**
  * Replace the character range [sentenceStart, sentenceEnd) in the Nth
  * paragraph-like block with newText. If `keepTagKind` is provided, the

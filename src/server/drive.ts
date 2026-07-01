@@ -131,8 +131,6 @@ export async function disconnectDrive(): Promise<void> {
   await supabase.from("google_credentials").delete().eq("user_id", user.id);
 }
 
-const dense = (t: string) => t.replace(/\s+/g, "").length;
-
 /** Non-whitespace chars in *body* lines (ignoring heading-only "# " lines). */
 function bodyDense(t: string): number {
   return t

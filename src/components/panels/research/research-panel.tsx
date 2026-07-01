@@ -33,6 +33,8 @@ export function ResearchPanel({ view }: { view: "sources" | "cited" }) {
   }
 
   useEffect(() => {
+    // Async data load on mount; setState happens after the await, not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void reload();
   }, []);
 
@@ -414,7 +416,22 @@ function SourceCard({
   const [saving, setSaving] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  // Re-sync the editable draft when the source row changes, during render
+  // (React docs pattern) instead of in an effect.
+  const rowSig = JSON.stringify([
+    row.id,
+    row.title,
+    row.url,
+    row.author,
+    row.publication,
+    row.published_date,
+    row.quote,
+    row.note,
+    row.kind,
+  ]);
+  const [prevRowSig, setPrevRowSig] = useState(rowSig);
+  if (rowSig !== prevRowSig) {
+    setPrevRowSig(rowSig);
     setDraft({
       title: row.title,
       url: row.url,
@@ -425,7 +442,7 @@ function SourceCard({
       note: row.note,
       kind: row.kind,
     });
-  }, [row.id, row.title, row.url, row.author, row.publication, row.published_date, row.quote, row.note, row.kind]);
+  }
 
   function schedule(patch: SourceInput) {
     if (saveTimer.current) clearTimeout(saveTimer.current);

@@ -94,6 +94,8 @@ export function DashboardTour({ autoStart = false }: { autoStart?: boolean }) {
     let idx = i;
     while (idx < STOPS.length && !document.querySelector(STOPS[idx].sel)) idx++;
     if (idx >= STOPS.length) {
+      // Tour advances by measuring live DOM targets; updates must run in the effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       finish();
       return;
     }

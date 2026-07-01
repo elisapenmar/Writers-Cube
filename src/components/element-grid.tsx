@@ -26,10 +26,17 @@ export function ElementGrid({
 }) {
   const [matrix, setMatrix] = useState<ElementMatrix | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadedKey, setLoadedKey] = useState(refreshKey);
+
+  // Reset to the loading state when refreshKey changes, during render (React
+  // docs pattern) rather than synchronously inside the effect.
+  if (loadedKey !== refreshKey) {
+    setLoadedKey(refreshKey);
+    setMatrix(null);
+  }
 
   useEffect(() => {
     let alive = true;
-    setMatrix(null);
     load()
       .then((m) => alive && setMatrix(m))
       .catch((e) => alive && setError(e instanceof Error ? e.message : "Failed"));

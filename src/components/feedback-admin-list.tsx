@@ -95,6 +95,10 @@ export function FeedbackAdminList({ initial }: { initial: FeedbackEntry[] }) {
 
               {e.screenshot_url && (
                 <a href={e.screenshot_url} target="_blank" rel="noopener noreferrer">
+                  {/* Admin-only view of an arbitrary user-submitted screenshot
+                      URL; next/image would require remotePatterns for unknown
+                      hosts, so a plain img is intentional here. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={e.screenshot_url}
                     alt="Attached screenshot"

@@ -63,13 +63,13 @@ export type ManuscriptChapter = {
 
 export function ManuscriptReader({
   projectId,
-  projectTitle,
   form,
   chapters,
   looseScenes = [],
 }: {
   projectId: string;
-  projectTitle: string;
+  /** Accepted for caller convenience; not rendered here. */
+  projectTitle?: string;
   form?: string;
   chapters: ManuscriptChapter[];
   looseScenes?: ManuscriptScene[];

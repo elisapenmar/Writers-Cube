@@ -57,6 +57,8 @@ export function CharactersTab() {
     const el = document.getElementById(`wc-char-${focusCharacterId}`);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Highlight only after locating the DOM node, so this must run in the effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlightId(focusCharacterId);
       setTimeout(() => setHighlightId(null), 2200);
     }
@@ -261,14 +263,17 @@ function CharacterCard({
   const [savingDescription, setSavingDescription] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [prevFocused, setPrevFocused] = useState(focused);
   const [citing, setCiting] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Opening this card from the manuscript (Smart Text click) expands it so the
-  // writer immediately sees the full bullets + citations.
-  useEffect(() => {
+  // writer immediately sees the full bullets + citations. Handled during render
+  // (React docs pattern) instead of in an effect.
+  if (focused !== prevFocused) {
+    setPrevFocused(focused);
     if (focused) setExpanded(true);
-  }, [focused]);
+  }
 
   async function cite() {
     setCiting(true);
@@ -282,11 +287,16 @@ function CharacterCard({
     }
   }
 
-  useEffect(() => {
+  // Re-sync editable drafts whenever the character prop's identity or canonical
+  // fields change, during render (React docs pattern) instead of in an effect.
+  const charSig = `${character.id} ${character.name} ${character.role ?? ""} ${character.description}`;
+  const [prevCharSig, setPrevCharSig] = useState(charSig);
+  if (charSig !== prevCharSig) {
+    setPrevCharSig(charSig);
     setName(character.name);
     setRole(character.role ?? "");
     setDescription(character.description);
-  }, [character.id, character.name, character.role, character.description]);
+  }
 
   function schedule(patch: Partial<Character>) {
     if (saveTimer.current) clearTimeout(saveTimer.current);

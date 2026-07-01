@@ -14,10 +14,17 @@ function cellBg(count: number, max: number): string {
 export function CharacterGrid({ refreshKey }: { refreshKey?: number }) {
   const [matrix, setMatrix] = useState<CharacterMatrix | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadedKey, setLoadedKey] = useState(refreshKey);
+
+  // Reset to the loading state when refreshKey changes, during render (React
+  // docs pattern) rather than synchronously inside the effect.
+  if (loadedKey !== refreshKey) {
+    setLoadedKey(refreshKey);
+    setMatrix(null);
+  }
 
   useEffect(() => {
     let alive = true;
-    setMatrix(null);
     characterChapterMatrix()
       .then((m) => alive && setMatrix(m))
       .catch((e) => alive && setError(e instanceof Error ? e.message : "Failed"));

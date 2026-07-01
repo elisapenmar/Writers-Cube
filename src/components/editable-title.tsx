@@ -15,11 +15,15 @@ export function EditableTitle({
 }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(initial);
+  const [prevInitial, setPrevInitial] = useState(initial);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  // Re-sync the draft when the source title changes (e.g. saved elsewhere).
+  // Done during render per the React docs pattern, not in an effect.
+  if (initial !== prevInitial) {
+    setPrevInitial(initial);
     setValue(initial);
-  }, [initial]);
+  }
 
   useEffect(() => {
     if (editing) {

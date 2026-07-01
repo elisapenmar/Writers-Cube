@@ -304,7 +304,6 @@ export function OrganizePanel() {
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
   }
-  const width = pinned ? "w-[30rem]" : "w-full md:w-[min(70vw,1000px)]";
 
   return (
     <aside

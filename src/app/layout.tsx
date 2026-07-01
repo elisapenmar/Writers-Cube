@@ -42,6 +42,10 @@ export default function RootLayout({
             (Parchment), Pacifico script (Sherbet). */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Global, theme-conditional display faces loaded once from the App
+            Router root layout (the document-level head), not a per-page font;
+            the families are referenced by name in the theme CSS. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Pacifico&family=Special+Elite&family=Ultra&display=swap"
           rel="stylesheet"

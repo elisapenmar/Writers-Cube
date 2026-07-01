@@ -62,6 +62,7 @@ export function SideNav({
   const router = useRouter();
   const params = useParams<{ sceneId?: string }>();
   const [chapters, setChapters] = useState<Chapter[]>(project.chapters);
+  const [prevProjectChapters, setPrevProjectChapters] = useState(project.chapters);
   const [pending, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [dragItem, setDragItem] = useState<{ id: string; kind: "loose" | "exercise" } | null>(null);
@@ -82,6 +83,8 @@ export function SideNav({
   const setActiveForm = useActiveForm((s) => s.setForm);
 
   useEffect(() => {
+    // One-time post-hydration mount flag; nothing to derive during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -91,9 +94,12 @@ export function SideNav({
     setActiveForm(project.form);
   }, [project.form, setActiveForm]);
 
-  useEffect(() => {
+  // Re-sync local chapter state when the server prop changes, during render
+  // (React docs pattern) rather than in an effect.
+  if (prevProjectChapters !== project.chapters) {
+    setPrevProjectChapters(project.chapters);
     setChapters(project.chapters);
-  }, [project.chapters]);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),

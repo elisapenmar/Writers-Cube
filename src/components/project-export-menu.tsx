@@ -75,7 +75,8 @@ export function ProjectExportMenu({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          open ? close() : openMenu();
+          if (open) close();
+          else openMenu();
         }}
         disabled={pending}
         className="rounded-[var(--wc-r-sm)] border border-[var(--wc-border)] bg-[var(--wc-surface)] px-2.5 py-1 text-xs text-[var(--wc-muted)] hover:border-[var(--wc-slate)] hover:text-[var(--wc-ink)] disabled:opacity-50"

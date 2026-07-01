@@ -28,10 +28,6 @@ export function SubmissionsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    void load();
-  }, []);
-
   async function load() {
     try {
       const [subs, m] = await Promise.all([listSubmissions(), getStoryMeta()]);
@@ -42,6 +38,12 @@ export function SubmissionsPanel() {
       setError(e instanceof Error ? e.message : "Load failed");
     }
   }
+
+  useEffect(() => {
+    // Async data load on mount; setState happens after the await, not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, []);
 
   function addSubmission() {
     startTransition(async () => {
@@ -223,10 +225,14 @@ function SubmissionRow({
   const [saving, setSaving] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  // Re-sync editable drafts when the submission prop changes, during render.
+  const subSig = [submission.id, submission.market, submission.notes].join(" ");
+  const [prevSubSig, setPrevSubSig] = useState(subSig);
+  if (subSig !== prevSubSig) {
+    setPrevSubSig(subSig);
     setMarket(submission.market);
     setNotes(submission.notes);
-  }, [submission.id, submission.market, submission.notes]);
+  }
 
   function schedule(patch: Partial<Submission>) {
     if (saveTimer.current) clearTimeout(saveTimer.current);

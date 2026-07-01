@@ -390,7 +390,12 @@ function NotesEditor({
   onChange: (text: string) => void;
 }) {
   const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  const [prevValue, setPrevValue] = useState(value);
+  // Re-sync the draft when the source value changes, during render.
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setDraft(value);
+  }
 
   if (editing) {
     return (

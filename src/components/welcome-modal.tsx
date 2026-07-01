@@ -92,6 +92,9 @@ export function WelcomeModal({ hasProjects }: { hasProjects: boolean }) {
   useEffect(() => {
     try {
       const seen = localStorage.getItem(SEEN_KEY);
+      // Post-hydration localStorage check: cannot run during SSR render, so a
+      // lazy initializer would not work here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!seen && !hasProjects) setOpen(true);
     } catch {
       /* localStorage unavailable */

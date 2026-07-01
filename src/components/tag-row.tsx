@@ -45,15 +45,15 @@ export function TagRow({
   const tagged = sentence.slice(tagOffsetInSentence, tagEnd);
   const after = sentence.slice(tagEnd);
 
-  useEffect(() => {
-    if (showTextarea) autosize(taRef.current);
-  }, [value, showTextarea]);
-
   function autosize(el: HTMLTextAreaElement | null) {
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   }
+
+  useEffect(() => {
+    if (showTextarea) autosize(taRef.current);
+  }, [value, showTextarea]);
 
   function enterEdit() {
     setEditing(true);

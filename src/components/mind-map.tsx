@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -42,8 +42,12 @@ function EditableBubble({ id, data }: NodeProps<Node<EditableNodeData>>) {
   const { label, level, onChange, onAddChild, onDelete } = data;
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(label);
-
-  useEffect(() => setText(label), [label]);
+  const [prevLabel, setPrevLabel] = useState(label);
+  // Re-sync the draft when the node label changes, during render.
+  if (label !== prevLabel) {
+    setPrevLabel(label);
+    setText(label);
+  }
 
   const styleByLevel: Record<0 | 1 | 2, string> = {
     0: "bg-[var(--wc-slate)] text-zinc-50 border-[var(--wc-slate)] font-serif text-base px-5 py-3 rounded-2xl shadow-lg",
@@ -269,11 +273,16 @@ export function MindMap({
   const [positionMap, setPositionMap] =
     useState<Record<string, SavedPosition>>(initialPositions);
 
-  // If the AI generates a new map (rawNodes changes), reset.
-  useEffect(() => {
+  // If the AI generates a new map (rawNodes changes), reset. Done during render
+  // (React docs pattern) rather than in an effect.
+  const [prevRawNodes, setPrevRawNodes] = useState(rawNodes);
+  const [prevInitialPositions, setPrevInitialPositions] = useState(initialPositions);
+  if (rawNodes !== prevRawNodes || initialPositions !== prevInitialPositions) {
+    setPrevRawNodes(rawNodes);
+    setPrevInitialPositions(initialPositions);
     setNodesData(rawNodes);
     setPositionMap(initialPositions);
-  }, [rawNodes, initialPositions]);
+  }
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   function scheduleSave(state: SavedMindMap, delay = 500) {
@@ -346,7 +355,6 @@ export function MindMap({
         );
       },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [nodesData, positionMap],
   );
 
@@ -387,10 +395,13 @@ export function MindMap({
   );
   const [rfEdges, setRfEdges] = useState<Edge[]>(initialReactFlow.reactEdges);
 
-  useEffect(() => {
+  const [prevInitialReactFlow, setPrevInitialReactFlow] = useState(initialReactFlow);
+  // Re-sync React Flow nodes/edges when the source changes, during render.
+  if (initialReactFlow !== prevInitialReactFlow) {
+    setPrevInitialReactFlow(initialReactFlow);
     setRfNodes(initialReactFlow.reactNodes);
     setRfEdges(initialReactFlow.reactEdges);
-  }, [initialReactFlow]);
+  }
 
   const onNodesChange = useCallback(
     (changes: NodeChange<Node<EditableNodeData>>[]) => {
@@ -412,7 +423,6 @@ export function MindMap({
         });
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [nodesData],
   );
 

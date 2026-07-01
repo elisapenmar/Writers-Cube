@@ -45,6 +45,9 @@ export function FindReplace({
   useEffect(() => {
     if (editor.isDestroyed) return;
     const m = findMatches(editor, query, caseSensitive);
+    // Matches derive from live editor content (not React state) and drive an
+    // editor selection side-effect, so this recompute belongs in the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMatches(m);
     setCurrent(0);
     if (m[0]) selectMatch(m[0]);

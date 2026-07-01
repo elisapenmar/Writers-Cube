@@ -47,7 +47,7 @@ export function TypewriterMode({
   const [lockBackspace, setLockBackspace] = useState(false);
 
   const [startWords, setStartWords] = useState(scene.word_count);
-  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [startTime, setStartTime] = useState<number>(() => Date.now());
   const [currentWords, setCurrentWords] = useState<number>(scene.word_count);
   const [elapsedSec, setElapsedSec] = useState<number>(0);
 
@@ -92,8 +92,10 @@ export function TypewriterMode({
       ? wordsWritten >= goalValue
       : elapsedSec >= goalValue * 60;
 
-  // When goal met, advance to "done" phase but don't auto-exit
+  // When goal met, advance to "done" phase but don't auto-exit. Reactive
+  // adjustment to the derived goalMet flag (including on mount), so it stays an effect.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (phase === "active" && goalMet) setPhase("done");
   }, [phase, goalMet]);
 
@@ -316,8 +318,10 @@ function ActiveSession({
   const viewportRef = useRef<HTMLDivElement>(null);
   const [celebrationDismissed, setCelebrationDismissed] = useState(false);
 
-  // Reset dismissal whenever a fresh goal-met transition happens
+  // Reset dismissal whenever a fresh goal-met transition happens. Reactive
+  // adjustment to the derived goalMet flag, so it stays an effect.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (goalMet) setCelebrationDismissed(false);
   }, [goalMet]);
 
@@ -398,7 +402,6 @@ function ActiveSession({
         scrollCursorToCenter();
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
   // Flush save on unmount
