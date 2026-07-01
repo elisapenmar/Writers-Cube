@@ -1,20 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { signInWithProvider } from "@/lib/native-auth";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function signIn() {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) setError(error.message);
+    setError(null);
+    const { error } = await signInWithProvider("google");
+    if (error) setError(error);
   }
 
   return (

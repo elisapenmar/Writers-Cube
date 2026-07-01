@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { NativeAuthHandler } from "@/components/native-auth-handler";
 
 export const metadata: Metadata = {
   applicationName: "Writer's Cube",
@@ -52,6 +53,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[var(--wc-canvas)] text-[var(--wc-ink)]">
         <ServiceWorkerRegister />
+        <NativeAuthHandler />
         {children}
       </body>
     </html>
