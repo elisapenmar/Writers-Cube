@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { ProjectTree } from "@/lib/types";
 import type { UncategorizedItem } from "@/components/side-nav";
 import { termsFor } from "@/lib/project-forms";
@@ -106,17 +106,24 @@ function StructureList({
   // sync engine drains the queue, and refresh the tree so the real rows replace
   // the pending ones.
   const [queued, setQueued] = useState<QueuedCreate[]>([]);
-  const { pending: outboxPending } = useSyncState();
+  const { pending: outboxPending, online } = useSyncState();
+  const prevPending = useRef(outboxPending);
   useEffect(() => {
     let alive = true;
     void listQueuedCreates().then((q) => {
       if (alive) setQueued(q);
     });
-    if (outboxPending === 0) router.refresh();
+    // Refresh the server-rendered tree only when the queue actually drains
+    // (pending -> 0 while online), so the real rows replace the pending ones.
+    // Refreshing unconditionally on mount broke the drawer in airplane mode:
+    // router.refresh() is a server fetch, and offline it can error the route
+    // instead of just rendering the props we already have.
+    if (prevPending.current > 0 && outboxPending === 0 && online) router.refresh();
+    prevPending.current = outboxPending;
     return () => {
       alive = false;
     };
-  }, [outboxPending, router]);
+  }, [outboxPending, online, router]);
 
   function addGroup() {
     start(async () => {
