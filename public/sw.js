@@ -8,7 +8,10 @@
 // Real document offline (prose + project metadata) is Phase 3, handled in-app
 // via Yjs + IndexedDB — NOT here. Bump VERSION to invalidate old caches.
 
-const VERSION = "wc-v2";
+// v3: navigation fallback must match ONLY the runtime (HTML) cache. v2 used the
+// global caches.match, which could return an RSC payload cached under the same
+// clean URL — the browser then rendered raw flight data / offered a download.
+const VERSION = "wc-v3";
 const PRECACHE = `wc-precache-${VERSION}`;
 const RUNTIME = `wc-runtime-${VERSION}`;
 // Next.js client-side navigations fetch an RSC payload instead of full HTML.
@@ -98,8 +101,13 @@ self.addEventListener("fetch", (event) => {
           }
           return fresh;
         } catch {
-          const cached = await caches.match(request);
-          return cached || (await caches.match("/offline.html"));
+          // Scope the lookup to the HTML cache: a global caches.match could hit
+          // the RSC-payload cache (same URL key) and serve flight data as HTML.
+          const runtime = await caches.open(RUNTIME);
+          const cached = await runtime.match(request);
+          if (cached) return cached;
+          const precache = await caches.open(PRECACHE);
+          return await precache.match("/offline.html");
         }
       })(),
     );
@@ -113,11 +121,15 @@ self.addEventListener("fetch", (event) => {
   ) {
     event.respondWith(
       (async () => {
-        const cached = await caches.match(request);
+        const cache = await caches.open(RUNTIME);
+        const cached = await cache.match(request);
         if (cached) return cached;
+        // Icons live in the precache; check it before hitting the network.
+        const precache = await caches.open(PRECACHE);
+        const pre = await precache.match(request);
+        if (pre) return pre;
         const fresh = await fetch(request);
         if (fresh && fresh.status === 200) {
-          const cache = await caches.open(RUNTIME);
           cache.put(request, fresh.clone());
         }
         return fresh;
