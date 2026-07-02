@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
+import { type StoryKernel } from "@/server/kernels";
 import {
-  createKernel,
-  updateKernel,
-  deleteKernel,
-  type StoryKernel,
-} from "@/server/kernels";
+  createKernelOffline,
+  updateKernelOffline,
+  deleteKernelOffline,
+} from "@/lib/offline";
 import { ViewToggle } from "@/components/view-toggle";
 import { useViewMode } from "@/store/view-mode-store";
 
@@ -27,7 +27,7 @@ export function StoryKernels({
     setError(null);
     start(async () => {
       try {
-        const k = await createKernel();
+        const k = await createKernelOffline();
         setKernels((prev) => [k, ...prev]);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not add");
@@ -139,7 +139,7 @@ function KernelCard({
     setSaving(true);
     timer.current = setTimeout(async () => {
       try {
-        await updateKernel(kernel.id, patch);
+        await updateKernelOffline(kernel.id, patch);
       } catch (e) {
         onError(e instanceof Error ? e.message : "Save failed");
       } finally {
@@ -151,7 +151,7 @@ function KernelCard({
   async function remove() {
     if (!confirm("Delete this kernel?")) return;
     try {
-      await deleteKernel(kernel.id);
+      await deleteKernelOffline(kernel.id);
       onDeleted();
     } catch (e) {
       onError(e instanceof Error ? e.message : "Delete failed");

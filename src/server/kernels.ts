@@ -77,6 +77,24 @@ export async function createKernel(): Promise<StoryKernel> {
   return data as StoryKernel;
 }
 
+/**
+ * Offline-replay variant of createKernel: the client supplies the row id it
+ * generated while offline, so its optimistic card and the server row are the
+ * same row and a replay retry (23505 duplicate key) is a no-op. Title/body
+ * arrive via the queued kernel.update replays that follow in FIFO order.
+ */
+export async function createKernelWithId(id: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("story_kernels")
+    .insert({ id, user_id: user.id, title: "", body: "" });
+  if (error && error.code !== "23505") {
+    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+    throw new Error(error.message);
+  }
+  revalidatePath("/app");
+}
+
 export async function updateKernel(
   id: string,
   patch: { title?: string; body?: string; content?: unknown },

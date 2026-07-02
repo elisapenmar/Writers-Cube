@@ -36,6 +36,13 @@ import {
   createLooseScene,
   createLooseSceneWithId,
 } from "@/server/loose";
+import {
+  createKernel,
+  createKernelWithId,
+  updateKernel,
+  deleteKernel,
+  type StoryKernel,
+} from "@/server/kernels";
 import { isNative, isStandalone, isMobile } from "@/lib/platform";
 import { isOnline } from "./online-state";
 import { idbGetAll, OUTBOX_STORE } from "./idb";
@@ -52,6 +59,9 @@ export const KIND_CHAPTER_REORDER = "chapter.reorder";
 export const KIND_CHAPTER_CREATE = "chapter.create";
 export const KIND_SCENE_CREATE = "scene.create";
 export const KIND_LOOSE_CREATE = "loose.create";
+export const KIND_KERNEL_CREATE = "kernel.create";
+export const KIND_KERNEL_UPDATE = "kernel.update";
+export const KIND_KERNEL_DELETE = "kernel.delete";
 
 /**
  * True when this runtime should route structural edits through the outbox:
@@ -105,6 +115,18 @@ export function registerOutboxHandlers(): void {
   });
   registerHandler(KIND_LOOSE_CREATE, async (entry: OutboxEntry) => {
     await createLooseSceneWithId(String(entry.payload.projectId), entry.entityId);
+  });
+  registerHandler(KIND_KERNEL_CREATE, async (entry: OutboxEntry) => {
+    await createKernelWithId(entry.entityId);
+  });
+  registerHandler(KIND_KERNEL_UPDATE, async (entry: OutboxEntry) => {
+    await updateKernel(
+      entry.entityId,
+      entry.payload.patch as { title?: string; body?: string },
+    );
+  });
+  registerHandler(KIND_KERNEL_DELETE, async (entry: OutboxEntry) => {
+    await deleteKernel(entry.entityId);
   });
 }
 
@@ -249,6 +271,41 @@ export async function createLooseSceneOffline(projectId: string): Promise<Create
   }
   await createLooseScene(projectId);
   return { queued: false, id: null };
+}
+
+/**
+ * Capture a story kernel offline: when the network is down, queue the create
+ * and hand back a synthetic kernel so the dashboard card is editable
+ * immediately. Title/body typed into it queue as kernel.update entries and
+ * replay after the create (FIFO order). Online, today's UX is unchanged.
+ */
+export async function createKernelOffline(): Promise<StoryKernel> {
+  if (!isOnline()) {
+    const id = newRowId();
+    await enqueue(KIND_KERNEL_CREATE, id, {}, null);
+    const now = new Date().toISOString();
+    return { id, title: "", body: "", created_at: now, updated_at: now } as StoryKernel;
+  }
+  return createKernel();
+}
+
+export async function updateKernelOffline(
+  id: string,
+  patch: { title?: string; body?: string; content?: unknown },
+): Promise<void> {
+  if (offlineFirst()) {
+    await enqueue(KIND_KERNEL_UPDATE, id, { patch }, null);
+    return;
+  }
+  await updateKernel(id, patch);
+}
+
+export async function deleteKernelOffline(id: string): Promise<void> {
+  if (offlineFirst()) {
+    await enqueue(KIND_KERNEL_DELETE, id, {}, null);
+    return;
+  }
+  await deleteKernel(id);
 }
 
 /** A queued (not yet on the server) create, for optimistic list rows. */
