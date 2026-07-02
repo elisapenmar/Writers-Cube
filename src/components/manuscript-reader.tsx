@@ -10,9 +10,9 @@ import {
   createScene,
   createChapter,
   mergeScene,
-  renameChapter,
   startFirstElement,
 } from "@/server/scenes";
+import { renameChapterOffline } from "@/lib/offline";
 import { EditableTitle } from "@/components/editable-title";
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
@@ -259,7 +259,7 @@ export function ManuscriptReader({
                 <EditableTitle
                   initial={chapter.title}
                   onSave={async (next) => {
-                    await renameChapter(chapter.id, next);
+                    await renameChapterOffline(chapter.id, next);
                     router.refresh();
                   }}
                   className="block"

@@ -6,12 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
 import { useCollab } from "@/lib/yjs/use-collab";
 import { registerActiveEditor, clearActiveEditor } from "@/lib/editor-bridge";
-import {
-  updateLooseSceneContent,
-  renameLooseScene,
-  deleteLooseScene,
-  type LooseScene,
-} from "@/server/loose";
+import { updateLooseSceneContent, type LooseScene } from "@/server/loose";
+import { renameLooseSceneOffline, deleteLooseSceneOffline } from "@/lib/offline";
 import { EditorToolbar } from "@/components/editor-toolbar";
 import { TagBubbleMenu } from "@/components/tag-bubble-menu";
 import { SceneHistory } from "@/components/scene-history";
@@ -132,12 +128,15 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
   function onTitle(next: string) {
     setTitle(next);
     if (titleTimer.current) clearTimeout(titleTimer.current);
-    titleTimer.current = setTimeout(() => void renameLooseScene(scene.id, next), 600);
+    titleTimer.current = setTimeout(
+      () => void renameLooseSceneOffline(scene.id, next, baseUpdatedAt.current),
+      600,
+    );
   }
 
   async function remove() {
     if (!confirm("Delete this item?")) return;
-    await deleteLooseScene(scene.id);
+    await deleteLooseSceneOffline(scene.id);
     router.push("/app/write");
     router.refresh();
   }

@@ -25,14 +25,16 @@ import {
   createChapter,
   createScene,
   createPieceInProject,
-  renameChapter,
-  renameScene,
-  reorderChapters,
-  reorderScenes,
-  updateProjectMetadata,
   attachUncategorizedToChapter,
   signOut,
 } from "@/server/scenes";
+import {
+  renameChapterOffline,
+  renameSceneOffline,
+  reorderChaptersOffline,
+  reorderScenesOffline,
+  updateProjectMetadataOffline,
+} from "@/lib/offline";
 import { termsFor } from "@/lib/project-forms";
 import { configFor, BUILTIN_TOOL_META, isBuiltinTool } from "@/lib/form-config";
 import { getRegisteredGroup, isGroupAvailableForForm } from "@/components/panels/registry";
@@ -130,7 +132,7 @@ export function SideNav({
     const next = arrayMove(chapters, oldIndex, newIndex);
     setChapters(next);
     startTransition(async () => {
-      await reorderChapters(project.id, next.map((c) => c.id));
+      await reorderChaptersOffline(project.id, next.map((c) => c.id));
     });
   }
 
@@ -147,7 +149,7 @@ export function SideNav({
       prev.map((c) => (c.id === chapterId ? { ...c, scenes: nextScenes } : c)),
     );
     startTransition(async () => {
-      await reorderScenes(chapterId, nextScenes.map((s) => s.id));
+      await reorderScenesOffline(chapterId, nextScenes.map((s) => s.id));
     });
   }
 
@@ -527,7 +529,7 @@ function ProjectMetadata({ project }: { project: ProjectTree }) {
       <EditableTitle
         initial={project.title}
         onSave={(next) =>
-          updateProjectMetadata(project.id, { title: next })
+          updateProjectMetadataOffline(project.id, { title: next })
         }
         className="font-serif text-lg text-[var(--wc-ink)] block"
         inputClassName="font-serif text-lg w-full"
@@ -644,7 +646,7 @@ function SortableChapter({
         >
           <EditableTitle
             initial={chapter.title}
-            onSave={(next) => renameChapter(chapter.id, next)}
+            onSave={(next) => renameChapterOffline(chapter.id, next)}
           />
         </Link>
         <button
@@ -767,7 +769,7 @@ function SortableScene({ scene, active }: { scene: Scene; active: boolean }) {
       >
         <EditableTitle
           initial={scene.title}
-          onSave={(next) => renameScene(scene.id, next)}
+          onSave={(next) => renameSceneOffline(scene.id, next)}
         />
       </Link>
     </li>

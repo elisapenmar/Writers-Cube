@@ -7,6 +7,7 @@ import { useOrganize } from "@/store/organize-store";
 import { OrganizePanel } from "@/components/organize-panel";
 import { BrainstormSidePanel } from "@/components/brainstorm-side-panel";
 import { useSyncStatusFallback } from "@/lib/sync-state";
+import { startOutbox, registerOutboxHandlers } from "@/lib/offline";
 import { MobileTabBar } from "@/components/mobile/mobile-tab-bar";
 import { MobileNavDrawer } from "@/components/mobile/mobile-nav-drawer";
 import { MobileEditorToolbar } from "@/components/mobile/mobile-editor-toolbar";
@@ -37,6 +38,14 @@ export function MobileShell({
 }) {
   const [structureOpen, setStructureOpen] = useState(false);
   useSyncStatusFallback();
+
+  // Boot the offline outbox for the whole mobile session (idempotent; the
+  // editor also does this on mount). Without it, structural edits queued from
+  // browse screens with no editor open would not replay on reconnect.
+  useEffect(() => {
+    registerOutboxHandlers();
+    return startOutbox();
+  }, []);
 
   // The organize store is module-global; when the active project changes, drop
   // the previous story's Story Bible so the panel re-reads for the new project.

@@ -5,8 +5,8 @@
  * - useSyncState(): the React hook for the synced / pending / offline indicator.
  * - SyncStatus / SyncState: the indicator's types.
  * - startOutbox(): wire the queue to connectivity (call once from a client mount).
- * - renameSceneOffline(): the representative offline-capable mutation wrapper.
- * - registerOutboxHandlers(): register replay handlers (called by the editor).
+ * - *Offline(): offline-capable mutation wrappers (renames, reorders, meta, delete).
+ * - registerOutboxHandlers(): register replay handlers (editor + mobile shell).
  */
 export { useSyncState, getSyncState, type SyncState, type SyncStatus } from "./sync-state";
 export { startOutbox, flush, pendingCount, enqueue, registerHandler } from "./outbox";
@@ -14,6 +14,11 @@ export type { OutboxEntry, OutboxHandler } from "./outbox";
 export { isOnline, onOnlineChange } from "./online-state";
 export {
   renameSceneOffline,
+  renameChapterOffline,
+  renameLooseSceneOffline,
+  deleteLooseSceneOffline,
+  updateProjectMetadataOffline,
+  reorderScenesOffline,
+  reorderChaptersOffline,
   registerOutboxHandlers,
-  KIND_SCENE_RENAME,
 } from "./mutations";
