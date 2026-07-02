@@ -75,3 +75,8 @@ begin
   return v_used;
 end;
 $$;
+
+-- The function guards on auth.uid() anyway, but anonymous callers have no
+-- business reaching it; revoking anon EXECUTE also keeps the Supabase security
+-- advisor quiet.
+revoke execute on function public.increment_ai_usage(date) from anon;
