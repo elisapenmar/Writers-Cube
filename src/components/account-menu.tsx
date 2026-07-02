@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "@/server/scenes";
+import { DeleteAccount } from "@/components/delete-account";
 import {
   useAppearance,
   THEMES,
@@ -123,6 +124,11 @@ export function AccountMenu({ email }: { email: string | null }) {
                 Sign out
               </button>
             </form>
+
+            {/* Account deletion (App Store requirement + self-serve data wipe). */}
+            <div className="mt-1 border-t border-[var(--wc-border)] pt-1.5">
+              <DeleteAccount />
+            </div>
           </div>
         </>
       )}

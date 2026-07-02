@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { signInWithProvider } from "@/lib/native-auth";
 
+// useSearchParams must sit under a Suspense boundary for prerendering.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [error, setError] = useState<string | null>(null);
+  const deleted = useSearchParams().get("deleted") === "1";
 
   async function signIn() {
     setError(null);
@@ -21,6 +32,11 @@ export default function LoginPage() {
             Your quiet place to write.
           </p>
         </div>
+        {deleted && (
+          <p className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+            Your account and all of its data have been deleted.
+          </p>
+        )}
         <button
           onClick={signIn}
           className="w-full rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800"
