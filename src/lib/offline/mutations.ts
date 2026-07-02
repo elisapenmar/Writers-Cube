@@ -25,9 +25,20 @@ import {
   reorderScenes,
   reorderChapters,
   updateProjectMetadata,
+  createChapter,
+  createScene,
+  createChapterWithId,
+  createSceneWithId,
 } from "@/server/scenes";
-import { renameLooseScene, deleteLooseScene } from "@/server/loose";
+import {
+  renameLooseScene,
+  deleteLooseScene,
+  createLooseScene,
+  createLooseSceneWithId,
+} from "@/server/loose";
 import { isNative, isStandalone } from "@/lib/platform";
+import { isOnline } from "./online-state";
+import { idbGetAll, OUTBOX_STORE } from "./idb";
 import { enqueue, registerHandler, type OutboxEntry } from "./outbox";
 
 /** Mutation kind ids (also the IndexedDB-stored handler keys). */
@@ -38,6 +49,9 @@ export const KIND_LOOSE_DELETE = "loose.delete";
 export const KIND_PROJECT_META = "project.meta";
 export const KIND_SCENE_REORDER = "scene.reorder";
 export const KIND_CHAPTER_REORDER = "chapter.reorder";
+export const KIND_CHAPTER_CREATE = "chapter.create";
+export const KIND_SCENE_CREATE = "scene.create";
+export const KIND_LOOSE_CREATE = "loose.create";
 
 /** True when this runtime should route structural edits through the outbox. */
 function offlineFirst(): boolean {
@@ -75,6 +89,17 @@ export function registerOutboxHandlers(): void {
   });
   registerHandler(KIND_CHAPTER_REORDER, async (entry: OutboxEntry) => {
     await reorderChapters(entry.entityId, (entry.payload.orderedIds as string[]) ?? []);
+  });
+  // Creates replay through the *WithId variants: entityId is the row id the
+  // client generated offline, so retries are idempotent (duplicate key = done).
+  registerHandler(KIND_CHAPTER_CREATE, async (entry: OutboxEntry) => {
+    await createChapterWithId(String(entry.payload.projectId), entry.entityId);
+  });
+  registerHandler(KIND_SCENE_CREATE, async (entry: OutboxEntry) => {
+    await createSceneWithId(String(entry.payload.chapterId), entry.entityId);
+  });
+  registerHandler(KIND_LOOSE_CREATE, async (entry: OutboxEntry) => {
+    await createLooseSceneWithId(String(entry.payload.projectId), entry.entityId);
   });
 }
 
@@ -170,8 +195,84 @@ export async function reorderChaptersOffline(
   await reorderChapters(projectId, orderedIds);
 }
 
+function newRowId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  // Fallback uuid-v4 shape for very old webviews; the DB only needs a valid uuid.
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+/** Result of an offline-capable create: `queued` means the row does not exist
+ *  on the server yet; `id` is the row's id either way (server's or generated). */
+export type CreateResult = { queued: boolean; id: string | null };
+
+/**
+ * Creates differ from renames: when online (any runtime) they call the original
+ * server action so today's UX is untouched (immediate row, navigation/redirect
+ * for loose scenes). Only when actually offline do they queue, with a
+ * client-generated uuid so the pending row and the eventual server row match.
+ */
+export async function createChapterOffline(projectId: string): Promise<CreateResult> {
+  if (!isOnline()) {
+    const id = newRowId();
+    await enqueue(KIND_CHAPTER_CREATE, id, { projectId }, null);
+    return { queued: true, id };
+  }
+  const id = await createChapter(projectId);
+  return { queued: false, id: id ?? null };
+}
+
+export async function createSceneOffline(chapterId: string): Promise<CreateResult> {
+  if (!isOnline()) {
+    const id = newRowId();
+    await enqueue(KIND_SCENE_CREATE, id, { chapterId }, null);
+    return { queued: true, id };
+  }
+  const id = await createScene(chapterId);
+  return { queued: false, id: id ?? null };
+}
+
+/** NOTE: when online this delegates to createLooseScene, which REDIRECTS into
+ *  the new note's editor (a Next redirect propagates from the action call). */
+export async function createLooseSceneOffline(projectId: string): Promise<CreateResult> {
+  if (!isOnline()) {
+    const id = newRowId();
+    await enqueue(KIND_LOOSE_CREATE, id, { projectId }, null);
+    return { queued: true, id };
+  }
+  await createLooseScene(projectId);
+  return { queued: false, id: null };
+}
+
+/** A queued (not yet on the server) create, for optimistic list rows. */
+export type QueuedCreate = {
+  kind: string;
+  /** The client-generated row id. */
+  id: string;
+  /** projectId for chapter/loose creates; chapterId for scene creates. */
+  parentId: string;
+};
+
+const CREATE_KINDS = new Set([KIND_CHAPTER_CREATE, KIND_SCENE_CREATE, KIND_LOOSE_CREATE]);
+
+/**
+ * List the creates still waiting in the outbox, so structure lists (the mobile
+ * drawer) can render them as pending rows across remounts and reloads.
+ */
+export async function listQueuedCreates(): Promise<QueuedCreate[]> {
+  const all = await idbGetAll<OutboxEntry>(OUTBOX_STORE);
+  return all
+    .filter((e) => CREATE_KINDS.has(e.kind))
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .map((e) => ({
+      kind: e.kind,
+      id: e.entityId,
+      parentId: String(e.payload.projectId ?? e.payload.chapterId ?? ""),
+    }));
+}
+
 // FOLLOW-UPS:
-// - scene.create / chapter.create / loose.create: need an offline-stable
-//   client-generated id + optimistic UI so the new row exists locally before the
-//   server assigns it; their server actions currently redirect into the row.
 // - tags + attach/split/merge flows (lower traffic, same handler pattern).
+// - piece creation for flat forms (createPieceInProject) offline.

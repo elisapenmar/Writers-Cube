@@ -206,6 +206,30 @@ export async function createChapter(projectId: string) {
   return data.id;
 }
 
+/**
+ * Offline-replay variant of createChapter: the client supplies the row id it
+ * generated while offline, so the queued optimistic row and the server row are
+ * the same row, and a replay retry (queue flushed twice, response lost) is a
+ * no-op instead of a duplicate. Position/title are computed at replay time.
+ */
+export async function createChapterWithId(projectId: string, id: string): Promise<void> {
+  const { supabase } = await requireUser();
+  const { data: last } = await supabase
+    .from("chapters")
+    .select("position")
+    .eq("project_id", projectId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = (last?.position ?? -1) + 1;
+  const { error } = await supabase
+    .from("chapters")
+    .insert({ id, project_id: projectId, title: `Chapter ${position + 1}`, position });
+  // 23505 = duplicate key: an earlier replay attempt already landed this row.
+  if (error && error.code !== "23505") throw new Error(error.message);
+  revalidatePath("/app", "layout");
+}
+
 /** Flat forms (poetry/short story/essay): add a piece, creating the single
  *  holding chapter if needed. Returns the new scene id. */
 export async function createPieceInProject(projectId: string): Promise<string> {
@@ -253,6 +277,28 @@ export async function createScene(chapterId: string) {
   if (error || !data) throw new Error(error?.message ?? "create scene failed");
   revalidatePath("/app", "layout");
   return data.id;
+}
+
+/** Offline-replay variant of createScene; see createChapterWithId. */
+export async function createSceneWithId(chapterId: string, id: string): Promise<void> {
+  const { supabase } = await requireUser();
+  const { data: last } = await supabase
+    .from("scenes")
+    .select("position")
+    .eq("chapter_id", chapterId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = (last?.position ?? -1) + 1;
+  const { error } = await supabase.from("scenes").insert({
+    id,
+    chapter_id: chapterId,
+    title: `Scene ${position + 1}`,
+    position,
+    content: { type: "doc", content: [{ type: "paragraph" }] },
+  });
+  if (error && error.code !== "23505") throw new Error(error.message);
+  revalidatePath("/app", "layout");
 }
 
 /**

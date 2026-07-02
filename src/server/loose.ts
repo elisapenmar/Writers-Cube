@@ -88,6 +88,27 @@ export async function createLooseScene(projectId: string): Promise<void> {
   redirect(`/app/loose/${data.id}`);
 }
 
+/**
+ * Offline-replay variant of createLooseScene: client-supplied id (so a replay
+ * retry is a no-op, not a duplicate) and no redirect (replay happens in the
+ * background; the writer is not navigated anywhere).
+ */
+export async function createLooseSceneWithId(projectId: string, id: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase.from("loose_scenes").insert({
+    id,
+    user_id: user.id,
+    project_id: projectId,
+    title: "Untitled",
+    content: { type: "doc", content: [{ type: "paragraph" }] },
+  });
+  if (error && error.code !== "23505") {
+    if (isMissingTable(error)) throw new Error(MIGRATION_REMINDER);
+    throw new Error(error.message);
+  }
+  revalidatePath("/app", "layout");
+}
+
 function countWords(doc: unknown): number {
   let text = "";
   const walk = (n: unknown) => {

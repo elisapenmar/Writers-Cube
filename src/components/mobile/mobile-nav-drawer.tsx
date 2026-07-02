@@ -1,13 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useTransition } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import type { ProjectTree } from "@/lib/types";
 import type { UncategorizedItem } from "@/components/side-nav";
 import { termsFor } from "@/lib/project-forms";
-import { createChapter, createScene, createPieceInProject, signOut } from "@/server/scenes";
-import { createLooseScene } from "@/server/loose";
+import { createPieceInProject, signOut } from "@/server/scenes";
+import {
+  createChapterOffline,
+  createSceneOffline,
+  createLooseSceneOffline,
+  listQueuedCreates,
+  useSyncState,
+  KIND_CHAPTER_CREATE,
+  KIND_SCENE_CREATE,
+  KIND_LOOSE_CREATE,
+  type QueuedCreate,
+} from "@/lib/offline";
 import { CubeMark } from "@/components/icons";
 
 export type DrawerMode = "structure" | "more";
@@ -87,27 +97,68 @@ function StructureList({
   onNavigate: () => void;
 }) {
   const params = useParams<{ sceneId?: string }>();
+  const router = useRouter();
   const terms = termsFor(project.form);
   const [pending, start] = useTransition();
 
+  // Creates made while offline wait in the outbox; show them as pending rows so
+  // the writer sees their addition immediately. Reload the list whenever the
+  // sync engine drains the queue, and refresh the tree so the real rows replace
+  // the pending ones.
+  const [queued, setQueued] = useState<QueuedCreate[]>([]);
+  const { pending: outboxPending } = useSyncState();
+  useEffect(() => {
+    let alive = true;
+    void listQueuedCreates().then((q) => {
+      if (alive) setQueued(q);
+    });
+    if (outboxPending === 0) router.refresh();
+    return () => {
+      alive = false;
+    };
+  }, [outboxPending, router]);
+
   function addGroup() {
     start(async () => {
+      // Flat forms create a piece (online-only for now); novels get the
+      // offline-capable chapter create.
       if (terms.flat) await createPieceInProject(project.id);
-      else await createChapter(project.id);
+      else {
+        const r = await createChapterOffline(project.id);
+        if (r.queued) {
+          setQueued(await listQueuedCreates());
+          return; // keep the drawer open so the pending row is visible
+        }
+      }
       onNavigate();
     });
   }
   function addScene(chapterId: string) {
     start(async () => {
-      await createScene(chapterId);
+      const r = await createSceneOffline(chapterId);
+      if (r.queued) {
+        setQueued(await listQueuedCreates());
+        return;
+      }
       onNavigate();
     });
   }
   function addLoose() {
     start(async () => {
-      await createLooseScene(project.id);
+      const r = await createLooseSceneOffline(project.id);
+      if (r.queued) setQueued(await listQueuedCreates());
+      // Online, createLooseScene redirects into the new note itself.
     });
   }
+
+  const queuedChapters = queued.filter(
+    (q) => q.kind === KIND_CHAPTER_CREATE && q.parentId === project.id,
+  );
+  const queuedLoose = queued.filter(
+    (q) => q.kind === KIND_LOOSE_CREATE && q.parentId === project.id,
+  );
+  const queuedScenesFor = (chapterId: string) =>
+    queued.filter((q) => q.kind === KIND_SCENE_CREATE && q.parentId === chapterId);
 
   const flatScenes = project.chapters.flatMap((c) => c.scenes);
 
@@ -149,7 +200,15 @@ function StructureList({
                 {chapter.scenes.map((scene) => (
                   <SceneRow key={scene.id} href={`/app/scene/${scene.id}`} title={scene.title} active={params.sceneId === scene.id} onClick={onNavigate} />
                 ))}
+                {queuedScenesFor(chapter.id).map((q) => (
+                  <PendingRow key={q.id} label="New scene" />
+                ))}
               </ul>
+            </li>
+          ))}
+          {queuedChapters.map((q) => (
+            <li key={q.id}>
+              <PendingRow label="New chapter" />
             </li>
           ))}
         </ul>
@@ -162,7 +221,7 @@ function StructureList({
             + add
           </button>
         </div>
-        {uncategorized.length === 0 ? (
+        {uncategorized.length === 0 && queuedLoose.length === 0 ? (
           <Empty>Loose items land here.</Empty>
         ) : (
           <ul className="mt-1 space-y-0.5">
@@ -173,6 +232,9 @@ function StructureList({
                 title={u.title}
                 onClick={onNavigate}
               />
+            ))}
+            {queuedLoose.map((q) => (
+              <PendingRow key={q.id} label="New scene" />
             ))}
           </ul>
         )}
@@ -256,6 +318,19 @@ function SceneRow({
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <p className="px-3 py-3 text-sm text-[var(--wc-faint)]">{children}</p>;
+}
+
+/** A create made offline, waiting in the outbox. Not navigable yet: the row
+ *  only exists on this device until the queue replays on reconnect. */
+function PendingRow({ label }: { label: string }) {
+  return (
+    <li className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-[var(--wc-faint)]">
+      <span className="truncate italic">{label}</span>
+      <span className="shrink-0 rounded-full border border-[var(--wc-border)] px-1.5 py-0.5 text-[9px] uppercase tracking-wide">
+        Waiting to sync
+      </span>
+    </li>
+  );
 }
 
 function CloseIcon() {
