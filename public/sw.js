@@ -8,9 +8,12 @@
 // Real document offline (prose + project metadata) is Phase 3, handled in-app
 // via Yjs + IndexedDB — NOT here. Bump VERSION to invalidate old caches.
 
-const VERSION = "wc-v1";
+const VERSION = "wc-v2";
 const PRECACHE = `wc-precache-${VERSION}`;
 const RUNTIME = `wc-runtime-${VERSION}`;
+// Next.js client-side navigations fetch an RSC payload instead of full HTML.
+// Cached separately so moving between already-seen scenes works offline.
+const RSC = `wc-rsc-${VERSION}`;
 
 const PRECACHE_URLS = [
   "/offline.html",
@@ -34,7 +37,7 @@ self.addEventListener("activate", (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys
-          .filter((key) => key !== PRECACHE && key !== RUNTIME)
+          .filter((key) => key !== PRECACHE && key !== RUNTIME && key !== RSC)
           .map((key) => caches.delete(key)),
       );
       await self.clients.claim();
@@ -50,6 +53,36 @@ self.addEventListener("fetch", (event) => {
   // Never touch cross-origin traffic (Google Fonts, Supabase realtime/storage,
   // the Anthropic API). Those must always hit the network.
   if (url.origin !== self.location.origin) return;
+
+  // Client-side navigations: Next fetches an RSC payload (marked by the `_rsc`
+  // search param / `RSC: 1` header) instead of full HTML. Network-first, cached
+  // under the URL minus the volatile `_rsc` token, so tapping into a scene the
+  // writer has already seen works offline. On a miss the fetch fails as it
+  // would without a service worker, and Next falls back to a full navigation
+  // (handled below: cached page, then offline.html).
+  if (url.searchParams.has("_rsc") || request.headers.get("RSC") === "1") {
+    event.respondWith(
+      (async () => {
+        const keyUrl = new URL(url);
+        keyUrl.searchParams.delete("_rsc");
+        const key = keyUrl.toString();
+        try {
+          const fresh = await fetch(request);
+          if (fresh && fresh.status === 200 && !fresh.redirected) {
+            const cache = await caches.open(RSC);
+            cache.put(key, fresh.clone());
+          }
+          return fresh;
+        } catch (err) {
+          const cache = await caches.open(RSC);
+          const cached = await cache.match(key);
+          if (cached) return cached;
+          throw err;
+        }
+      })(),
+    );
+    return;
+  }
 
   // Page navigations: network-first so content stays fresh online, falling back
   // to the last-seen version of that page, then the generic offline shell.
