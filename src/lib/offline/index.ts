@@ -12,6 +12,7 @@ export { useSyncState, getSyncState, type SyncState, type SyncStatus } from "./s
 export { startOutbox, flush, pendingCount, enqueue, registerHandler } from "./outbox";
 export type { OutboxEntry, OutboxHandler } from "./outbox";
 export { isOnline, onOnlineChange } from "./online-state";
+export { useOnReconnect } from "./use-reconnect";
 export {
   renameSceneOffline,
   renameChapterOffline,

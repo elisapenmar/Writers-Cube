@@ -12,7 +12,7 @@ import {
   mergeScene,
   startFirstElement,
 } from "@/server/scenes";
-import { renameChapterOffline } from "@/lib/offline";
+import { renameChapterOffline, useOnReconnect } from "@/lib/offline";
 import { EditableTitle } from "@/components/editable-title";
 import { updateLooseSceneContent } from "@/server/loose";
 import { updateExercise } from "@/server/prompts";
@@ -502,11 +502,23 @@ function SceneBlock({
         savedAt = (await updateSceneContent(scene.id, doc, baseUpdatedAt.current)).savedAt;
         baseUpdatedAt.current = savedAt;
       }
+      saveFailed.current = false;
       onStatus("saved", savedAt);
     } catch {
+      saveFailed.current = true;
       onStatus("error");
     }
   }
+
+  // Retry the durable save when connectivity returns (offline edits live in
+  // the Yjs mirror; the JSONB copy other clients read would stay stale).
+  const saveFailed = useRef(false);
+  useOnReconnect(() => {
+    if (saveFailed.current && editor && !editor.isDestroyed) {
+      onStatus("saving");
+      void save(editor.getJSON());
+    }
+  });
 
   useEffect(() => {
     // New scene loaded: reset the CAS token to this scene's version.

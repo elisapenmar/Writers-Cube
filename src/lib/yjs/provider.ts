@@ -8,6 +8,7 @@ import {
 import { IndexeddbPersistence } from "y-indexeddb";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { onOnlineChange } from "@/lib/offline/online-state";
 import { loadCrdt, saveCrdt, type CrdtKind } from "@/server/crdt";
 
 function toB64(u8: Uint8Array): string {
@@ -56,6 +57,7 @@ export class SupabaseYjsProvider {
    * Constructed in init() so a server bundle never touches IndexedDB.
    */
   private idb: IndexeddbPersistence | null = null;
+  private offOnline: (() => void) | null = null;
 
   constructor(kind: CrdtKind, id: string, doc: Y.Doc, awareness: Awareness) {
     this.kind = kind;
@@ -126,6 +128,18 @@ export class SupabaseYjsProvider {
       });
       this.broadcastAwareness([this.doc.clientID]);
     });
+    // On reconnect, write the durable snapshot (edits made offline otherwise
+    // reach the server only when the writer happens to type again) and re-run
+    // the state-vector handshake so live peers converge.
+    this.offOnline = onOnlineChange((online) => {
+      if (!online || this.destroyed) return;
+      this.schedulePersist();
+      void this.channel.send({
+        type: "broadcast",
+        event: "sync1",
+        payload: { sv: toB64(Y.encodeStateVector(this.doc)) },
+      });
+    });
   }
 
   private onDocUpdate = (update: Uint8Array, origin: unknown) => {
@@ -163,6 +177,7 @@ export class SupabaseYjsProvider {
 
   destroy() {
     this.destroyed = true;
+    this.offOnline?.();
     if (this.persistTimer) clearTimeout(this.persistTimer);
     void this.persist(); // final snapshot
     this.doc.off("update", this.onDocUpdate);

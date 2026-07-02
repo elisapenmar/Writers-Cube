@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { RTE_EXTENSIONS } from "@/lib/editor-extensions";
 import { useCollab } from "@/lib/yjs/use-collab";
 import { registerActiveEditor, clearActiveEditor } from "@/lib/editor-bridge";
+import { useOnReconnect } from "@/lib/offline";
 import { updateLooseSceneContent, type LooseScene } from "@/server/loose";
 import { renameLooseSceneOffline, deleteLooseSceneOffline } from "@/lib/offline";
 import { EditorToolbar } from "@/components/editor-toolbar";
@@ -88,13 +89,25 @@ export function LooseEditor({ scene }: { scene: LooseScene }) {
     try {
       const r = await updateLooseSceneContent(scene.id, doc, baseUpdatedAt.current);
       baseUpdatedAt.current = r.savedAt;
+      saveFailed.current = false;
       setSavedAt(r.savedAt);
       setWordCount(r.word_count);
       setStatus("saved");
     } catch {
+      saveFailed.current = true;
       setStatus("error");
     }
   }
+
+  // Retry the durable save when connectivity returns (offline edits live in
+  // the Yjs mirror; the JSONB copy the desktop reads would stay stale).
+  const saveFailed = useRef(false);
+  useOnReconnect(() => {
+    if (saveFailed.current && editor && !editor.isDestroyed) {
+      setStatus("saving");
+      void save(editor.getJSON());
+    }
+  });
 
   useEffect(() => {
     // New scene loaded: reset the CAS token to this scene's version.

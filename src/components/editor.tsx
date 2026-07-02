@@ -19,7 +19,7 @@ import { useEditorView } from "@/store/editor-view-store";
 import { lookupMisspelling, acceptWord, spellEnabled, setSpellEnabled, type SpellHit } from "@/lib/spellcheck";
 import { useClampedMenuPosition } from "@/lib/menu-position";
 import { AiDiamond } from "@/components/icons";
-import { startOutbox, registerOutboxHandlers } from "@/lib/offline";
+import { startOutbox, registerOutboxHandlers, useOnReconnect } from "@/lib/offline";
 import { registerActiveEditor, clearActiveEditor } from "@/lib/editor-bridge";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -120,13 +120,27 @@ export function Editor({ scene, onEditorReady, renderToolbar }: EditorProps) {
     try {
       const result = await updateSceneContent(scene.id, doc, baseUpdatedAt.current);
       baseUpdatedAt.current = result.savedAt;
+      saveFailed.current = false;
       setSavedAt(result.savedAt);
       setWordCount(result.word_count);
       setStatus("saved");
     } catch {
+      saveFailed.current = true;
       setStatus("error");
     }
   }
+
+  // Offline typing keeps prose in the local Yjs mirror, but the durable JSONB
+  // save above fails with no network — retry it the moment connectivity
+  // returns, otherwise the server (and desktop web) holds stale content until
+  // the writer happens to type again.
+  const saveFailed = useRef(false);
+  useOnReconnect(() => {
+    if (saveFailed.current && editor && !editor.isDestroyed) {
+      setStatus("saving");
+      void save(editor.getJSON());
+    }
+  });
 
   async function doSplit(into: "scenes" | "chapters") {
     setSplitting(true);
