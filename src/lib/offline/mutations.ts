@@ -36,7 +36,7 @@ import {
   createLooseScene,
   createLooseSceneWithId,
 } from "@/server/loose";
-import { isNative, isStandalone } from "@/lib/platform";
+import { isNative, isStandalone, isMobile } from "@/lib/platform";
 import { isOnline } from "./online-state";
 import { idbGetAll, OUTBOX_STORE } from "./idb";
 import { enqueue, registerHandler, type OutboxEntry } from "./outbox";
@@ -53,9 +53,14 @@ export const KIND_CHAPTER_CREATE = "chapter.create";
 export const KIND_SCENE_CREATE = "scene.create";
 export const KIND_LOOSE_CREATE = "loose.create";
 
-/** True when this runtime should route structural edits through the outbox. */
+/**
+ * True when this runtime should route structural edits through the outbox:
+ * the native shell, an installed PWA, or any phone-width browser tab. A writer
+ * in mobile Safari expects offline to work the same as the installed app;
+ * desktop web (wide viewport) keeps calling server actions directly.
+ */
 function offlineFirst(): boolean {
-  return isNative() || isStandalone();
+  return isNative() || isStandalone() || isMobile();
 }
 
 type ProjectMetadata = Parameters<typeof updateProjectMetadata>[1];
