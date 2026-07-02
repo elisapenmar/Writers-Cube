@@ -174,7 +174,7 @@ function StructureList({
             ))
           )}
         </ul>
-      ) : project.chapters.length === 0 ? (
+      ) : project.chapters.length === 0 && queuedChapters.length === 0 ? (
         <Empty>No {terms.groupPlural.toLowerCase()} yet.</Empty>
       ) : (
         <ul className="space-y-2">
